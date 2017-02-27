@@ -1,0 +1,81 @@
+NameVirtualHost *:80
+<VirtualHost *:80>
+	RewriteEngine On
+	RewriteCond %{HTTPS} off
+	RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+</VirtualHost>
+
+NameVirtualHost *:443
+<VirtualHost *:443>
+	ServerAdmin webmaster@localhost
+	ServerName replica10.enlightedcloud.net
+
+	SSLEngine On
+	#SSLCertificateFile    /etc/apache2/ssl/apache.pem
+	#SSLCertificateKeyFile /etc/apache2/ssl/apache.key
+	SSLCertificateFile    /etc/enlighted/CA/ssl/certs/replica10.enlightedcloud.net.pem
+	SSLCertificateKeyFile /etc/enlighted/CA/ssl/private/replica10.enlightedcloud.net.key
+	SSLCACertificateFile  /etc/enlighted/CA/ssl/certs/enlca.crt
+	SSLCACertificatePath /etc/enlighted/CA/ssl/
+	SSLCARevocationFile /etc/enlighted/CA/ssl/crl/enlca.crl
+    SSLCARevocationPath /etc/enlighted/CA/ssl/crl/
+	SSLOptions +ExportCertData +StdEnvVars
+	SSLVerifyClient require
+	SSLVerifyDepth  2
+	BrowserMatch "MSIE [2-6]" \
+                nokeepalive ssl-unclean-shutdown \
+                downgrade-1.0 force-response-1.0
+        # MSIE 7 and newer should be able to use keepalive
+    BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+
+	RewriteEngine On
+
+
+	DocumentRoot /var/www
+	<Directory />
+		Options FollowSymLinks
+		AllowOverride None
+	</Directory>
+	<Directory /var/www/>
+		Options Indexes FollowSymLinks MultiViews
+		AllowOverride None
+		Order allow,deny
+		allow from all
+	</Directory>
+
+	ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
+	<Directory "/usr/lib/cgi-bin">
+		AllowOverride None
+		Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+		Order allow,deny
+		Allow from all
+	</Directory>
+
+	ErrorLog /var/log/apache2/error.log
+
+	# Possible values include: debug, info, notice, warn, error, crit,
+	# alert, emerg.
+	LogLevel warn
+
+	CustomLog /var/log/apache2/access.log combined
+
+    Alias /doc/ "/usr/share/doc/"
+    <Directory "/usr/share/doc/">
+        Options Indexes MultiViews FollowSymLinks
+        AllowOverride None
+        Order deny,allow
+        Deny from all
+        Allow from 127.0.0.0/255.0.0.0 ::1/128
+    </Directory>
+
+	ProxyRequests On
+	ProxyPass / http://localhost:8080/
+        ProxyPassReverse / http://localhost:8080/
+        <LocationMatch "/(services)">
+                SSLVerifyClient require
+		SSLRenegBufferSize 50486000
+        </LocationMatch>
+</VirtualHost>
+########################################
+# This file is being managed by puppet #
+########################################

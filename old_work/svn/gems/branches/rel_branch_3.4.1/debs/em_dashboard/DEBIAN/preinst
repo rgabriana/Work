@@ -1,0 +1,45 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+t1=$(sudo service tomcat6 status)
+if [[ $t1 =~ "is running"  ]]
+then
+        echo "Tomcat6 is running......."
+        sudo service tomcat6 stop
+else
+        echo "Tomcat6 not running ..........:"
+fi
+ps -ef |grep postgresql |grep -v grep > /dev/null
+if [ $? -eq 0 ]
+        then
+                if [ `psql -q -U postgres -h localhost  -t -c "select count(*) from pg_database where datname='emsdashboard'"` -eq 1 ]
+                        then
+
+                                TOMCAT_PATH=/var/lib/tomcat6
+                                mkdir -p ${TOMCAT_PATH}/Enlighted/tempExtract
+                                dumpfileprefix=emsdashboard_dump_preupgradebkp
+
+
+                                DBUSER=postgres
+                                DBHOST=localhost
+                                DB=emsdashboard
+
+                                #-- Take backup of existing war and database
+
+                                echo "Taking backup of Existing application.."
+
+                                sudo cp ${TOMCAT_PATH}/webapps/ems_dashboard.war ${TOMCAT_PATH}/Enlighted/tempExtract/ems_dashboard_bkp.war
+
+                                echo "Taking backup of database.."
+                                /usr/bin/pg_dump -U $DBUSER -h $DBHOST -b -f "${TOMCAT_PATH}/Enlighted/tempExtract/${dumpfileprefix}.sql" $DB
+
+                                echo "Undeploying application.."
+                                sudo rm -f ${TOMCAT_PATH}/webapps/ems_dashboard.war
+                                sudo rm -fr ${TOMCAT_PATH}/webapps/ems_dashboard/
+                                sudo rm -fr ${TOMCAT_PATH}/work/Catalina/localhost/ems_dashboard
+
+                        else
+                                echo "First time install"
+                fi
+        else
+                echo "Postgres not running. Maybe first time install"
+fi

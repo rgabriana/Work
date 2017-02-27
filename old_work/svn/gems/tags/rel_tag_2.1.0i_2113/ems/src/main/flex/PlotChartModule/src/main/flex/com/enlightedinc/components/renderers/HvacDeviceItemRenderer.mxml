@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   xmlns:mx="library://ns.adobe.com/flex/mx" 
+		   width="100%" height="100%"
+		   name="{Constants.HVAC_RENDERER}"
+		   buttonMode="true"
+		   doubleClickEnabled="true" doubleClick="showHvacDetails(event)"
+		   creationComplete="onUpdateComplete()">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.assets.images.Images;
+			import com.enlightedinc.components.Constants;
+			
+			import mx.core.FlexGlobals;
+
+			public function onUpdateComplete() : void
+			{
+				// TODO: Depend upon type show the ICON
+				hvacImage.source=Images.AC;
+			}
+			private function showHvacDetails(event:MouseEvent) : void
+			{
+				if((ExternalInterface.available) && (FlexGlobals.topLevelApplication.m_propertyMode == Constants.FLOORPLAN))
+				{
+					ExternalInterface.call("showHvacDetailsForm", data.item.deviceid, data.item.name);
+					FlexGlobals.topLevelApplication.showAlertMarquee("Please wait. Opening HVAC details", true);
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:Image id="hvacImage" width="16" height="16"/>
+	
+</mx:Canvas>

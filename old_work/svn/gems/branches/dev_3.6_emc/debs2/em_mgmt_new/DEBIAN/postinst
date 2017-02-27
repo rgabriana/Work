@@ -1,0 +1,139 @@
+#!/bin/bash -x
+source /etc/environment
+
+cd /tmp/em_mgmt_new/
+
+sudo cp bin/authadmin.sh /bin/
+sudo chmod 755 /bin/authadmin.sh
+
+sudo mkdir -p $ENL_APP_HOME/Enlighted/UpgradeImages
+ 
+sudo chmod 775 $ENL_APP_HOME/Enlighted/UpgradeImages
+
+sudo chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted/UpgradeImages
+
+sudo cp -R home/enlighted/4g ${ENLIGHTED_HOME}/
+sudo chown -R enlighted:enlighted ${ENLIGHTED_HOME}/4g
+
+
+sudo chmod 755 $TOMCAT_LOG/
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/adminpasswd" ]
+then
+	adminpass=$(psql -U postgres -x ems -c "select password from users where email = 'admin' limit 1" | grep password | cut -d " " -f3)
+	if test -z "$adminpass"
+	then
+		echo -n "admin" | md5sum | cut -d" " -f1 > $ENL_APP_HOME/Enlighted/adminpasswd
+	else
+		echo "$adminpass" > $ENL_APP_HOME/Enlighted/adminpasswd
+	fi
+	sudo chmod 775 $ENL_APP_HOME/Enlighted/adminpasswd
+	sudo chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted/adminpasswd
+fi
+
+# Remove tomcat-manager and tomcat-host-manager
+sudo rm -f $ENL_APP_HOME/conf/Catalina/localhost/manager.xml
+sudo rm -f $ENL_APP_HOME/conf/Catalina/localhost/host-manager.xml
+
+sudo cp home/enlighted/dailybackup.sh ${OPT_ENLIGHTED}/DB/dailybackup.sh
+
+sudo cp home/enlighted/checkandsetemmode.sh /bin/checkandsetemmode.sh
+sudo chown root:root /bin/checkandsetemmode.sh
+sudo chmod 755 /bin/checkandsetemmode.sh
+
+
+sudo cp home/enlighted/rc.local /etc/rc.local
+sudo chown root:root /etc/rc.local
+sudo chmod 755 /etc/rc.local
+
+
+##Insert/update python variables in apache
+function  updatepythonenv(){
+	sudo sed -i "/$1/d" $2
+	sudo sed -i "$ a os.environ.setdefault(\"$1\", \"$3\")" $2
+}
+updatepythonenv PGPORT var/www/em_mgmt/enlenv.py $PGPORT 
+updatepythonenv ENL_APP_HOME var/www/em_mgmt/enlenv.py  $ENL_APP_HOME
+updatepythonenv ENL_TOMCAT_HOME var/www/em_mgmt/enlenv.py $ENL_TOMCAT_HOME
+updatepythonenv OPT_ENLIGHTED var/www/em_mgmt/enlenv.py $OPT_ENLIGHTED 
+updatepythonenv ENLIGHTED_HOME var/www/em_mgmt/enlenv.py $ENLIGHTED_HOME 
+updatepythonenv EM_MGMT_BASE var/www/em_mgmt/enlenv.py $EM_MGMT_BASE
+updatepythonenv ENL_APACHE_HOME var/www/em_mgmt/enlenv.py $ENL_APACHE_HOME 
+
+
+sudo service apache2 start
+
+sleep 5
+
+
+statusapache=$(sudo service apache2 status)
+if [[ "$statusapache" =~ "is running" ]]
+    then
+		sudo a2enmod wsgi
+		sudo a2enmod ssl
+		sudo a2enmod rewrite
+		sudo a2enmod proxy
+		sudo a2enmod proxy_http
+        sudo a2enmod headers
+		
+		if [ ! -d "${ENL_APACHE_HOME}/ssl" ]
+		then
+			sudo mkdir ${ENL_APACHE_HOME}/ssl
+		fi
+		sudo cp home/enlighted/apache2/installation/apache.key ${ENL_APACHE_HOME}/ssl/
+		sudo cp home/enlighted/apache2/installation/apache.pem ${ENL_APACHE_HOME}/ssl/
+		sudo chown -R root:root ${ENL_APACHE_HOME}/ssl/
+		
+		#sudo cp apache2.conf ${ENL_APACHE_HOME}/apache2.conf
+		#sudo chown root:root ${ENL_APACHE_HOME}/apache2.conf
+		
+		sudo cp home/enlighted/apache2/installation/ports.conf ${ENL_APACHE_HOME}/ports.conf
+		sudo chown root:root ${ENL_APACHE_HOME}/ports.conf
+		
+		sudo cp home/enlighted/apache2/installation/000-default.conf ${ENL_APACHE_HOME}/sites-available/000-default.conf
+		sudo chown root:root ${ENL_APACHE_HOME}/sites-available/000-default.conf
+		
+		sudo cp home/enlighted/apache2/installation/proxy.conf ${ENL_APACHE_HOME}/mods-enabled/proxy.conf
+		sudo chown root:root ${ENL_APACHE_HOME}/mods-enabled/proxy.conf
+		
+		chmod 744 home/enlighted/apache2/installation/rewrite_prg.pl
+		sed -i "s|/var/lib/tomcat6|$ENL_APP_HOME|g" home/enlighted/apache2/installation/rewrite_prg.pl
+		sudo cp home/enlighted/apache2/installation/rewrite_prg.pl ${ENL_APACHE_HOME}/rewrite_prg.pl
+		sudo chown root:root ${ENL_APACHE_HOME}/rewrite_prg.pl
+		
+		
+		
+		sudo chmod 777 $ENL_APP_HOME/Enlighted/emsmode
+
+		chmod 0440 home/enlighted/apache2/installation/sudoers
+		sudo cp home/enlighted/apache2/installation/sudoers /etc/
+		sudo chown root:root /etc/sudoers
+		
+		# Add www-data to tomcat group
+		sudo sed -i.bak  's/\('$TOMCAT_USER':x:[0-9]*:\).*/\1www-data/' /etc/group
+		
+		if [ ! -d "${ENLIGHTED_HOME}/django_cache" ]
+		then
+			sudo mkdir ${ENLIGHTED_HOME}/django_cache
+			sudo chown enlighted:enlighted ${ENLIGHTED_HOME}/django_cache
+			sudo chmod 777 ${ENLIGHTED_HOME}/django_cache
+		fi
+
+	else
+		echo "*** Could Not Start Apache Server. Contact Admin ***"
+		exit 1
+fi
+
+#Future backups should not use the stale ec data which might be based on different schema.
+rm -f ${OPT_ENLIGHTED}/DB/DBBK/daily_ec_dump.backup
+
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/emsmode" ]
+then
+	echo "NORMAL" > $ENL_APP_HOME/Enlighted/emsmode
+	sudo chmod 777 $ENL_APP_HOME/Enlighted/emsmode
+	sudo chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted/emsmode
+fi
+
+cp -R var/www/em_mgmt/ ${EM_MGMT_BASE}/
+sudo chmod 755 -R ${EM_MGMT_BASE}/em_mgmt/

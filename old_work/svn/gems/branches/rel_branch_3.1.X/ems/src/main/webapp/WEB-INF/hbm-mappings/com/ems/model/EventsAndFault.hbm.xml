@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.EventsAndFault"
+        table="events_and_fault"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">events_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-EventsAndFault.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="eventTime"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="event_time"
+        />
+
+        <property
+            name="severity"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="severity"
+        />
+
+        <property
+            name="eventType"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="event_type"
+        />
+
+        <property
+            name="description"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="description"
+        />
+
+        <property
+            name="active"
+            type="java.lang.Boolean"
+            update="true"
+            insert="true"
+            column="active"
+        />
+
+        <many-to-one
+            name="device"
+            class="com.ems.model.Device"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="device_id"
+        />
+
+        <property
+            name="resolutionComments"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="resolution_comments"
+        />
+
+        <many-to-one
+            name="resolvedBy"
+            class="com.ems.model.User"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="resolved_by"
+        />
+
+        <property
+            name="resolvedOn"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="resolved_on"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-EventsAndFault.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+<gatewayinterface>eth1</gatewayinterface>
+<gemip>10.0.2.15</gemip>
+<delay>300000</delay>
+<sensorList>aa:aa:1,aa:aa:2</sensorList>
+<wdsList>a:0:1,a:0:2</wdsList>
+<enablembits>0</enablembits>
+<jitter>120000</jitter>
+<type>1</type>
+<fxstathb>-1</fxstathb>
+<fxstathbjitter>25000</fxstathbjitter>
+<pmstatshb>0</pmstatshb>
+<customMotion>0</customMotion>
+<randomTemp>0</randomTemp>
+<randomPowerLight>0</randomPowerLight>
+<plugloadList>bb:bb:1,bb:bb:2</plugloadList>
+</config>
+
+

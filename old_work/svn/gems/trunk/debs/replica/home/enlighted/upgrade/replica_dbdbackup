@@ -1,0 +1,10 @@
+/var/log/enlighted/backup.log{
+	rotate 12
+	size 50M
+	monthly
+	missingok
+	delaycompress
+	notifempty
+	copytruncate
+	create 644 enlighted enlighted
+}

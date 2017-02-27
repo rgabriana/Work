@@ -1,0 +1,14 @@
+/var/log/ufw.log
+{
+	rotate 30 
+	daily
+	missingok
+	notifempty
+	compress
+	create 644 syslog adm
+	delaycompress
+	sharedscripts
+	postrotate
+		reload rsyslog >/dev/null 2>&1 || true
+	endscript
+}

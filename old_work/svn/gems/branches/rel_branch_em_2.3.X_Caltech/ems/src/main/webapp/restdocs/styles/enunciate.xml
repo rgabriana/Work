@@ -1,0 +1,17 @@
+<enunciate xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://enunciate.codehaus.org/schemas/enunciate-1.21.xsd">
+  
+	<services>
+		<rest defaultRestSubcontext="/"/>
+	</services>
+		
+	<namespaces>
+		<namespace id="cws" uri="https://Your EMM IP/ems/ws/"/>
+	</namespaces>
+	<deployment protocol="https" host="localhost" context="/ems/ws"/>
+	<modules>
+		<spring-app disabled="true" />
+		<docs  disableRestMountpoint="true" css="rest-doc.css" docsDir="/docs/" splashPackage="com.ems" title="enlighted REST API"
+			copyright="Enlighted inc."/>
+	</modules>
+</enunciate>

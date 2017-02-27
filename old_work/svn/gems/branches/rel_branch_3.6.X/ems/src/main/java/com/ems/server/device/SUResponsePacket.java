@@ -1,0 +1,370 @@
+package com.ems.server.device;
+
+import java.util.Date;
+
+import org.apache.log4j.Logger;
+
+import com.ems.action.SpringContext;
+import com.ems.cache.DeviceInfo;
+import com.ems.cache.FixtureCache;
+import com.ems.model.EventsAndFault;
+import com.ems.model.Fixture;
+import com.ems.model.MotionBitRecord;
+import com.ems.server.GatewayInfo;
+import com.ems.server.GwStatsSO;
+import com.ems.server.PerfSO;
+import com.ems.server.ServerConstants;
+import com.ems.server.ServerMain;
+import com.ems.server.discovery.DiscoverySO;
+import com.ems.server.upgrade.ImageUpgradeSO;
+import com.ems.server.util.ServerUtil;
+import com.ems.service.EventsAndFaultManager;
+import com.ems.service.FixtureManager;
+import com.ems.service.MotionBitRecordManager;
+
+public class SUResponsePacket {
+
+  private byte[] pkt = null;
+  private String gwIp = null;
+  private long gwId = -1;
+  
+  private FixtureManager fixtureMgr = null;
+  private MotionBitRecordManager motionBitRecordMgr = null;
+  private EventsAndFaultManager eventMgr = null;
+  
+  private static final Logger logger = Logger.getLogger("CommLog");
+  private static Logger profileLogger = Logger.getLogger("ProfileLogger");
+  private static final Logger fixturelogger = Logger.getLogger("FixtureLogger");
+  
+  public SUResponsePacket(byte[] suPkt, String gwIp, long gwId) {
+    
+    this.pkt = suPkt;
+    this.gwIp = gwIp;
+    this.gwId = gwId;
+    
+    fixtureMgr = (FixtureManager) SpringContext.getBean("fixtureManager");
+    motionBitRecordMgr = (MotionBitRecordManager) SpringContext.getBean("motionBitRecordManager");
+    eventMgr = (EventsAndFaultManager) SpringContext.getBean("eventsAndFaultManager");
+    
+    
+  } //end of constructor
+  
+  public void finalize() {
+    
+    pkt = null;
+    gwIp = null;
+    
+  }
+  /*
+   * function to return the message type of the response packet
+   */
+  private int getMessageType() {
+    
+    int msgTypePos = ServerConstants.RES_CMD_PKT_MSG_TYPE_POS;       
+    if(pkt[0] == ServerConstants.FRAME_START_MARKER) { //old packet
+      msgTypePos = 2;
+    }
+    if(pkt[1] == 1) { //1.2 packet
+      msgTypePos -= 3;
+    }
+    int msgType = (pkt[msgTypePos] & 0xFF);
+    return msgType;
+    
+  } //end of method getMessageType
+  
+  /*
+   * returns the string format of 3 byte mac address of su
+   */
+  private String getSUAddress() {
+    
+    //byte[] snapByteArr = { pkt[8], pkt[9], pkt[10] };    
+    return ServerUtil.getSnapAddr(pkt[8], pkt[9], pkt[10]); 
+    
+  } //end of method getSUAddress
+  
+  /* 
+   * function to return the data part of the packet
+   */
+  private byte[] getDataPacket() {
+    
+    int index = ServerConstants.RES_CMD_PKT_MSG_START_POS;
+    if(pkt[0] == ServerConstants.FRAME_START_MARKER) { //old packet
+      index = 3;
+    }
+    int pktLen = pkt.length;
+    byte[] data = new byte[pktLen - index];
+    System.arraycopy(pkt, index, data, 0, data.length);
+    return data;
+      
+  } //end of method getDataPacket
+  
+  private long getTransactionId() {
+    
+    byte[] seqNoArr = new byte[4];
+    System.arraycopy(pkt, 4, seqNoArr, 0, seqNoArr.length);
+    long seqNo = ServerUtil.byteArrayToInt(seqNoArr);
+    return seqNo;
+    
+  } //end of method getTransactionId
+  
+  //this is the function to parse the packet received from SU
+  public void processResponse() {
+        
+    String snapAddr = getSUAddress();
+   
+    int msgType = getMessageType();    
+    //when the SU is discovered first time, fixture is not there in the database
+    //so call discovery class without checking for fixture object
+    if(msgType == ServerConstants.SU_DISCOVERY_TYPE) {
+      DiscoverySO.getInstance().discoveryData(snapAddr, pkt, gwIp);
+      pkt = null;
+      return;
+    }
+    Fixture fixture =  FixtureCache.getInstance().getDeviceFixture(snapAddr);
+    if(fixture == null) {
+      logger.error(snapAddr + ": There is no fixture, ignoring the node pkt - " + ServerUtil.getLogPacket(pkt));	
+      pkt = null;
+      return;
+    }
+    fixture.setLastConnectivityAt(new Date());
+    long fixtureId = fixture.getId();    
+    switch (msgType){      	
+    	case ServerConstants.REPT_PM_DATA_MSG_TYPE:	  	  
+    		if (fixture.getState().equals(ServerConstants.FIXTURE_STATE_DELETED_STR)) {
+    			String sMsg = snapAddr + ": Fixture in deleted state, ignoring the pms stats";
+    			fixturelogger.info(sMsg);
+    			GatewayInfo gwInfo = ServerMain.getInstance().getGatewayInfo(gwId);
+    			if(gwInfo != null && gwInfo.getOperationalMode() == GatewayInfo.GW_NORMAL_MODE) {       			
+    				eventMgr.addAlarm(fixture, sMsg, EventsAndFault.WIRELESS_PARAMS_MISMATCH_STR);
+    				//DeviceServiceImpl.getInstance().setWirelessFactoryDefaults(fixture, false);    				       		
+    	    }
+    			pkt = null;
+  				fixture = null;
+  				return; 
+    		}
+    	  //Put the PM stat in a map to forward to UEM
+    	  DeviceServiceImpl.getInstance().getSUHeartBeatQueue().add("PM**" + fixture.getMacAddress(), pkt);
+      	  PerfSO.getInstance().updateStatsFromZigbee(fixture, pkt, gwId);         	  
+      	  break;
+      	case ServerConstants.REPT_MOTION_MSG_TYPE:
+      	  DiscoverySO.getInstance().motionEvent(fixture, pkt);
+      	  break;
+      	case ServerConstants.RESEND_REQUEST:
+      	  ImageUpgradeSO.getInstance().missingPacketRequest(fixture, pkt, gwId);
+      	  break;
+      	case ServerConstants.ABORT_ISP_OPCODE:
+      	  ImageUpgradeSO.getInstance().cancelFileUpload(fixture, pkt, gwId);
+      	  break;
+      	case ServerConstants.ACK_TO_MSG:
+      	  int msgStartPos = ServerConstants.RES_CMD_PKT_MSG_START_POS;
+      	  if(pkt[0] == ServerConstants.FRAME_START_MARKER) { //old packet
+      	    msgStartPos = 3;
+      	  }
+      	  if ((pkt[msgStartPos] & 0xFF) == ServerConstants.ISP_INIT_ACK_OPCODE) {		
+      	    ImageUpgradeSO.getInstance().ackImageUploadStart(fixture, gwId);
+      	  } else {
+      	    int ackToMsg = pkt[msgStartPos] & 0xFF;
+      	    if(logger.isDebugEnabled()) {
+      	      logger.debug(fixture.getId() + ": ack packet(" + ackToMsg + ") -- " + 
+      		ServerUtil.getLogPacket(pkt));
+      	    }
+      	    //ServerMain.getInstance().ackDeviceMessage(fixture, pkt, gwId);
+      	    CommandScheduler.getInstance().gotAck(pkt, fixture, gwId);      	    
+      	    switch(ackToMsg) {
+      	    case ServerConstants.SU_SET_WIRELESS_CMD:
+      	      //ack came for the change wireless params
+      	      DeviceServiceImpl.getInstance().applyWireless(fixture);
+      	      //change the commission state = COMMISSION_STATUS_WIRELESS
+      	      fixtureMgr.updateCommissionStatus(fixtureId, 
+      		  ServerConstants.COMMISSION_STATUS_WIRELESS);
+      	      break;
+      	    case ServerConstants.SU_APPLY_WIRELESS_CMD:
+      	      //ack came for the applying the wireless params
+      	      DeviceServiceImpl.getInstance().suWirelessChangeAckStatus(fixture, true);
+      	      GatewayImpl.getInstance().receivedSuWirelessChangeAck(fixture);
+      	      break;
+      	    case ServerConstants.SU_SET_APPLY_WIRELESS_CMD:
+      	      DiscoverySO.getInstance().receivedHopperWirelessParamsAck(fixture.getId());
+      	      GwStatsSO.getInstance().receivedHopperWirelessParamsAck(fixture.getId());
+      	      break;
+      	    case ServerConstants.SET_LIGHT_LEVEL_MSG_TYPE:
+      	      //may be bacnet service is waiting for this. inform
+      	      //BacnetService.getInstance().receivedDimAck(fixture);
+      	      break;
+      	    case ServerConstants.SU_CMD_JOIN_GRP:
+      	    	DeviceServiceImpl.getInstance().suWirelessGrpChangeAckStatus(fixture, ServerConstants.ACK_TO_MSG);
+      	    	logger.info(fixture.getId() + " joined group");
+      	    	break;
+      	    case ServerConstants.SU_CMD_LEAVE_GRP:
+      	    	DeviceServiceImpl.getInstance().suWirelessGrpChangeAckStatus(fixture, ServerConstants.ACK_TO_MSG);
+      	    	logger.info(fixture.getId() + " left group");
+      	    	break;
+      	    case ServerConstants.SU_CMD_REQ_REST_GRP:
+      	    	DeviceServiceImpl.getInstance().suWirelessGrpChangeAckStatus(fixture, ServerConstants.ACK_TO_MSG);
+      	    	logger.info(fixture.getId() + " rest group successfull");
+      	    	break;
+            case ServerConstants.CMD_SET_SWITCH_GRP_PARMS:
+                DeviceServiceImpl.getInstance().suWirelessGrpConfigChangeAckStatus(fixture, true);
+                logger.info(fixture.getId() + " switch group sync'd");
+                break;
+            case ServerConstants.CMD_SET_SWITCH_GRP_WDS:
+                DeviceServiceImpl.getInstance().suWirelessGrpConfigChangeAckStatus(fixture, true);
+                logger.info(fixture.getId() + " wds group sync'd");
+                break;
+            case ServerConstants.CMD_MOTION_GRP_APPLY_ACTION:
+            	DeviceServiceImpl.getInstance().suWirelessGrpConfigChangeAckStatus(fixture, true);
+              logger.info(fixture.getId() + " motion group sync'd");
+              break;
+            case ServerConstants.CMD_SWITCH_GRP_DEL_WDS:
+                DeviceServiceImpl.getInstance().suWirelessGrpConfigChangeAckStatus(fixture, true);
+                logger.info(fixture.getId() + " wds removed");
+                break;
+            case ServerConstants.ENABLE_HOPPER_MSG_TYPE:
+                DeviceServiceImpl.getInstance().updateHopperState(fixture, 1);
+                logger.info(fixture.getId() + " hopper enabled");
+                break;
+            case ServerConstants.DISABLE_HOPPER_MSG_TYPE:
+                DeviceServiceImpl.getInstance().updateHopperState(fixture, 0);
+                logger.info(fixture.getId() + " hopper disabled");
+                break;
+            case ServerConstants.CMD_LAMP_CALIBRATION_REQ:
+                logger.info(fixture.getId() + " received lamp calibration request successful");
+                break;
+            case ServerConstants.SU_CMD_HB_CONFIG_MSG_TYPE:
+            	Fixture fix = fixtureMgr.getFixtureById(fixture.getId());
+            	fix.setCurrentTriggerType(fix.getChangeTriggerType());
+            	fixtureMgr.save(fix);
+            	break;
+      	    default:
+      	      break;
+      	    }      	    
+      	  }      	  
+      	  break;
+        case ServerConstants.NACK_TO_MSG:
+            msgStartPos = ServerConstants.RES_CMD_PKT_MSG_START_POS;
+            if (pkt[0] == ServerConstants.FRAME_START_MARKER) { // old packet
+                msgStartPos = 3;
+            }
+            if ((pkt[msgStartPos] & 0xFF) != ServerConstants.ISP_INIT_ACK_OPCODE) {
+                int nackToMsg = pkt[msgStartPos] & 0xFF;
+                if (logger.isDebugEnabled()) {
+                    logger.debug(fixture.getId() + ": NACK packet(" + nackToMsg + ") -- " + ServerUtil.getLogPacket(pkt));
+                }
+                CommandScheduler.getInstance().gotNack(pkt, fixture, gwId);
+                switch(nackToMsg) {
+                case ServerConstants.SU_CMD_JOIN_GRP:
+                    DeviceServiceImpl.getInstance().suWirelessGrpChangeAckStatus(fixture, ServerConstants.NACK_TO_MSG);
+                    logger.info(fixture.getId() + " joined group");
+                    break;
+                case ServerConstants.CMD_LAMP_CALIBRATION_REQ:
+                    logger.info(fixture.getId() + " received lamp calibration request failed!");
+                    break;
+                case ServerConstants.CMD_MOTION_GRP_APPLY_ACTION:
+                	fixturelogger.warn(fixture.getId() + " " + fixture.getSnapAddress() + " motion group configuration not support!");
+                	break;
+                }
+            }
+            break;
+        case ServerConstants.PROFILE_DOWNLOAD_MSG_TYPE:
+          if(profileLogger.isDebugEnabled()) {
+            profileLogger.debug(snapAddr + " received profile download msg (" + msgType + ")\n" + ServerUtil.getLogPacket(pkt));
+          }
+          FixtureCache.getInstance().getProfileFromSU(fixtureId, pkt);
+          break;
+        case ServerConstants.SU_CMD_REQ_DETAIL_CONFIG_CRC_RESP:
+        	DeviceServiceImpl.getInstance().receivedGroupChecksums(fixture, pkt);
+        	break;
+      	case ServerConstants.GET_STATUS_MSG_TYPE:
+      	  ServerMain.getInstance().getCurrentState(fixture, pkt, gwId);      	  
+      	  break;	   
+      	case ServerConstants.GET_VERSION_MSG_TYPE:
+      	  ImageUpgradeSO.getInstance().currentNodeVersion(fixture, pkt, gwId);    	  
+      	  break;
+      	case ServerConstants.NODE_INFO_MSG_TYPE:
+      	  DeviceServiceImpl.getInstance().nodeBootInfo(fixture, pkt, gwId);      	  
+      	  break;
+      	case ServerConstants.SU_RDB_MSG_TYPE:
+      	  DeviceServiceImpl.getInstance().logRDBMessages(snapAddr, pkt);
+      	  break;
+      	case ServerConstants.SU_EVENT_MSG_TYPE:
+      	  DeviceServiceImpl.getInstance().handleSUEvent(fixtureId, pkt);
+      	  break;      	
+        case ServerConstants.SU_TRIGGER_MOTION_BIT_MSG_TYPE:
+            long currTime = System.currentTimeMillis();
+            logger.debug("Processing motion bit pkt: ");
+            int seqNo = ServerUtil.extractIntFromByteArray(pkt, 4);
+            DeviceInfo device = FixtureCache.getInstance().getDevice(fixture);
+            if (device != null && device.getLastMBitSeqNo() == seqNo) {
+                // duplicate packet ignore it
+                logger.debug(fixture.getId() + " seq: " + seqNo + ", duplicate motion bit received! " + (System.currentTimeMillis() - currTime));
+                pkt = null;
+                fixture = null;
+                return;
+            } else {
+                byte motion_bit_info = (byte)(pkt[12] & 0xFF);
+                int bitmask = pkt[13] & 0xFF;
+                
+                device.setLastMBitSeqNo(seqNo);
+                logger.debug(fixture.getId() + " seq: " + seqNo + ", motion_bit_info: " + (motion_bit_info & 0xFF) + ", mask: " + (bitmask & 0xFF) + ", motion bit recived " + ServerUtil.getLogPacket(pkt));
+                MotionBitRecord mbr = new MotionBitRecord();
+                mbr.setFixtureId(fixture.getId());
+                mbr.setCaptureAt(new Date());
+                mbr.setMotionBitsLevel(((motion_bit_info >> 4) & 0x0f));
+                //add the frequency
+                mbr.setMotionBitsFrequency(((motion_bit_info) &  0x0F));
+                if (bitmask > 0) {
+                    int pos = 14;
+                    int length = bitmask * 4;
+                    StringBuffer sb = new StringBuffer();
+                    for(int i = 0; i < length; i++) {
+                        sb.append(String.format("%02x", pkt[pos]));
+                        pos++;
+                    }
+                    mbr.setMotionBits(sb.toString());
+                    sb = null;
+                }
+                motionBitRecordMgr.save(mbr);
+                logger.debug(fixture.getId() + " seq: " + seqNo + ", Processed motion bit pkt: " + (System.currentTimeMillis() - currTime));
+            }
+            //DeviceServiceImpl.getInstance().suWirelessMotionBitAckStatus(fixture, true);
+            break;
+        case ServerConstants.GET_MANUF_INFO_RSP:
+      		DeviceServiceImpl.getInstance().processSUManufacturingInfo(fixture, pkt);
+      		break;
+        case ServerConstants.CMD_LAMP_CALIBRATION_RES:
+            DeviceServiceImpl.getInstance().downloadLampCalibrationCurve(fixture, pkt);
+            break;
+        case ServerConstants.SU_CMD_HEART_BEAAT_MSG_TYPE:
+            if (!fixture.getState().equals(ServerConstants.FIXTURE_STATE_COMMISSIONED_STR)) {
+                // fixture is not yet commissioned. So, ignore the stats
+                logger.error(fixture.getFixtureName() + ": Fixture is not yet commissioned");
+                return;
+            }
+            DeviceServiceImpl.getInstance().getSUHeartBeatQueue().add(fixture.getMacAddress(), pkt);
+      		break;
+        case ServerConstants.SU_CMD_HB_STATS_MSG_TYPE:
+            if (!fixture.getState().equals(ServerConstants.FIXTURE_STATE_COMMISSIONED_STR)) {
+                // fixture is not yet commissioned. So, ignore the stats
+                logger.error(fixture.getFixtureName() + ": Fixture is not yet commissioned");
+                return;
+            }
+            byte motionReportType = pkt[ServerConstants.RES_CMD_PKT_MSG_START_POS];
+            if(motionReportType == ServerConstants.MOT_RPT_OCC_TO_VAC || motionReportType == ServerConstants.MOT_RPT_VAC_TO_OCC) {
+            	DeviceServiceImpl.getInstance().getSUHeartBeatQueue().add("RT**" + fixture.getMacAddress(), pkt);
+            }
+            //update the fixture lighting occupancy state
+            if(motionReportType == ServerConstants.MOT_RPT_VAC_TO_OCC) {
+            	fixture.setLightingOccStatus((short)1);
+            	fixtureMgr.updateLightingOccupancyStatus(fixture);
+            }
+      		break;
+      	default:
+      	  logger.error(snapAddr + ": message unknown - " + msgType);
+      	  break;
+    }
+    pkt = null;
+    fixture = null;
+  
+  } //end of method processResponse  
+  
+} //end of class SUResponsePacket

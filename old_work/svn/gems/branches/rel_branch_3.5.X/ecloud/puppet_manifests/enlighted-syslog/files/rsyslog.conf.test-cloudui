@@ -1,0 +1,216 @@
+#  /etc/rsyslog.conf	Configuration file for rsyslog.
+#
+#			For more information see
+#			/usr/share/doc/rsyslog-doc/html/rsyslog_conf.html
+#
+#  Default logging rules can be found in /etc/rsyslog.d/50-default.conf
+
+#################
+#### MODULES ####
+#################
+
+$ModLoad imuxsock # provides support for local system logging
+$ModLoad imklog   # provides kernel logging support
+$ModLoad imfile   # file logging support
+#$ModLoad immark  # provides --MARK-- message capability
+
+# provides UDP syslog reception
+#$ModLoad imudp
+#$UDPServerRun 514
+
+# provides TCP syslog reception
+#$ModLoad imtcp
+#$InputTCPServerRun 514
+
+# Enable non-kernel facility klog messages
+$KLogPermitNonKernelFacility on
+
+###########################
+#### GLOBAL DIRECTIVES ####
+###########################
+
+#
+# Use traditional timestamp format.
+# To enable high precision timestamps, comment out the following line.
+#
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+
+# Filter duplicated messages
+$RepeatedMsgReduction on
+
+#
+# Set the default permissions for all log files.
+#
+$FileOwner syslog
+$FileGroup adm
+$FileCreateMode 0644
+$DirCreateMode 0755
+$Umask 0022
+$PrivDropToUser syslog
+$PrivDropToGroup syslog
+
+# Enable syslog debugging uncomment the following lines
+# File location of the debug file
+#$DebugFile /var/log/debugsyslog.log
+# 3 varying levels of debugging (0=off,1=debug on demand,2=full debugging mode
+#$DebugLevel 2
+
+##
+#Audit Logs
+#
+
+## Audit Files
+input(type="imfile"
+	File="/var/log/audit/audit.log"
+	Tag="audit"
+	StateFile="audit"
+	Severity="info"
+	Facility="local6")
+
+## Apache2 error logs
+input(type="imfile"
+        File="/var/log/apache2/error.log"
+        Tag="apache2Error"
+        StateFile="apache2Error"
+        Severity="info"
+        Facility="local6")
+##  Apache2 access logs
+input(type="imfile"
+        File="/var/log/apache2/access.log"
+        Tag="apache2Access"
+        StateFile="apache2Access"
+        Severity="info"
+        Facility="local6")
+## Apache2 other_vhosts_access logs
+input(type="imfile"
+        File="/var/log/apache2/other_vhosts_access.log"
+        Tag="apache2OtherVhostsAccess"
+        StateFile="apache2OtherVhostsAccess"
+        Severity="info"
+        Facility="local6")
+## Tomcat6 catalina.out
+input(type="imfile"
+        File="/var/log/tomcat6/catalina.out"
+        Tag="tomcat6catalina"
+        StateFile="tomcat6catalina"
+        Severity="info"
+        Facility="local6")
+## Enlighted Cloud Billing log
+input(type="imfile"
+        File="/var/log/tomcat6/Cloud_Billing.log"
+        Tag="enlightedCloudBilling"
+        StateFile="enlightedCloudBilling"
+        Severity="info"
+        Facility="local6")
+## Enlighted Cloud Profile log
+input(type="imfile"
+        File="/var/log/tomcat6/Cloud_Profile.log"
+        Tag="enlightedCloudProfile"
+        StateFile="enlightedCloudProfile"
+        Severity="info"
+        Facility="local6")
+##  Enlighted EMS Dashboard log
+input(type="imfile"
+        File="/var/log/tomcat6/EMS_Dashboard.log"
+        Tag="enlightedEMSDashboard"
+        StateFile="enlightedEMSDashboard"
+        Severity="info"
+        Facility="local6")
+## Denyhosts log 
+input(type="imfile"
+        File="/var/log/Denyhosts"
+        Tag="Denyhosts"
+        StateFile="Denyhosts"
+        Severity="info"
+        Facility="local6")
+## Enlighted backup log
+input(type="imfile"
+        File="/var/log/enlighted_backup.log"
+        Tag="enlighted_backup.log"
+        StateFile="enlighted_backup.log"
+        Severity="info"
+        Facility="local6")
+##  Enlighted gencerts log
+input(type="imfile"
+        File="/var/log/enlighted_gencerts.log"
+        Tag="enlighted_gencerts.log"
+        StateFile="enlighted_gencerts.log"
+        Severity="info"
+        Facility="local6")
+## Enlighted EM Health Monitoring log
+input(type="imfile"
+        File="/var/log/enlightedEMHealthMonitoring.log"
+        Tag="enlightedEMHealthMonitoring.log"
+        StateFile="enlightedEMHealthMonitoring.log"
+        Severity="info"
+        Facility="local6")
+## Landscape Broker log
+input(type="imfile"
+        File="/var/log/landscape/broker.log"
+        Tag="landscape_broker"
+        StateFile="landscape_broker"
+        Severity="info"
+        Facility="local6")
+## Landscape Manager log
+input(type="imfile"
+        File="/var/log/landscape/manager.log"
+        Tag="landscape_manager"
+        StateFile="landscape_manager"
+        Severity="info"
+        Facility="local6")
+## Landscape Monitor log
+input(type="imfile"
+        File="/var/log/landscape/monitor.log"
+        Tag="landscape_monitor"
+        StateFile="landscape_monitor"
+        Severity="info"
+        Facility="local6")
+##  Landscape package reported log
+input(type="imfile"
+        File="/var/log/landscape/package-reporter.log"
+        Tag="landscape_package-reporter"
+        StateFile="landscape_package-reporter"
+        Severity="info"
+        Facility="local6")
+## Landscape watchdog log
+input(type="imfile"
+        File="/var/log/landscape/watchdog.log"
+        Tag="landscape_watchdog"
+        StateFile="landscape_watchdog"
+        Severity="info"
+        Facility="local6")
+## Bash logs
+input(type="imfile" 
+	 File="/var/log/bash.log"
+	 Tag="bash"
+	 StateFile="bash"
+	 Severity="info"
+	 Facility="local6")
+## Auth Logs
+input(type="imfile"
+	File="/var/log/auth.log"
+	Tag="auth"
+	StateFile="auth"
+	Severity="info"
+	Facility="local6")
+
+#
+# Where to place spool and state files
+#
+$WorkDirectory /var/spool/rsyslog
+
+#
+# Include all config files in /etc/rsyslog.d/
+#
+$IncludeConfig /etc/rsyslog.d/*.conf
+
+# 
+# send all syslogs to remote server
+#
+
+*.* @10.4.0.200:514
+*.* @@10.4.0.200:514
+
+###########################################
+# This file is being controlled by puppet #
+###########################################

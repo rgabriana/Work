@@ -1,0 +1,9 @@
+Package: enLighted-gems
+Version: 3.4.1
+Section: misc
+Priority: optional
+Architecture: all
+Essential: no
+Maintainer: enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: enLighted EM

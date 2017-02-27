@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop-3.0.xsd   
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd  
+        http://www.springframework.org/schema/jee 
+        http://www.springframework.org/schema/jee/spring-jee-3.0.xsd
+        http://www.springframework.org/schema/tx 
+        http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+
+	<context:annotation-config />
+
+	<context:component-scan base-package="com.emscloud" />
+
+	<aop:aspectj-autoproxy />
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	<!-- <tx:annotation-driven transaction-manager="jdbcTransactionManager" /> -->
+
+	<!-- This will automatically locate any and all property files you have 
+		within your classpath, provided they fall under the META-INF/spring directory. 
+		The located property files are parsed and their values can then be used within 
+		application context files in the form of ${propertyKey}. -->
+	<context:property-placeholder location="classpath*:META-INF/spring/*.properties" />
+
+	<bean id="messageSource"
+		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>classpath:ApplicationResources</value>
+				<value>classpath:billing-cron-trigger</value>
+			</list>
+		</property>
+		<property name="defaultEncoding" value="UTF-8" />
+	</bean>
+	
+ 
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:/META-INF/*.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<jee:jndi-lookup id="dataSource" jndi-name="jdbc/emscloud"
+		proxy-interface="javax.sql.DataSource" />
+
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource">
+			<ref local="dataSource" />
+		</property>
+		<property name="annotatedClasses">
+			<list>
+				<value>com.emscloud.model.Users</value>
+				<value>com.emscloud.model.Customer</value>
+				<value>com.emscloud.model.EmHealthMonitor</value>
+				<value>com.emscloud.model.EmInstance</value>
+				<value>com.emscloud.model.EmStats</value>
+				<value>com.emscloud.model.ReplicaServer</value>
+				<value>com.emscloud.model.Upgrades</value>
+				<value>com.emscloud.model.EmTasks</value>
+				<value>com.emscloud.model.EmState</value>
+				<value>com.emscloud.model.SppaBill</value>
+				<value>com.emscloud.model.CustomerSppaBill</value>
+				<value>com.emscloud.model.FloorEnergyConsumptionDaily</value>
+				<value>com.emscloud.model.FloorEnergyConsumptionHourly</value>
+				<value>com.emscloud.model.FloorEnergyConsumption15min</value>
+				<value>com.emscloud.model.BldEnergyConsumptionDaily</value>
+				<value>com.emscloud.model.BldEnergyConsumptionHourly</value>
+				<value>com.emscloud.model.BldEnergyConsumption15min</value>
+				<value>com.emscloud.model.CampusEnergyConsumptionDaily</value>
+				<value>com.emscloud.model.CampusEnergyConsumptionHourly</value>
+				<value>com.emscloud.model.CampusEnergyConsumption15min</value>
+				<value>com.emscloud.model.OrganizationEnergyConsumptionDaily</value>
+				<value>com.emscloud.model.OrganizationEnergyConsumptionHourly</value>
+				<value>com.emscloud.model.OrganizationEnergyConsumption15min</value>				
+				<value>com.emscloud.model.UserCustomers</value>
+				<value>com.emscloud.model.SystemConfiguration</value>
+				<value>com.emscloud.model.BillPayments</value>
+				<value>com.emscloud.model.Site</value>
+				<value>com.emscloud.model.EmSite</value>
+				<value>com.emscloud.model.Facility</value>
+				<value>com.emscloud.model.FacilityEmMapping</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<prop key="hibernate.show_sql">false</prop>
+				<prop key="hibernate.jdbc.batch_size">${hibernate.jdbc.batch_size}</prop>
+				<prop key="hibernate.cache.use_query_cache">true</prop>
+				<prop key="hibernate.cache.provider_class">org.hibernate.cache.EhCacheProvider</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<!-- <prop key="hibernate.current_session_context_class">thread</prop> -->
+			</props>
+		</property>
+	</bean>
+
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<!--  <bean id="jdbcTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+          dataSource-ref="jdbcDataSource" /> -->
+
+	<!-- <bean class="org.springframework.orm.jpa.JpaTransactionManager" -->
+	<!-- id="transactionManager"> -->
+	<!-- <property name="entityManagerFactory" ref="entityManagerFactory" /> -->
+	<!-- </bean> -->
+	
+	
+	<!-- <bean id="jdbcBuildingDao" class="com.emscloud.jdbcDao.dao.JdbcBuildingDao">  
+		<property name="dataSource" ref="dataSource"/>  
+	</bean> -->  
+	<!-- Configure the multipart resolver -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!-- one of the properties available; the maximum file size in bytes -->        
+        <!-- <property name="maxUploadSize" value="1048576" /> -->
+    </bean>
+
+</beans>
+

@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<!-- <groupId>com.enlightedinc.gem</groupId> -->
+	<groupId>com.enlighted.mobile</groupId>
+	<artifactId>emsMobileAndroid</artifactId>
+	<version>2.1.0</version>
+	<packaging>apk</packaging>
+	<name>emsMobileAndroid</name>
+	
+	
+	<scm>
+		<connection>scm:svn:http://none</connection>
+		<developerConnection>scm:svn:https://none</developerConnection>
+		<url>scm:svn:https://none</url>
+	</scm>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.google.android</groupId>
+			<artifactId>android</artifactId>
+			<version>2.1_r1</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>phonegap</groupId>
+			<artifactId>phonegap</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20090211</version>
+		</dependency>
+            
+		
+		<!-- <dependency>
+			<groupId>com.phonegap.android</groupId>
+			<artifactId>phonegap</artifactId>
+			<version>1.1.0</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/libs/phonegap-1.1.0.jar</systemPath>
+		</dependency> -->
+	</dependencies>
+
+	<!-- <build>
+		<finalName>${project.artifactId}</finalName>
+		<sourceDirectory>src</sourceDirectory>
+		<plugins>
+			
+			<plugin>
+				<groupId>
+                    com.jayway.maven.plugins.android.generation2
+                </groupId>
+				<artifactId>android-maven-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<sdk>
+						<path>${env.ANDROID_HOME}</path>
+						<platform>7</platform>
+					</sdk>
+					<undeployBeforeDeploy>true</undeployBeforeDeploy>
+					<deleteConflictingFiles>true</deleteConflictingFiles>
+				</configuration>
+				<extensions>true</extensions>
+			</plugin>
+					
+		</plugins>
+	</build> -->
+	
+	<build>
+        <finalName>${project.artifactId}</finalName>
+        <sourceDirectory>src</sourceDirectory>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+                    <artifactId>android-maven-plugin</artifactId>
+                    <version>3.1.1</version>
+                    <extensions>true</extensions>
+                </plugin>
+                
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>buildnumber-maven-plugin</artifactId>
+                    <version>1.0</version>
+                    <extensions>true</extensions>
+                </plugin>
+                
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+                <artifactId>android-maven-plugin</artifactId>
+                <configuration>
+                    <sdk>
+                        <!-- platform or api level (api level 4 = platform 1.6)-->
+                        <platform>7</platform>
+                    </sdk>
+                </configuration>
+            </plugin>
+            
+            <plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.0</version>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<doCheck>false</doCheck>
+					<doUpdate>true</doUpdate>
+					<revisionOnScmFailure />
+					<providerImplementations>
+						<svn>javasvn</svn>
+					</providerImplementations>
+				</configuration>
+			</plugin>
+            
+            
+            <plugin>
+			    <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+			    <artifactId>android-maven-plugin</artifactId>
+			    <executions>
+			      <execution>
+			        <id>update-manifest</id>
+			        <goals>
+			          <goal>manifest-update</goal>
+			        </goals>
+			        <configuration>
+			          <manifest>
+			            <versionName>${project.version}</versionName>
+			            <versionCode>${buildNumber}</versionCode>
+			            <!-- <versionCodeAutoIncrement>true</versionCodeAutoIncrement>
+			            <versionCodeUpdateFromVersion>true</versionCodeUpdateFromVersion> -->
+			          </manifest>
+			        </configuration>
+			      </execution>
+			    </executions>
+		   </plugin>
+        </plugins>
+    </build>
+    
+    <profiles>
+        <profile>
+            <id>sign</id>
+            <build>
+                <plugins>
+                    
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jarsigner-plugin</artifactId>
+                        <version>1.2</version>
+                        <executions>
+                            <execution>
+                                <id>signing</id>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <phase>package</phase>
+                                <inherited>true</inherited>
+                                <configuration>
+                                    <archiveDirectory></archiveDirectory>
+                                    <includes>
+                                        <include>target/*.apk</include>
+                                    </includes>
+                                    <keystore>enlighted</keystore>
+                                    <storepass>save-energy</storepass>
+                                    <keypass>save-energy</keypass>
+                                    <alias>emsmobileandroid</alias>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+                        <artifactId>android-maven-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <sign>
+                                <debug>false</debug>
+                            </sign>
+                            <sdk>
+		                        <platform>7</platform>
+		                    </sdk>
+                        </configuration>
+                    </plugin>
+		          
+            </plugins>
+           </build>
+        </profile>
+    </profiles>
+           
+</project>

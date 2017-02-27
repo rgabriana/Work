@@ -1,0 +1,19 @@
+<?xml version='1.0'?>
+<devices>
+    <device>
+        <mac>10-D5-6E-D9-93-73</mac>
+        <port>io,0,4,0,0,0,4,0</port>
+    </device>
+    <device>
+        <mac>10-B6-43-F9-A7-95</mac>
+        <port>io,0,8,0,0,0,4,0</port>
+    </device>
+    <device>
+        <mac>10-06-12-DF-27-AF</mac>
+        <port>io,0,4,0,0,0,4,0</port>
+    </device>
+    <device>
+        <mac>10-06-12-DF-27-A0</mac>
+        <port>io,0,8,0,0,0,4,0</port>
+    </device>    
+</devices>

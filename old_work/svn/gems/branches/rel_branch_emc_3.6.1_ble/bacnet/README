@@ -1,0 +1,16 @@
+It needs to be complied either for Lighting or for HVAC, but will compile 64 or 32 bit with no change.
+
+To compile for HVAC
+               make clean
+               make HVAC
+
+To compile for Lighting
+               make clean
+               make Lighting
+
+Don’t forget the “make clean” when switching modes.
+
+They will produce
+               stack-0.8.0/demo/gateway/bacnetHVAC
+               stack-0.8.0/demo/gateway/bacnetLighting
+executables respectively. (These used to be called ‘bacnetd’)

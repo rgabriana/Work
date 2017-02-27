@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.Profile"
+        table="profile"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">profile_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-Profile.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="minLevel"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="min_level"
+        />
+
+        <property
+            name="onLevel"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="on_level"
+        />
+
+        <property
+            name="motionDetectDuration"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="motion_detect_duration"
+        />
+
+        <property
+            name="manualOverrideDuration"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="manual_override_duration"
+        />
+
+        <property
+            name="motionSensitivity"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="motion_sensitivity"
+        />
+
+        <property
+            name="rampUpTime"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="ramp_up_time"
+        />
+
+        <property
+            name="ambientSensitivity"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="ambient_sensitivity"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-Profile.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

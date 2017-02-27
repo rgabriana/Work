@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.LampCalibrationConfiguration" table="lamp_calibration_configuration">
+		<cache usage="nonstrict-read-write" />
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">lamp_calibration_configuration_seq</param>
+			</generator>
+		</id>
+
+		<property name="enabled" type="java.lang.Boolean" update="true"
+			insert="true" column="enabled" />
+		<property name="facilityType" type="java.lang.Short" update="true"
+			insert="true" column="facility_type" />
+		<property name="frequency" type="java.lang.Short" update="true"
+			insert="true" column="frequency" />
+		<property name="scheduledTime" type="java.lang.Integer"
+			update="true" insert="true" column="scheduled_time" />
+		<property name="mode" type="java.lang.Short" update="true"
+			insert="true" column="mode" />
+		<property name="warmupTime" type="java.lang.Short" update="true"
+			insert="true" column="warmup_time" />
+		<property name="stabilizationTime" type="java.lang.Short"
+			update="true" insert="true" column="stabilization_time" />
+		<property name="excludedFixtures" type="java.lang.String"
+			update="true" insert="true" column="excluded_fixtures" />
+		<property name="potentialDegradeThreshold" type="java.lang.Short"
+			update="true" insert="true" column="potential_degrade_threshold" />
+		<property name="degradeThreshold" type="java.lang.Short"
+			update="true" insert="true" column="degrade_threshold" />
+	</class>
+
+</hibernate-mapping>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  
+  	<title>Scene Page</title>
+  	
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	
+	    
+  </head>
+ 
+	<body >
+		
+		<div id="scenePage" data-role="page" >
+
+			<div data-role="header" data-position="fixed" >
+				<!-- <a data-icon="arrow-l" class="ui-btn-left" onclick= "backToSwitches()">Switches</a> -->
+				<a data-icon="arrow-l" onclick= "backToSwitches()">Switches</a>
+				<h1 id="switchName" style="padding-left: 10px"></h1>
+			</div>
+			
+			
+	    	<div data-role="content" id="ScenePageContent" align="center"> 
+
+			  		
+				<!-- <div data-role="fieldcontain" style="width:100%;"> -->
+					<!-- <label for="slider">Brightness</label> -->
+					
+					<div align="center" class="setwidth">
+						<div id="slider_info" >
+	                        <span id="slider_value" style="background-color: #DDDDDD; border: thin solid #AAAAAA; padding: 0 2px;">0%</span>
+	                 	</div>
+						
+						<input type="range" name="slider" id="slider" readonly="readonly" value="0" min="0" max="100" />
+						
+						<div class="ui-grid-a" >
+						    <div class="ui-block-a"><label class="ui-block-left" for="slider">0</label></div>
+						    <div class="ui-block-b"><label class="ui-block-right" for="slider">100</label></div>
+						</div>
+					</div>	
+				<!-- </div> -->
+				
+				<div data-role="controlgroup" data-type="horizontal">
+					<a href="#" data-role="button" id="autoButton" data-inline="true" data-icon="scene-off" data-iconpos="top">Auto</a>
+					<a href="#" data-role="button" id="allOnButton" data-inline="true" data-icon="scene-off" data-iconpos="top">All On</a>
+					<a href="#" data-role="button" id="allOffButton" data-inline="true" data-icon="scene-off" data-iconpos="top">All Off</a>
+				</div>
+				
+				
+	         	<ul id="attachedSceneList" data-role="listview" data-filter="false" data-inset="true">
+	         	</ul>
+	         	
+			
+			</div>
+			
+			<div data-role="footer"  data-position="fixed" data-id="myfooter">
+				<div data-role="navbar" data-iconpos="top">
+					<ul>
+						<li><a   data-icon="info"    onclick="infoDialog()" >About</a></li>
+						<li><a   data-icon="refresh" onclick="backToSwitches()">Refresh</a></li>
+						<li><a   data-icon="delete" onclick="logoutLayer()">Logout</a></li>
+					</ul>
+				</div>
+			</div>	
+		
+		</div>
+		
+		
+	</body>
+	
+</html>

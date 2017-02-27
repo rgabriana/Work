@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+
+Name: CloudData
+CurrentRecordNumber: 0
+CurrentTransactionNumber: 0
+CurrentTransactionStatus: Y

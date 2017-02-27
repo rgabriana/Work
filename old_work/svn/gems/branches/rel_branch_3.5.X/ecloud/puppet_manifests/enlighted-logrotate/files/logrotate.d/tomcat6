@@ -1,0 +1,10 @@
+# this file is managed by puppet
+/var/log/tomcat6/* {
+  copytruncate
+  daily
+  minsize 250M
+  rotate 7
+  delaycompress
+  missingok
+  create 644 tomcat6 tomcat6
+}

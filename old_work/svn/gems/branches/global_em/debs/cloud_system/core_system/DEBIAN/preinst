@@ -1,0 +1,35 @@
+#!/bin/bash -x
+# Run this before installing this package, it requires root privilage
+
+#Firewall related changes
+ufw_config()
+{
+	sudo ufw allow ssh
+	sudo ufw allow https
+	sudo ufw allow http
+}
+#Apache mod enabling or installation
+enable_apache_mods()
+{
+	sudo a2enmod ssl 
+	sudo a2enmod proxy proxy_http proxy_ajp rewrite
+}
+
+
+#Start execution
+echo "Doing prerequisite..."
+file=/home/enlighted/core_file
+if [ -e "$file" ] ; then
+	rmdir /home/enlighted/core_file	
+fi
+ufw_config
+echo "Enabling Apache mods"
+enable_apache_mods
+
+
+
+
+
+
+
+

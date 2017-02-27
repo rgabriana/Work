@@ -1,0 +1,26 @@
+{% extends "pages/layouts/mainLayout.html" %}
+
+{% block body %}
+
+{% load customtemplatetags %}
+
+{% load i18n %}
+
+<div class="pgset">
+	<div class="outermostdiv">
+		<div class="outerContainer">
+			
+			<div style="padding-bottom: 5px; text-align: center;color: red;";>
+				<b id="msg"></b>
+        <script type="text/javascript">
+          var url = '{{ STATIC_URL }}home';
+          $("#msg").html({% translate "system.maintenance" "url" url %});
+        </script>
+			</div>
+			
+
+		</div>
+	</div>
+</div>
+
+{% endblock %}

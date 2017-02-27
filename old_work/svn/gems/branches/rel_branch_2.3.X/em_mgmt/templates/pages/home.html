@@ -1,0 +1,68 @@
+{% extends "pages/layouts/mainLayout.html" %}
+
+{% load i18n %}
+
+{% load customtemplatetags %}
+
+{% block body %}
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.blockUI.2.39.js"></script>
+
+<script type="text/javascript">
+
+function releaselock() {
+    
+  jConfirm("Server might be in the state of some critical process. Continuing might lead to some unexpected behavior on the server. Are you sure you want to release the system upgrade lock manually?", "{% trans 'upgrade.confirmation.title' %}", function(result){
+       if(result) {
+        		$("#releasestatus").css('color', "blue");
+        		var loadingImageString="<img alt='loading' src='{{ STATIC_URL }}static/themes/default/images/ajax-loader_small.gif'>";
+            $("#releasestatus").html("Processing..."+loadingImageString);
+
+    			$.ajax({
+ 				   type: "POST",
+ 				   cache: false,
+ 				   dataType: "json",
+ 				   url: '{{ STATIC_URL }}services/release/lock/',
+ 				   async: true,
+ 				   success: function(data){
+            $.each(data, function(key, val) {
+                msg = val;
+             });
+ 						if(msg != "S") {
+              $("#releasestatus").css('color', "red");
+ 					    $("#releasestatus").html("Failed");
+ 						}
+ 						else {
+              $("#releasestatus").css('color', "green");
+ 					    $("#releasestatus").html("Success");
+ 						}
+ 					},
+ 				    error: function() {
+ 				    	$("#releasestatus").css('color', "red");
+ 					    $("#releasestatus").html("Failed");
+ 				    }
+ 			  });	
+      }
+    });
+}
+</script>
+
+<div class="pgset">
+<div class="outermostdiv" style="min-height: 400px; padding: 20px 0px 0px 30px">
+
+  <!--
+  <a style="padding-right: 20px" href="{{ STATIC_URL }}upgrade"><button>EC Upgrade</button></a>
+  <a style="padding-right: 20px" href="{{ STATIC_URL }}backuprestore"><button>Backup Restore</button></a>
+  <a href="{{ STATIC_URL }}history"><button>History</button></a>
+  <br/><br/><br/>
+  -->
+  <span>This will release the lock which manages system upgrades or server level changes. Do not click if you are not sure.</span>
+  <br/>
+  <button style="margin-right: 10px" onclick="releaselock();" >Release Lock</button>
+  <span id="releasestatus"></span>
+</div>
+
+</div>
+
+{% endblock %}
+

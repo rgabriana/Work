@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 showCloseButton="true"
+		 title="Create Scene"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" close="closeWindow(event)" >
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.core.IFlexDisplayObject;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			private const regExpStr:RegExp = /^[a-z0-9\_\s]+$/i;
+			private var trim:RegExp = /^\s+|\s+$/g;
+			
+			private var errorStr:String = "Scene name must contain only letters, numbers, or underscore";
+			private var isValid:Boolean = false;
+			[Bindable]
+			public var application:Object = FlexGlobals.topLevelApplication.plotChartView;
+			private function closeWindow(e:CloseEvent):void {
+				PopUpManager.removePopUp(e.target as IFlexDisplayObject);
+			}
+			private function saveScene():void{
+				if(isValid)
+				{
+					var sceneNameStr:String = sceneValue.text;
+					sceneNameStr = sceneNameStr.replace(trim, "");
+					(application as PlotChartView).saveScene(sceneNameStr);
+					PopUpManager.removePopUp(this);
+				}else
+				{
+					sceneValue.errorString = errorStr;
+				}
+			}
+			private function validateScene(evt:Event):void {
+				var sceneNameStr:String = sceneValue.text;
+				sceneNameStr = sceneNameStr.replace(trim, "");
+				if (regExpStr.test(sceneNameStr)) {
+					isValid = true;
+					sceneValue.errorString = null;
+				} else {
+					isValid = false;
+					sceneValue.errorString = errorStr;
+				}
+			}
+
+		]]>
+	</fx:Script>
+	<s:VGroup width="100%" height="100%">
+		<s:HGroup width="100%" height="100%" paddingTop="10" paddingLeft="5" paddingRight="5" paddingBottom="10" verticalAlign="middle">
+			<mx:Form>
+				<mx:FormItem id="sceneName" label="Scene Name :" required="true">
+					<mx:TextInput id="sceneValue"
+								  change="validateScene(event)" creationComplete="sceneValue.setFocus();" />
+				</mx:FormItem>
+			</mx:Form>
+		</s:HGroup>
+		<s:HGroup width="100%" height="100%" horizontalAlign="right">
+			<mx:Button id="saveSceneButton" label="Save" click="saveScene();"/>
+		</s:HGroup>
+	</s:VGroup>
+</mx:TitleWindow>

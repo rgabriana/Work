@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache>
+
+	<!-- Required elements -->
+	<diskStore path="java.io.tmpdir" />
+	<defaultCache maxElementsInMemory="20000" eternal="false"
+		timeToIdleSeconds="300" timeToLiveSeconds="300" overflowToDisk="true"
+		diskPersistent="false" diskExpiryThreadIntervalSeconds="300"
+		memoryStoreEvictionPolicy="LRU" />
+
+	<cache name="com.ems.model.BallastVoltPower" eternal="true"
+		maxElementsInMemory="30" />
+
+<cache name="com.ems.model.Bulb" eternal="true"
+        maxElementsInMemory="300" overflowToDisk="false" />
+        
+	<cache name="com.ems.model.Ballast" eternal="true"
+		maxElementsInMemory="150" />
+
+	<cache name="com.ems.model.EventType" eternal="true"
+		maxElementsInMemory="30" />
+
+	<cache name="com.ems.model.Gateway" eternal="true"
+		maxElementsInMemory="10" />
+
+	<cache name="com.ems.model.Role" eternal="true"
+		maxElementsInMemory="10" />
+
+	<cache name="com.ems.model.Timezone" eternal="true"
+		maxElementsInMemory="450" />
+
+
+</ehcache>

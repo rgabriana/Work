@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:components="com.enlightedinc.components.*"
+			   width="100%" height="100%" applicationComplete="onApplicationComplete(event)"
+			   backgroundColor="#FFFFFF">
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="YYYYMMDDJJNNSS"/>
+	</fx:Declarations>
+	
+	<fx:Style source="com/enlightedinc/assets/css/flexStyle.css"/>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.components.AlertBox;
+			import com.enlightedinc.components.Constants;
+			
+			import mx.core.FlexGlobals;
+			import mx.core.mx_internal;
+			import mx.events.FlexEvent;
+			
+			use namespace mx_internal;
+			
+			import spark.filters.GlowFilter;
+			
+			private var color:Number = 0x1F29AD;
+			private var glowFilter:GlowFilter = new GlowFilter(color, .8, 6, 6, 2, 1,false, false);
+			
+			private var m_propertyId:String;
+			private var m_propertyType:String;
+			public var m_propertyMode:String = Constants.FLOORPLAN;
+			private var m_propertyModeId:String = "";
+			
+			private var timer:Timer;
+			
+			private var alertBox:AlertBox;
+			
+			[Bindable]
+			public var showTabBar:Boolean=false;			
+			
+			private function onApplicationComplete(event:Event) : void
+			{
+				trace("onApplicationComplete");
+				// Allow Javascript to communicate.
+				if (ExternalInterface.available) 
+				{
+					ExternalInterface.addCallback("changeFloor", changeFloor);
+					ExternalInterface.addCallback("handleWheel", handleWheel);
+					ExternalInterface.addCallback("plotChartRefresh", plotChartRefresh);
+				} 
+				else 
+				{
+				}
+				
+				this.systemManager.addEventListener(FlexEvent.IDLE, onUserIdle);
+				
+				var orgId:String = FlexGlobals.topLevelApplication.parameters.orgId;
+				var orgType:String = FlexGlobals.topLevelApplication.parameters.orgType;
+				var viewMode:String = FlexGlobals.topLevelApplication.parameters.mode;
+				var modeId:String = (FlexGlobals.topLevelApplication.parameters.modeid) ? (FlexGlobals.topLevelApplication.parameters.modeid) : "";
+				var userRole:String = (FlexGlobals.topLevelApplication.parameters.role)? (FlexGlobals.topLevelApplication.parameters.role) : "";
+					
+				trace("onLoad", "FP {" + orgId + ", " + orgType + ", " + viewMode + ", " + modeId + "}");
+				
+				if (orgId != null && orgType != null) 
+				{
+					changeFloor(orgType, orgId, viewMode);
+				}
+				
+				plotChartView.setMode();
+			}
+			
+			private function changeFloor(orgType:String, orgId:String, viewMode:String) : void
+			{
+				if(m_propertyId == orgId && m_propertyType == orgType)
+					return;
+					
+				plotChartView.m_propertyId = m_propertyId = orgId;
+				plotChartView.m_propertyType = m_propertyType = orgType;
+				plotChartView.m_propertyMode = m_propertyMode = viewMode;
+				plotChartView.fpModel.m_propertyId = orgId;
+				plotChartView.fpModel.m_propertyType = orgType;
+				plotChartView.fpModel.m_propertyMode = viewMode;
+				plotChartView.resetDataOnFloorChange();
+				getFloorPlanData();
+			}
+			
+			private function resizeEventFired():void{
+			}
+
+			private function getFloorPlanData() : void
+			{
+				plotChartView.getFloorPlanData();
+			}
+			
+			private function plotChartRefresh() : void
+			{
+				showAlertMarquee("Refreshing...", true);
+				getFloorPlanData();
+			}
+
+			private function handleWheel(event : Object) : void {
+				var obj : InteractiveObject = null;
+				var applicationStage : Stage = FlexGlobals.topLevelApplication.stage as Stage;
+
+				var mousePoint : Point = new Point(applicationStage.mouseX, applicationStage.mouseY);
+				var objects : Array = applicationStage.getObjectsUnderPoint(mousePoint);
+
+				for (var i : int = objects.length - 1; i >= 0; i--) {
+				    if (objects[i] is InteractiveObject) {
+					obj = objects[i] as InteractiveObject;
+					break;
+				    }
+				    else {
+					if (objects[i] is Shape && (objects[i] as Shape).parent) {
+					    obj = (objects[i] as Shape).parent;
+					    break;
+					}
+				    }
+				}
+
+				if (obj) {
+				    var mEvent : MouseEvent = new MouseEvent(MouseEvent.MOUSE_WHEEL, true, false,
+									     mousePoint.x, mousePoint.y, obj,
+									     event.ctrlKey, event.altKey, event.shiftKey,
+									     false, Number(event.delta));
+				    obj.dispatchEvent(mEvent);
+				}
+			}
+			
+	
+			private function floorPlanRefresh() : void
+			{
+			}
+			
+			private function onUserIdle(e:FlexEvent) : void
+			{
+				var waitTime:Number = 10; //wait time is in minutes
+				var counter:Number = (waitTime * 60 * 1000)/100; // minutes * (60secs) = (600secs) = (600000msecs) = 600000/100 = 6000
+				if(e.currentTarget.mx_internal::idleCounter == counter) 
+				{
+					this.systemManager.removeEventListener(FlexEvent.IDLE, onUserIdle);
+					this.addEventListener(MouseEvent.MOUSE_MOVE, refreshData);
+					this.addEventListener(MouseEvent.MOUSE_DOWN, refreshData);
+					this.addEventListener(KeyboardEvent.KEY_DOWN, refreshData);
+				}
+			}
+			
+			private function refreshData(event:MouseEvent) : void
+			{
+				this.removeEventListener(MouseEvent.MOUSE_MOVE, refreshData);
+				this.removeEventListener(MouseEvent.MOUSE_DOWN, refreshData);
+				this.removeEventListener(KeyboardEvent.KEY_DOWN, refreshData);
+				showAlertMarquee("Refreshing...", true);
+				getFloorPlanData();
+				this.systemManager.addEventListener(FlexEvent.IDLE, onUserIdle);
+			}
+            
+			
+			private function refreshFixtureData() : void{
+			}
+			
+			public function showAlertMarquee(str:String, timerEnable:Boolean) : void
+			{
+				if(alertBox)
+					removeMarquee();
+				
+				alertBox = new AlertBox();
+				alertBox.marqueeText = str;
+				
+				alertBox.width = plotChartView.panCanvas.width;
+				alertBox.x = plotChartView.panCanvas.horizontalScrollPosition;
+				alertBox.y = plotChartView.panCanvas.verticalScrollPosition;
+				
+				plotChartView.panCanvas.addChild(alertBox);
+				
+				if(timerEnable)
+				{
+					if(timer)
+					{
+						timer.stop();
+						timer = null;
+					}
+					
+					timer = new Timer(5000);
+					timer.addEventListener( TimerEvent.TIMER, marqueeTimerHandler);
+					timer.start();
+				}
+			}
+			
+			private function marqueeTimerHandler(event:TimerEvent) : void
+			{
+				removeMarquee();
+				if(timer)
+				{
+					timer.stop();
+					timer = null;
+				}
+			}
+			
+			public function removeMarquee() : void
+			{
+				for (var i:int = plotChartView.panCanvas.numChildren-1 ; i >= 0; i--) {
+					if(plotChartView.panCanvas.getChildAt(i) is AlertBox)
+						plotChartView.panCanvas.removeChildAt(i);
+				}
+				alertBox = null;
+			}
+			
+			protected function tabs_clickHandler(event:MouseEvent):void
+			{
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Scroller width="100%" height="100%">
+		<s:Group width="100%" height="100%">
+			<mx:VBox id="floorPlanDefault" width="100%" height="100%">
+				<mx:VBox verticalGap="0" width="100%" paddingTop="10">
+				</mx:VBox>
+				<components:FPView id="plotChartView" width="100%" height="100%"/>
+			</mx:VBox>
+		</s:Group>
+	</s:Scroller>
+	
+</s:Application>

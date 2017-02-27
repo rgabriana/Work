@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:ColumnChart xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			 xmlns:s="library://ns.adobe.com/flex/spark" 
+			 xmlns:mx="library://ns.adobe.com/flex/mx"
+			 height="100%" width="100%"
+			 showDataTips="true"
+			 columnWidthRatio="0.75"
+			 maxColumnWidth="30"
+			 dataTipFunction="chartDataTipFunction"
+			 styleName="energyGraph"
+			 creationComplete="init()" >
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="MMM DD"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.common.CountsCalculator;
+			import com.enlightedinc.events.CurrentSavingChartUpdate;
+			import com.enlightedinc.utils.GlobalUtils;
+			
+			import mx.charts.HitData;
+			import mx.charts.chartClasses.IAxis;
+			import mx.charts.series.items.ColumnSeriesItem;
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.utils.StringUtil;
+			
+			[Bindable]
+			public var plugloaddataPeriod:String;
+			
+			private var chartColumnItem:Object = new Object();
+			private var columnItemDictionary:Dictionary = new Dictionary();
+			
+			[Bindable]
+			public var rotationVal:Number =0;
+			[Bindable]
+			private var countsCalculator:CountsCalculator= CountsCalculator.getInstance();
+			
+			private var application:Object = FlexGlobals.topLevelApplication;
+			private function init():void{
+				columnItemDictionary['powerused'] = Constants.MANAGED_LOAD;
+				columnItemDictionary['unmanagedpowerused'] = Constants.UNMANAGED_LOAD;
+				countsCalculator.addEventListener(CurrentSavingChartUpdate.CHART_UPDATE,chartUpdate);
+			}
+			private function chartUpdate(e:CurrentSavingChartUpdate):void{
+				var YAxisMaxVaue:Number = CountsCalculator.getInstance().YAxisMaxVaue;
+				if(application.displayUnmanagedLoad==true)
+				{
+				//Alert.show("YAxisMaxVaue "+YAxisMaxVaue + "application.displayUnmanagedLoad "+ application.displayUnmanagedLoad);
+				if(YAxisMaxVaue<=1)
+				{
+					energyAxis.maximum = 1;
+					var currentUnit:String = CountsCalculator.getInstance().currentUnitSelection;
+					if(currentUnit == Constants.POWER_UNIT)
+					{
+						GlobalUtils.getCustomEnergyLabel(0);
+					}else if(currentUnit == Constants.CARBON_UNIT)
+					{
+						if(YAxisMaxVaue>0)
+						{
+							energyAxis.maximum = YAxisMaxVaue;
+						}
+						GlobalUtils.getCarbonUnitEnergyLabel(0);
+					}else if(currentUnit == Constants.CURRENCY_UNIT)
+					{
+						GlobalUtils.getCustomMoneyLabel(0);
+					}
+					GlobalUtils.getCustomEnergyLabel(0);
+					
+				}else
+				{
+					energyAxis.maximum = NaN;//energyAxis.computedMaximum = Math.ceil(YAxisMaxVaue);
+				}
+				this.dataProvider = countsCalculator.chartDataCollection;
+				}
+			}
+			private function timeLabelFunction(categoryValue:Object, previousCategoryValue:Object, axis:CategoryAxis, categoryItem:Object) : String
+			{
+				var timeStr:String = categoryValue.slice(0,10);
+				var datestr:String="";
+				if(plugloaddataPeriod == Constants.WEEK || plugloaddataPeriod == Constants.MONTH || plugloaddataPeriod == Constants.MAX)
+				{
+					if(plugloaddataPeriod == Constants.WEEK)
+						rotationVal =0;
+					else
+						rotationVal =60;
+					datestr = categoryValue.slice(5,7) + "/" + categoryValue.slice(8,10) + "/" + categoryValue.slice(2,4);
+					return datestr;
+				}	
+				if(plugloaddataPeriod == Constants.DAY)
+				{
+					rotationVal =60;
+					dateFormatter.formatString = "L A";
+					//Change the time to 12Hr format
+					datestr = dateFormatter.format(categoryValue);
+					//timeStr =categoryValue.slice(11,16);
+					//datestr = categoryValue.slice(11,16);
+					return datestr;
+				}	
+				if(plugloaddataPeriod == Constants.YEAR)
+				{
+					rotationVal =0;
+					dateFormatter.formatString="MMM YYYY"
+					datestr = dateFormatter.format(timeStr);
+					return datestr//categoryValue.slice(5,7) + "/" + categoryValue.slice(2,4);
+				}	
+				return "";
+			}
+			
+			private function chartDataTipFunction(item:HitData):String 
+			{
+				if (item.element is ColumnSeries)
+				{
+					var cSI:ColumnSeriesItem = item.chartItem as ColumnSeriesItem;
+					var col:String = ColumnSeries(item.element).yField;
+					
+					var columnName:String = columnItemDictionary[col];
+					
+					var categoryValue:String = cSI.item.captureon;
+					var timeStr:String="";
+					if(plugloaddataPeriod == Constants.WEEK || plugloaddataPeriod == Constants.MONTH || plugloaddataPeriod == Constants.MAX)
+					{
+						dateFormatter.formatString = "MMM DD, YYYY";
+						timeStr =dateFormatter.format(categoryValue);//categoryValue.slice(5,7) + "/" + categoryValue.slice(8,10) + "/" + categoryValue.slice(2,4);
+					}	
+					if(plugloaddataPeriod == Constants.DAY)
+					{
+						dateFormatter.formatString = "MMM DD, YYYY LL:NN A";
+						//Change the time to 12Hr format
+						timeStr = dateFormatter.format(categoryValue);
+						//timeStr =categoryValue.slice(11,16);
+					}	
+					if(plugloaddataPeriod == Constants.YEAR)
+					{
+						var str:String = categoryValue.slice(0,10);
+						dateFormatter.formatString="MMM YYYY"
+						timeStr = dateFormatter.format(str);
+						//timeStr =categoryValue.slice(5,7) + "/" + categoryValue.slice(2,4);
+					}
+					var itemValue:String="";
+					var currentUnit:String = CountsCalculator.getInstance().currentUnitSelection;
+					var UnitSpecificLabel:String;
+					if(currentUnit == Constants.POWER_UNIT)
+					{
+						UnitSpecificLabel = "Managed Load";
+						itemValue= GlobalUtils.getCustomEnergyLabel(cSI.item[col]);//cSI.item[col] +" W";
+					}else if(currentUnit == Constants.CARBON_UNIT)
+					{
+						UnitSpecificLabel = "CO2";
+						itemValue= GlobalUtils.getCarbonUnitEnergyLabel(cSI.item[col]);//cSI.item[col] +" tons";
+					}else if(currentUnit == Constants.CURRENCY_UNIT)
+					{
+						UnitSpecificLabel = "Cost";
+						itemValue= GlobalUtils.getCustomMoneyLabel(cSI.item[col]);
+					}
+					if(columnName==columnItemDictionary['powerused'])
+					{
+						columnName = UnitSpecificLabel;
+					}else if(columnName==columnItemDictionary['unmanagedpowerused'])
+					{
+						columnName = "Unmanaged Load";
+					}
+					
+					return StringUtil.substitute("<b>{0}</b><br>{1}: {2}",timeStr, columnName, itemValue);
+				}
+				
+				return "";
+			}
+			private function setEnergyLabel(labelValue:Object, previousLabelValue:Object, axis:IAxis):String
+			{
+				var currentUnit:String = CountsCalculator.getInstance().currentUnitSelection;
+				if(currentUnit == Constants.POWER_UNIT)
+				{
+					return GlobalUtils.getCustomEnergyLabel(labelValue);
+				}else if(currentUnit == Constants.CARBON_UNIT)
+				{
+					return GlobalUtils.getCarbonUnitEnergyLabel(labelValue);
+				}else if(currentUnit == Constants.CURRENCY_UNIT)
+				{
+					return GlobalUtils.getCustomMoneyLabel(labelValue);
+				}
+				return GlobalUtils.getCustomEnergyLabel(labelValue);
+			}
+			
+		]]>
+	</fx:Script>
+		<mx:horizontalAxis>
+			<mx:CategoryAxis id="dateAxis" categoryField="captureon"  labelFunction="timeLabelFunction" />
+		</mx:horizontalAxis>
+		<mx:verticalAxis>
+			<!--<mx:LinearAxis id="energyAxis" displayName="%" minimum="0" maximum="100"/>-->
+			<mx:LinearAxis id="energyAxis" labelFunction="setEnergyLabel" />
+		</mx:verticalAxis>
+		<mx:horizontalAxisRenderers>
+			<mx:AxisRenderer axis="{dateAxis}" labelRotation="{rotationVal}" canDropLabels="false" fontSize="10">
+				<mx:axisStroke>
+					<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+				</mx:axisStroke>
+				<mx:tickStroke>
+					<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+				</mx:tickStroke>
+				<mx:minorTickStroke>
+					<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+				</mx:minorTickStroke>
+				<mx:labelRenderer>
+					<fx:Component>
+						<mx:Label toolTip="{this.customToolTip}">
+							<fx:Script><![CDATA[
+								[Bindable]
+								private var customToolTip:String;
+								override public function set data(value:Object):void{
+									if(value == null)
+										return;
+									customToolTip = value.text;
+									var length:int = value.text.toString().length;
+									if (length > 20) {
+										text = value.text.toString().substr(0, 20) + "...";
+									} else {
+										text = value.text;
+									}
+								}
+							]]></fx:Script>
+						</mx:Label>
+					</fx:Component>
+				</mx:labelRenderer>
+
+			</mx:AxisRenderer>
+			
+		</mx:horizontalAxisRenderers>
+		<mx:verticalAxisRenderers>
+			<mx:AxisRenderer axis="{energyAxis}"
+							 verticalAxisTitleAlignment="vertical" showLine="false" fontSize="10"/>
+		</mx:verticalAxisRenderers>
+		
+		<mx:series>
+			<mx:ColumnSet type="stacked"> 
+				<mx:ColumnSeries id="unmanagedpowerused" xField="captureon"
+								 yField="unmanagedpowerused" >
+					<mx:fill>
+						<s:SolidColor color="0xFFBB00"  />
+					</mx:fill>
+				</mx:ColumnSeries>
+				
+				<mx:ColumnSeries id="powerused" xField="captureon"
+								 yField="powerused" >
+					<mx:fill>
+						<s:SolidColor color="0xff9900"  />
+					</mx:fill>
+				</mx:ColumnSeries>
+			</mx:ColumnSet>
+		</mx:series>
+</mx:ColumnChart>

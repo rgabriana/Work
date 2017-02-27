@@ -1,0 +1,1275 @@
+{% extends "pages/layouts/mainLayout.html" %}
+
+{% load i18n %}
+
+{% load customtemplatetags %}
+
+{% block body %}
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.blockUI.2.39.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.tablesorter.min.js"> </script>
+
+<style> table#backuplisttable td{overflow: hidden !important; text-overflow: ellipsis;} </style>
+
+<script type="text/javascript">
+	var usbIcon = "<img alt='USB' src='{{ STATIC_URL }}static/themes/default/images/usb_file.png'/ >";
+	
+	$().ready(function() {
+		
+		$("#savestatususb").html("");
+    	$("#usberrorId").text("");
+    	$("#usbStorageErrorId").text("");
+						jQuery.validator
+								.addMethod("invalidChar", function(value,
+										element) {
+									var pattern = /[^0-9a-zA-Z_]/;
+									if (pattern.test(value)) {
+										return false;
+									}
+									return true;
+								},
+										"{% trans 'error.file.restricted.characters' %}");
+
+						$("#backup")
+								.validate(
+										{
+											rules : {
+												backupfilename : {
+													required : true,
+													invalidChar : ""
+												}
+											},
+											messages : {
+												backupfilename : {
+													required : "{% trans 'error.above.field.required' %}"
+												}
+											}
+
+										});
+										
+						
+						$("#sftpForm").validate({
+							rules: {
+								sftpserverip: {
+									required: true
+								},
+								sftpdirectory: {
+									required: true
+								},
+								sftpusername: {
+									required: true
+								},
+								sftppassword: {
+									required: true
+								}
+							},
+							messages: {
+								sftpserverip: {
+									required: 'Field is required',
+								},
+								sftpdirectory: {
+									required: 'Field is required',
+								},
+								sftpusername: {
+									required: 'Field is required',
+								},
+								sftppassword: {
+									required: 'Field is required',
+								}
+							}
+							
+						});
+						
+						$(".outermostdiv").css("minHeight", $(window).height() - 85);
+						
+						$("#file").click(function(){
+							   
+							   label = $('label[for="'+ $(this).attr('id') +'"]');
+							   $(this).removeClass('error');
+							   label.hide();
+							  
+
+						 });
+
+            {% if existingProcess %}
+
+		          showlogsWindow();
+
+            {% endif %}	
+            
+            $("#usberrorId").text("");
+            
+            var IsbackupUsbPathValueAttached = false;
+            
+            {% if backupOptionSelectedValue == 'usb' %}
+            	$("#attachedStorageId").prop("checked", true);
+            	
+            	$("#usbpathsselectid").removeAttr("disabled");
+            	$("#savestatussftp").html("");
+            	var backupUsbListLength = '{{ backupUsbList }}'.length;
+            	
+            	if (backupUsbListLength == 2)
+            	{
+            		$("#usberrorId").text("There is no external storage device attached to EM.");
+            		$("#usbStorageErrorId").text("The backup will be saved to default location on the EM.");
+            		//$("#usbsubmit").attr("disabled", true);
+            	}else{
+            		$("#usberrorId").text("");
+            		
+            		{% for backupUsb in backupUsbList %}
+            			$("#usbpathsselectid").append(new Option('{{ backupUsb }}', '{{ backupUsb }}'));
+            			if('{{ backupUsb }}' == '{{ backupUsbPathValue }}'){
+            				IsbackupUsbPathValueAttached = true;
+            			}
+            		{% endfor %}
+            
+            		$("#usbpathsselectid").val('{{ backupUsbPathValue }}');
+            		
+            		$("#usbsubmit").removeAttr("disabled");
+            		
+            		if(!IsbackupUsbPathValueAttached){
+            			$("#usberrorId").text('The last saved attached storage {{ backupUsbPathValue }} does not have a external storage device attached.Please check.');
+            			$("#usbStorageErrorId").text("The backup will be saved to default location on the EM.");
+            		}
+            		
+            	}
+		                    	
+            	
+            	
+            	//$("#sftpserverip").val('');
+	        	//$("#sftpdirectory").val('');
+	        	//$("#sftpusername").val('');
+	        	//$("#sftppassword").val('');
+	        	
+	        	$("#sftpserverip").attr("disabled", true);
+	        	$("#sftpdirectory").attr("disabled", true);
+	        	$("#sftpusername").attr("disabled", true);
+	        	$("#sftppassword").attr("disabled", true);
+	        	
+	        	$("#sftpsubmit").attr("disabled", true);
+	        	
+            	
+	        {% endif %}
+	        
+	        {% if backupOptionSelectedValue == 'sftp' %}
+	        	$("#sftpId").prop("checked", true);
+	        	
+	        	$("#usbpathsselectid").attr("disabled", true);
+            	
+            	$("#sftpserverip").removeAttr("disabled");
+            	$("#sftpdirectory").removeAttr("disabled");
+            	$("#sftpusername").removeAttr("disabled");
+            	$("#sftppassword").removeAttr("disabled");
+	        	
+	        	$("#sftpserverip").val('{{ backupSftpIpValue }}');
+	        	$("#sftpdirectory").val('{{ backupSftpDirectoryValue }}');
+	        	$("#sftpusername").val('{{ backupSftpUsernameValue }}');
+	        	$("#sftppassword").val('{{ backupSftpPasswordValue }}');
+	        	
+	        	$("#usbsubmit").attr("disabled", true);
+	        	$("#sftpsubmit").removeAttr("disabled");
+	        	$("#savestatususb").html("");
+            	$("#usberrorId").text("");
+            	$("#usbStorageErrorId").text("");
+	        {% endif %}
+	        
+	        $('input[type=radio][name=storageoption]').change(function() {
+	            if (this.value == 'usb') {
+	            	
+	            	$("#usbpathsselectid").removeAttr("disabled");
+	            	
+	            	{% for backupUsb in backupUsbList %}
+            			$("#usbpathsselectid").append(new Option('{{ backupUsb }}', '{{ backupUsb }}'));
+	            	{% endfor %}
+	            
+	            	$("#usbpathsselectid").val('{{ backupUsbPathValue }}');
+	            	$("#savestatussftp").html("");
+	            	//$("#sftpserverip").val('');
+		        	//$("#sftpdirectory").val('');
+		        	//$("#sftpusername").val('');
+		        	//$("#sftppassword").val('');
+		        	
+		        	$("#sftpserverip").attr("disabled", true);
+		        	$("#sftpdirectory").attr("disabled", true);
+		        	$("#sftpusername").attr("disabled", true);
+		        	$("#sftppassword").attr("disabled", true);
+		        	
+		        	$("#sftpsubmit").attr("disabled", true);
+		        	$("#usbsubmit").removeAttr("disabled");
+	            }
+	            else if (this.value == 'sftp') {
+	            	$("#usbpathsselectid").empty();
+	            	$("#usbpathsselectid").attr("disabled", true);
+	            	$("#savestatususb").html("");
+	            	$("#usberrorId").text("");
+	            	$("#usbStorageErrorId").text("");
+	            	$("#sftpserverip").removeAttr("disabled");
+	            	$("#sftpdirectory").removeAttr("disabled");
+	            	$("#sftpusername").removeAttr("disabled");
+	            	$("#sftppassword").removeAttr("disabled");
+	            	
+	            	$("#sftpserverip").val('{{ backupSftpIpValue }}');
+		        	$("#sftpdirectory").val('{{ backupSftpDirectoryValue }}');
+		        	$("#sftpusername").val('{{ backupSftpUsernameValue }}');
+		        	$("#sftppassword").val('{{ backupSftpPasswordValue }}');
+		        	
+		        	$("#usbsubmit").attr("disabled", true);
+		        	$("#sftpsubmit").removeAttr("disabled");
+	            }
+	        });
+	        
+	        {% if savestatususb == "S" %}
+			  $("#savestatususb").css("color", "green");
+	          $("#savestatususb").html("Attached Storage Configuration is saved successfully.");
+	        {% endif %}
+	        
+	        
+	        {% if savestatussftp == "S" %}
+	          $("#savestatussftp").css("color", "green");
+	          $("#savestatussftp").html("Sftp Configuration is saved successfully.");
+	        {% endif %}
+            
+					});
+
+
+  function showlogsWindow() {
+
+      {% if processType == 'backup' %}
+          beforeBackup('{{ filename }}');
+          backupPollServer = null;
+          var logstring	 = '{{ logMessage }}'.replace(/&lt;br&gt;/g,"<br>");
+          pollBackupLog(logstring)
+          pollBackup()
+ 	    {% endif %};
+      {% if processType == 'restore' %}
+          beforeRestore('{{ filename }}');
+          restorePollServer = null;
+          var logstring	 = '{{ logMessage }}'.replace(/&lt;br&gt;/g,"<br>");
+          pollRestoreLog(logstring)
+	      pollRestore()
+ 	    {% endif %};
+  }
+
+	function startBackUp() {
+
+		var isValid = $('#backup').valid();
+
+		if (isValid) {
+			$.when(backupFormsubmit(), pollBackup());
+		}
+	}
+
+  function beforeBackup(filename) {
+          var loadingImageString = "<img alt='loading' src='{{ STATIC_URL }}static/themes/default/images/ajax-loader_small.gif' / >";
+				  $.blockUI({
+					  message : "{% trans 'check.progress' %}",
+					  css : {
+						  border : 'none',
+						  padding : '15px',
+						  backgroundColor : '#000000',
+						  '-webkit-border-radius' : '10px',
+						  '-moz-border-radius' : '10px',
+						  opacity : .8,
+						  color : '#FFFFFF',
+						  top : '50px',
+						  left: '200px',
+						  width : '800px',
+						  height : '370px'
+					  }
+				  });
+
+				  $('.blockMsg')
+						  .html(
+								  '<div id="backupProgress" style="font-weight: bold; color: yellow; float:left;">'+ {% translate "backup.wait.message" "filename" filename %} + ' ... ' + loadingImageString+'</div>' 
+								  +'<br/ ><br/ ><div style="float: left;"><span style="font-weight: bold;">'+ '{% trans "backup.progress.title" %}' +'</span></div><br/ ><br/ >'
+										  + '<div>'
+										  + '<ol style="padding-left: 15px">'
+										  + '<li style="color: blue; font-weight: bold; float: left;" id="step1"><p>'+ '{% trans "backup.database.dump" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step2"><p>'+ '{% trans "backup.database.version" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step3"><p>'+ '{% trans "backup.bundle.files" %}' +'</p></li><br/ >'
+										  + '</ol>'
+										  + '</div> <br/ >'
+										  + '<div style="padding: 5px; max-height: 200px; overflow: auto; clear: both; text-align:left;" id="blockProgress">'
+										  + '</div>'
+										  + '<br/ > <div id="closeprogress" style="font-weight: bold;"></div>');
+
+  }
+
+	var backupPollServer = null;
+	function backupFormsubmit() {
+		$("#backupProgressIndicator").html("");
+
+		$.ajax({
+					type : "POST",
+					cache : false,
+					dataType : "json",
+          data: {file: $("#backupfilename").val()},
+					url : '{{ STATIC_URL }}services/backup/',
+					async : true,
+					beforeSend : function() {
+            $("#uploadProgressIndicator").html("");
+            $("#listProgressIndicator").html("");
+            beforeBackup($("#backupfilename").val());
+					},
+					success : function(msg) {
+            $.each(msg, function(key, val) {
+              data = val;
+            });
+						if (data == "FAILURE") {
+							clearInterval(backupPollServer);
+							$.unblockUI();
+          		$("#backupProgressDiv").show();
+							$("#backupProgressIndicator")
+									.html(
+											"<span style='color:red'>"
+													+ "{% trans 'error.backup.internal' %}"
+													+ "</span>");
+						} else if (data == "NOSPACE") {
+							clearInterval(backupPollServer);
+							$.unblockUI();
+          		$("#backupProgressDiv").show();
+							$("#backupProgressIndicator")
+									.html(
+											"<span style='color:red'>"
+													+ "{% trans 'error.backup.nospace' %}"
+													+ "</span>");
+						}
+					},
+					error : function() {
+						clearInterval(backupPollServer);
+						$.unblockUI();
+          	$("#backupProgressDiv").show();
+						$("#backupProgressIndicator")
+								.html(
+										"<span style='color:red'>"
+												+ "{% trans 'error.connection.server' %}"
+												+ "</span>");
+					},
+					complete : function() {
+						$("#backupfilename").val("");
+					}
+				});
+	}
+
+
+	
+	//Update KK
+	
+	function pollBackupLog(logMessage) {
+
+		$("<span id='showlogs'></span>").appendTo("#blockProgress");
+		$("<br/ >").appendTo("#blockProgress");
+		var step_no = 1;
+   		var log_parts = logMessage.split('EMS_BACKUP_RESTORE_STARTED');
+		$('#showlogs').html(log_parts[0]);
+
+		if (log_parts[1] != null && log_parts[1] != "") {
+			while (log_parts[1].indexOf("step"
+					+ step_no) >= 0) {
+				$('#step' + step_no).css('color',
+						'green');
+				step_no = step_no + 1;
+				$('#step' + step_no).css('color',
+						'blue');
+			}
+			if (log_parts[1].indexOf("ERROR::") >= 0) {
+				var errorMsg = log_parts[1]
+						.split('ERROR::');
+				$('#showlogs').html(
+						log_parts[0] + "<br / >" +"{% trans 'logs.error.heading' %}"
+								+ errorMsg[1]);
+				$('#closeprogress')
+						.html(
+								"<span>"+"{% trans 'click.close.window' %}"+"</span>");
+				$("div").css('cursor', 'default');
+				$('#step' + step_no).css('color',
+						'red');
+				$(
+						"#backupProgress")
+						.css('color',
+								"red");
+				$(
+						"#backupProgress")
+						.html(
+								"{% trans 'error.backup.internal' %}");
+			}
+			if (step_no == 4) {
+				$('#closeprogress')
+						.html(
+								"<span>"+"{% trans 'click.refresh.page' %}"+"</span>");
+				$("div").css('cursor', 'default');
+				$(
+						"#backupProgress")
+						.css('color',
+								"green");
+				$(
+				"#backupProgress")
+				.html(
+						"{% trans 'backup.successful' %}");
+			}
+		}
+
+											
+	}
+	
+
+	//update KK
+	
+	//update KK restore
+	
+	function pollRestoreLog(logMessage) {
+
+		$("<span id='showlogs'></span>").appendTo("#blockProgress");
+		$("<br/ >").appendTo("#blockProgress");
+		var step_no = 1;
+                var log_parts = logMessage.split("EMS_BACKUP_RESTORE_STARTED");
+		var log_msgdiv = "<div>"+log_parts[0]+"</div>"
+		$('#showlogs').html(log_msgdiv);
+		//$('#showlogs').html(logMessage);
+		if (log_parts[1] != null && log_parts[1] != "") {
+			while (log_parts[1].indexOf("step"
+					+ step_no) >= 0) {
+				$('#step' + step_no).css('color',
+						'green');
+				step_no = step_no + 1;
+				$('#step' + step_no).css('color',
+						'blue');
+			}
+			if (log_parts[1].indexOf("ERROR::") >= 0) {
+				var errorMsg = log_parts[1]
+						.split('ERROR::');
+				$('#showlogs').html(
+						log_parts[0] + "<br / >" +"{% trans 'logs.error.heading' %}"
+								+ errorMsg[1]);
+				$('#closeprogress')
+						.html(
+								"<span>"+"{% trans 'click.close.window' %}"+"</span>");
+				$("div").css('cursor', 'default');
+				$('#step' + step_no).css('color',
+						'red');
+				$(
+						"#restoreProgress")
+						.css('color',
+								"red");
+				$(
+						"#restoreProgress")
+						.html(
+								"{% trans 'error.restore.internal' %}");
+			}
+			if (step_no == 6) {
+				$('#closeprogress')
+						.html(
+								"<span>"+"{% trans 'click.refresh.page' %}"+"</span>");
+				$("div").css('cursor', 'default');
+				$(
+						"#restoreProgress")
+						.css('color',
+								"green");
+				$(
+				"#restoreProgress")
+				.html(
+						"{% trans 'restore.successful' %}");
+			}
+		}
+
+											
+	}
+	
+	//update KK restore
+	
+	
+	
+	function pollBackup() {
+
+		$("<span id='showlogs'></span>").appendTo("#blockProgress");
+		$("<br/ >").appendTo("#blockProgress");
+		var step_no = 1;
+    var errorCount = 1;
+
+		backupPollServer = setInterval(
+				function() {
+					$.ajax({
+								type : "POST",
+								cache : false,
+								dataType : "json",
+								url : "{{ STATIC_URL }}services/backuprestore/logs/",
+								beforeSend : function() {
+								},
+								success : function(data) {
+                  errorCount = 1;
+                  $.each(data, function(key, val) {
+                      msg = val;
+                   });
+									var parts = msg.split('EMS_BACKUP_RESTORE_STARTED');
+									$('#showlogs').html(parts[0]);
+									if (parts[1] != null && parts[1] != "") {
+										while (parts[1].indexOf("step"
+												+ step_no) >= 0) {
+											$('#step' + step_no).css('color',
+													'green');
+											step_no = step_no + 1;
+											$('#step' + step_no).css('color',
+													'blue');
+										}
+										if (parts[1].indexOf("ERROR::") >= 0) {
+											var errorMsg = parts[1]
+													.split('ERROR::');
+											$('#showlogs').html(
+													parts[0] + "<br / >" +"{% trans 'logs.error.heading' %}"
+															+ errorMsg[1]);
+											$('#closeprogress')
+													.html(
+															"<span>"+"{% trans 'click.close.window' %}"+"</span>");
+											clearInterval(backupPollServer);
+											$("div").css('cursor', 'default');
+											$('#step' + step_no).css('color',
+													'red');
+											$(
+													"#backupProgress")
+													.css('color',
+															"red");
+											$(
+													"#backupProgress")
+													.html(
+															"{% trans 'error.backup.internal' %}");
+										}
+										if (step_no == 4) {
+											$('#closeprogress')
+													.html(
+															"<span>"+"{% trans 'click.refresh.page' %}"+"</span>");
+											clearInterval(backupPollServer);
+											$("div").css('cursor', 'default');
+											$(
+													"#backupProgress")
+													.css('color',
+															"green");
+											$(
+											"#backupProgress")
+											.html(
+													"{% trans 'backup.successful' %}");
+										}
+									}
+								},
+                error: function() {
+                	errorCount++;
+                }
+							});
+
+							if(errorCount > 30) {
+								$('#closeprogress')
+								.html("<span>"+"{% trans 'click.close.window' %}"+"</span>");
+                  					clearInterval(backupPollServer);
+								$("div").css('cursor', 'default');
+								$("#listProgressIndicator").css('color',"red");
+								$("#listProgressIndicator").html("{% trans 'error.no.server.access' %}");
+								$("<span> WARNING: " + "{% trans 'error.no.server.access' %}" + "</span>").appendTo("#blockProgress");
+                $("#backupProgress").css('color',"red");
+								$("#backupProgress").html("{% trans 'error.no.server.access' %}");	
+							}
+
+				}, 5000);
+	}
+	
+	function saveUsbSettings(){
+		
+		$("#usberrorId").text("");
+		
+		var backupUsbListLength = '{{ backupUsbList }}'.length;
+            	
+    	if (backupUsbListLength == 2)
+    	{
+    		$("#usberrorId").text("There is no external storage device attached to EM.");
+    		$("#usbStorageErrorId").text("The backup will be saved to default location on the EM.");
+    		$('#usbForm').submit();
+    	}else{
+    		$('#usbForm').submit();
+    	}
+	}
+
+	function saveSftpSettings(){
+		var isValid = $('#sftpForm').valid();		
+		if(isValid){
+			$('#sftpForm').submit();		
+		}
+	}
+</script>
+
+
+<div class="pgset">
+	<div class="outermostdiv">
+		<div class="outerContainer">
+			<div class="i1" align="center" style="height: 15px;" id="i1div"></div>
+			<div style="width: 100%;">
+				<fieldset style="padding: 10px;">
+				<legend style="font-weight: bold">Select Backup Option</legend>
+					<table cellspacing="10px">
+						<tr>
+							<td align="right">
+								<div class="field">
+									<div class="formPrompt">
+										<span>Attached Storage</span>
+									</div>
+									<div class="formValue">
+										<input  type="radio"  id="attachedStorageId" name="storageoption" value="usb"/>
+									</div>
+								</div>
+							</td>
+							<td align="right">
+								<div class="field">
+									<div class="formPrompt">
+										<span>Sftp Remote Backup</span>
+									</div>
+									<div class="formValue">
+										<input  type="radio"  id="sftpId" name="storageoption" value="sftp"/>
+									</div>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td align="right">
+								<form id="usbForm" method="post" action="{{ STATIC_URL }}backuprestore/usb/save/">
+									{% csrf_token %}
+									<div class="field">
+										<div class="formPrompt">
+											<span>Select attached Storage</span>
+										</div>
+										<div class="formValue">
+											<select id="usbpathsselectid" style="width: 315px" path="usbpathsselect"  name="usbpathsselect" >
+											</select>
+										</div>
+									</div>
+									
+									<div class="field">
+										<div class="formPrompt">
+											<span></span>
+										</div>
+										<div class="formValue">
+											<input class="navigation" id="usbsubmit" type="button"
+												value="Save" onclick="saveUsbSettings();"></input><span id="savestatususb" style="font-size: 1.1em; display: inline"></span>
+										</div>
+										
+										
+									</div>
+									
+									<div class="field">
+									<div>
+									<span id="usberrorId" style="font-weight: bold; color: red"></span>
+									</div>
+									<div>
+									<span id="usbStorageErrorId" style="font-weight: bold; color: black"></span>
+									</div>
+									</div>
+									
+								</form>
+							</td>
+							<td align="right">
+								<form id="sftpForm" method="post" action="{{ STATIC_URL }}backuprestore/sftp/save/">
+									{% csrf_token %}
+									<div class="field">
+										<div class="formPrompt">
+											<span>Server Ip</span>
+										</div>
+										<div class="formValue">
+											<input id="sftpserverip" type="text" name="sftpserverip" path="sftpserverip"
+												size="24" />
+										</div>
+									</div>
+									<div class="field">
+										<div class="formPrompt">
+											<span>Directory Path</span>
+										</div>
+										<div class="formValue">
+											<input id="sftpdirectory" type="text" name="sftpdirectory" path="sftpdirectory"
+												size="24" />
+										</div>
+									</div>
+									<div class="field">
+										<div class="formPrompt">
+											<span>Username</span>
+										</div>
+										<div class="formValue">
+											<input id="sftpusername" type="text" name="sftpusername" path="sftpusername"
+												size="24" />
+										</div>
+									</div>
+									<div class="field">
+										<div class="formPrompt">
+											<span>Password</span>
+										</div>
+										<div class="formValue">
+											<input id="sftppassword" type="password" name="sftppassword" path="sftppassword"
+												size="24" />
+										</div>
+									</div>
+									<div class="field">
+										<div class="formPrompt">
+											<span></span>
+										</div>
+										<div class="formValue">
+											<input class="navigation" id="sftpsubmit" type="button"
+												value="Save" onclick="saveSftpSettings();"></input><span id="savestatussftp" style="font-size: 1.1em; display: inline"></span>
+										</div>
+									</div>
+								</form>
+								
+							</td>
+						</tr>
+					</table>
+						
+					
+				</fieldset>
+			</div>
+		</div>
+		<div style="padding: 3px;"></div>
+		<div class="outerContainer">
+			<!-- <span>{% trans 'backup.header' %}</span> -->
+			<div class="i1"></div>
+			<div style="width: 100%;">
+				<fieldset style="padding: 10px;">
+					<legend style="font-weight: bold">
+						{% trans "backup.legend.title" %}
+					</legend>
+					<span style="font-weight: normal; font-style: italic;">
+					{% trans "backup.note" %}</span>
+
+					<form id="backup" method="post"
+						onsubmit="startBackUp(); return false;">
+            {% csrf_token %}
+						<div class="field">
+							<div class="formPrompt">
+								<span>{% trans "backup.label.file.name" %}</span>
+							</div>
+							<div class="formValue">
+								<input id="backupfilename" type="text" name="backupfilename"
+									size="24" />
+							</div>
+						</div>
+
+						<div id="backupProgressDiv" class="field">
+							<div class="formPrompt">
+								<span></span>
+							</div>
+							<div class="formValue" id="backupProgressIndicator"></div>
+						</div>
+						<script type="text/javascript">
+							$("#backupProgressDiv").hide();
+						</script>
+						<div class="field">
+							<div class="formPrompt">
+								<span></span>
+							</div>
+							<div class="formValue">
+								<input class="navigation" id="backupsubmit" type="submit"
+									value="{% trans 'action.start' %}" ></input>
+							</div>
+						</div>
+					</form>
+
+				</fieldset>
+			</div>
+		</div>
+		<div style="padding: 3px;"></div>
+
+		<script type="text/javascript">
+			$()
+					.ready(
+							function() {
+
+								getbackuplist();
+								$("#upload")
+										.validate(
+												{
+													rules : {
+														file : {
+															required : true,
+															accept : "tar.gz"
+														}
+													},
+													messages : {
+														file : {
+															required : '{% trans "error.above.field.required" %}',
+															accept : "{% trans 'error.tar.gz.extension.required' %}"
+														}
+													}
+
+												});
+							});
+
+			function upload() {
+
+				var isValid = $('#upload').valid();
+
+				if (isValid) {
+
+					$('#uploadsubmit').attr('disabled', 'disabled');
+					$("#uploadProgressDiv").show();
+          $("#listProgressIndicator").html("");
+					var loadingImageString = "<img alt='loading' src='{{ STATIC_URL }}static/themes/default/images/ajax-loader_small.gif'>";
+					$("#uploadProgressIndicator")
+							.html(
+									"<span>"
+											+ '{% trans "restore.upload.wait" %}'
+											+ loadingImageString + "</span><span id='uploadSizeIndicator'></span>");
+
+					var uploadPollServer = setInterval( function() {
+					 	$.ajax({
+							 type: "POST",
+							 cache: false,
+							 dataType: "json",
+							 url: '{{ STATIC_URL }}services/upload/size/',
+							 beforeSend: function() {
+							 },
+							 success: function(data){
+							 	$.each(data, function(key, val) {
+                  msg = val;
+                });
+					     	if(msg != "-1") {
+					     		$("#uploadSizeIndicator").text(msg);
+					     	}
+							 } 
+							 });
+							
+							 }, 5000);
+
+					$("#upload").submit();
+				}
+			}
+		</script>
+
+		<div class="outerContainer">
+			<span>{% trans "restore.header" %}</span>
+			<div class="i1"></div>
+			<fieldset style="padding: 10px;">
+				<legend style="font-weight: bold">
+					{% trans "restore.upload.legend" %}
+				</legend>
+
+				<form id="upload"
+					action="{{ STATIC_URL }}upload/backup/file/" method="post"
+					enctype="multipart/form-data">
+          {% csrf_token %}
+					<div class="field">
+						<div class="formPrompt">
+							<span>{% trans "restore.label.backup.upload" %}</span>
+						</div>
+						<div class="formValue">
+							<input name="file" id="file" type="file" />
+						</div>
+					</div>
+					<div id="uploadProgressDiv" class="field">
+						<div class="formPrompt">
+							<span></span>
+						</div>
+						<div class="formValue" id="uploadProgressIndicator"></div>
+					</div>
+					<script type="text/javascript">
+            {% if uploadStatus == 'F' %}
+       	      $("#uploadProgressIndicator").html("<span style='color:red'>"+ "{% trans 'error.restore.upload.internal' %}" +"</span>");
+            {% else %} {% if uploadStatus == 'S' and fileuploadconfirmation %}
+              $("#uploadProgressIndicator").html("<span style='color:green'>" + '{{ fileuploadconfirmation }}' + "</span>");
+            {% else %}
+              $("#uploadProgressDiv").hide();
+            {% endif %} {% endif %}
+					</script>
+					<div class="field">
+						<div class="formPrompt">
+							<span></span>
+						</div>
+						<div class="formValue">
+							<input class="navigation" id="uploadsubmit" type="button"
+								onclick="upload();" value="{% trans 'action.upload' %}" ></input>
+						</div>
+					</div>
+				</form>
+
+			</fieldset>
+
+			<script type="text/javascript">
+				function deleteBackupFile(elementObj) {
+					var id = $(elementObj).attr('id').split('T')[0];
+					var filename = $("#" + id + "Tname").html();
+
+					jConfirm(
+							{% translate "file.delete.conform" "filename" filename %},
+							'{% trans "deletion.confirmation.title" %}',
+							function(result) {
+								if (result) {
+									$("input.action").attr('disabled',
+											"disabled");
+									$("#listProgressDiv").show();
+                  $("#uploadProgressIndicator").html("");
+									$("#listProgressIndicator").css('color',
+											"#333333");
+									var loadingImageString = "<img alt='loading' src='{{ STATIC_URL }}static/themes/default/images/ajax-loader_small.gif'>";
+									$("#listProgressIndicator").html(
+											'{% trans "delete.wait" %}'
+													+ loadingImageString);
+									$.ajax({
+												type : "POST",
+												cache : false,
+												dataType : "json",
+                        data: {file: $("#" + id + "Tpath").val()},
+												url : '{{ STATIC_URL }}services/delete/backup/file/',
+												async : true,
+												beforeSend : function() {
+												},
+												success : function(data) {
+             						  var errorMsg = null;
+                          $.each(data, function(key, val) {
+                              msg = val;
+                           });
+	             						if(msg != "S") {
+                            if(msg == "I") {
+	             								errorMsg = "{% trans 'error.backup.delete' %}";
+	             							}
+	             							$("#listProgressIndicator").css('color', "red");
+	             							$("#listProgressIndicator").html(errorMsg);
+	             							return false;
+	             						}
+	             						else {
+	             							$("#" + id + "Trow").remove();
+		             				    	$("#listProgressIndicator").css('color', "green");
+		             					    $("#listProgressIndicator").html({% translate "file.delete.successful" "filename" filename %});
+	             						}
+		             				},
+             				    error: function() {
+             				    	$("#listProgressIndicator").css('color', "red");
+             					    $("#listProgressIndicator").html("{% trans 'error.connection.server' %}");
+             				    },
+             				    complete: function() {
+             				    	$("input.action").removeAttr('disabled');
+             				    }
+											});
+								} else {
+									return false;
+								}
+							});
+				}
+
+				var restorePollServer = null;
+
+        function beforeRestore(filename) {
+          var loadingImageString = "<img alt='loading' src='{{ STATIC_URL }}static/themes/default/images/ajax-loader_small.gif' / >";
+				  $.blockUI({
+					  message : "{% trans 'check.progress' %}",
+					  css : {
+						  border : 'none',
+						  padding : '15px',
+						  backgroundColor : '#000000',
+						  '-webkit-border-radius' : '10px',
+						  '-moz-border-radius' : '10px',
+						  opacity : .8,
+						  color : '#FFFFFF',
+						  top : '50px',
+						  left: '200px',
+						  width : '800px',
+						  height : '410px'
+					  }
+				  });
+
+				  $('.blockMsg')
+						  .html(
+								  '<div id="restoreProgress" style="font-weight: bold; color: yellow; float:left;">'+ {% translate "restore.wait.message" "filename" filename %} + ' ... ' + loadingImageString+'</div>' 
+								  +'<br/ ><br/ ><div style="float: left;"><span style="font-weight: bold;">'+ '{% trans "backup.progress.title" %}' +'</span></div><br/ ><br/ >'
+										  + '<div>'
+										  + '<ol style="padding-left: 15px">'
+										  + '<li style="color: blue; font-weight: bold; float: left;" id="step1"><p>'+ '{% trans "restore.pre.sanity" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step2"><p>'+ '{% trans "restore.shutdown.em" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step3"><p>'+ '{% trans "restore.recreate.database" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step4"><p>'+ '{% trans "restore.database" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step5"><p>'+ '{% trans "restore.start.em" %}' +'</p></li><br/ >'
+										  + '</ol>'
+										  + '</div> <br/ >'
+										  + '<div style="padding: 5px; max-height: 200px; overflow: auto; clear: both; text-align:left;" id="blockProgress">'
+										  + '</div>'
+										  + '<br/ > <div id="closeprogress" style="font-weight: bold;"></div>');
+
+        }
+
+				function restoreBackupFile(elementObj) {
+					var id = $(elementObj).attr('id').split('T')[0];
+					var filename = $("#" + id + "Tname").html();
+          var filepath = $("#" + id + "Tpath").val();
+
+					jConfirm(
+							{% translate "file.restore.conform" "filename" filename %},
+							'{% trans "deletion.confirmation.title" %}',
+							function(result) {
+								if (result) {
+									restorePollServer = null;
+									$.when(restoresubmit(filename,filepath),
+											pollRestore());
+								}
+
+							});
+				}
+
+				function restoresubmit(filename,filepath) {
+					$("#listProgressIndicator").html("");
+
+					$.ajax({
+								type : "POST",
+								cache : false,
+								dataType : "json",
+                data: {file: filepath},
+								url : '{{ STATIC_URL }}services/restore/',
+								async : true,
+								beforeSend : function() {
+                  $("#uploadProgressIndicator").html("");
+                  $("#listProgressIndicator").html("");
+									beforeRestore(filename);
+								},
+								success : function(msg) {
+                  $.each(msg, function(key, val) {
+                      data = val;
+                  });
+									if (data == "FAILURE") {
+										clearInterval(restorePollServer);
+										$.unblockUI();
+          					$("#listProgressDiv").show();
+										$("#listProgressIndicator").css(
+												'color', "red");
+										$("#listProgressIndicator")
+												.html(
+														'{% trans "error.restore.internal" %}');
+									}
+								},
+								error : function() {
+									clearInterval(restorePollServer);
+									$.unblockUI();
+        					$("#listProgressDiv").show();
+									$("#listProgressIndicator").css('color',
+											"red");
+									$("#listProgressIndicator")
+											.html(
+													'{% trans "error.restore.connection.server" %}');
+								},
+								complete : function() {
+								}
+							});
+				}
+
+				function pollRestore() {
+					
+					$("<span id='showlogs'></span>").appendTo("#blockProgress");
+					$("<br/ >").appendTo("#blockProgress");
+					var step_no = 1;
+					var errorCount = 1;
+
+					restorePollServer = setInterval(
+							function() {
+										
+										$.ajax({
+											type : "POST",
+											cache : false,
+											dataType : "json",
+											url : '{{ STATIC_URL }}services/backuprestore/logs/',
+											beforeSend : function() {
+											},
+											success : function(data) {
+                        $.each(data, function(key, val) {
+                            msg = val;
+                        });
+												errorCount = 1;
+												var parts = msg
+														.split('EMS_BACKUP_RESTORE_STARTED');
+												$('#showlogs').html(parts[0]);
+												if (parts[1] != null
+														&& parts[1] != "") {
+													while (parts[1]
+															.search("step"
+																	+ step_no) >= 0) {
+														$('#step' + step_no)
+																.css('color',
+																		'green');
+														step_no = step_no + 1;
+														$('#step' + step_no)
+																.css('color',
+																		'blue');
+													}
+													if (parts[1]
+															.search("ERROR::") >= 0) {
+														var errorMsg = parts[1]
+																.split('ERROR::');
+														$('#showlogs')
+																.html(
+																		parts[0]
+																				+ "<br / > "+ "{% trans 'logs.error.heading' %}"
+																				+ errorMsg[1]);
+														$('#closeprogress')
+																.html(
+																		'<span>'+"{% trans 'click.close.window' %}"+'</span>');
+														clearInterval(restorePollServer);
+														$("div").css('cursor',
+																'default');
+														$('#step' + step_no)
+																.css('color',
+																		'red');
+														$(
+																"#restoreProgress")
+																.css('color',
+																		"red");
+														$(
+																"#restoreProgress")
+																.html(
+																		'{% trans "error.restore.internal" %}');
+													}
+													if (step_no == 6) {
+														$('#closeprogress')
+																.html(
+																		'<span>'+"{% trans 'click.refresh.page' %}"+'</span>');
+														clearInterval(restorePollServer);
+														$("div").css('cursor',
+																'default');
+														$(
+																"#restoreProgress")
+																.css('color',
+																		"green");
+														$(
+																"#restoreProgress")
+																.html(
+																		'{% trans "restore.successful" %}');
+													}
+												}
+											},
+						                    complete: function(transport){
+						                    },
+						                    error: function() {
+						                    	errorCount++;
+						                    }
+										});
+										
+										if(errorCount > 30) {
+											$('#closeprogress')
+											.html('<span>'+"{% trans 'click.close.window' %}"+'</span>');
+											clearInterval(restorePollServer);
+											$("div").css('cursor', 'default');
+											$("#listProgressIndicator").css('color',"red");
+											$("#listProgressIndicator").html("{% trans 'error.no.server.access' %}");
+											$("<span> WARNING: " + "{% trans 'error.no.server.access' %}" + "</span>").appendTo("#blockProgress");	
+                      $("#restoreProgress").css('color',"red");
+											$("#restoreProgress").html("{% trans 'error.no.server.access' %}");
+										}
+							}, 5000);
+				}
+				
+				function getbackuplist() {
+					$("#listProgressIndicator").html("Please Wait..");
+
+					$.ajax({
+								type : "POST",
+								cache : false,
+								dataType : "json",
+								url : '{{ STATIC_URL }}services/backuplist/',
+								async : true,
+								beforeSend : function() {
+									$("#listProgressDiv").show();
+									$("#i1div").html("Please Wait..");
+									$("#i1div").css('color',"#333333");
+									$("#listProgressIndicator").html("Please Wait..");
+									$("#listProgressIndicator").css('color',
+									"#333333");
+									var loadingImageString = "<img alt='loading' src='{{ STATIC_URL }}static/themes/default/images/ajax-loader_small.gif'>";
+									$("#listProgressIndicator")
+											.html(
+													"<span>"
+															+ 'Please Wait....'
+															+ loadingImageString + "</span>");
+									$("#i1div")
+									.html(
+											"<span style='text-align:center'>"
+													+ 'Please Wait....'
+													+ loadingImageString + "</span>");
+								},
+								success : function(data) {
+									$("#tableContainer").html(
+											"<table id='backuplisttable' class='tablesorter entable' width='100%'>"
+											+"<thead>"
+											+"<tr>"
+												+"<th>{% trans 'restore.label.list.creation.time' %}</th>"
+												+"<th>{% trans 'restore.label.list.file' %}</th>"
+												+"<th>{% trans 'restore.label.list.file.size' %}</th>"
+												+"<th>Action</th>"
+											+"</tr>"
+											+"</thead>"
+											+"<tbody id='backuplisttbody'>"
+									);
+									$.each(data.filelist, function(index, element) {
+										$("#backuplisttable").append("<tr id='"+ index +"Trow'> </tr>");
+										//"<tr id='"+ index +"Trow' >"
+										$("#"+ index +"Trow").append("<td id='"+ index +"Tdate'>"+element.creationDate+"</td>");
+										$("#"+ index +"Trow").append("<td id='"+ index +"Tname' title='"+element.filename+"'>"+element.filename+"</td>");
+										$("#"+ index +"Trow").append("<td class='alignright' id='"+ index +"Tsize'>"+element.filesize+"</td>");
+										$("#"+ index +"Trow").append("<td class='alignright'><span id='"+ index +"Tusb'> </span>"
+											+ "<input class='action' id='"+ index +"Trestore' type='button' onclick='restoreBackupFile(this);' value='{% trans 'action.restore' %}' />" 
+											+ "<span> </span>"
+											+ "<input class='action' id='"+ index +"Tdelete' type='button' onclick='deleteBackupFile(this);' value='{% trans 'action.delete' %}' />" 
+											+ "<span> </span>"
+											+ "<input class='action' id='"+ index +"Tdownload' type='button' onclick='window.location = &apos;{{ STATIC_URL }}backup/download/?file="+element.filepath+"&apos;' value='{% trans 'action.download' %}'/>" 
+											+ "<input id='"+ index + "Tpath' type='hidden' value='"+element.filepath+"' />"
+											+ "</td>");
+										var usbPattern = /\/media\//;
+										if(usbPattern.test(element.filepath)) {
+											$("#"+ index +"Tusb").html(usbIcon);
+										}
+										var sftpPattern = /\/SFTP\//;
+										if(sftpPattern.test(element.filepath)) {
+											$("#"+ index +"Tusb").html("SFTP");
+											$("#"+ index +"Trestore").hide();
+											$("#"+ index +"Tdelete").hide();
+										}
+										$("#backuplisttable").tablesorter({
+											sortList: [[0,1]],
+											headers: { 0: {sorter:'text'}, 1: {sorter: 'text'}, 2: {sorter: 'numeric'}, 3: {sorter: false} }
+										});
+							        });
+									$('#backuplisttable').append('</tbody>');
+									$('#backuplisttable').append('</table>');
+									
+									
+								},
+								error : function() {
+									$.unblockUI();
+									$("#listProgressDiv").show();
+									$("#listProgressIndicator").css('color',
+											"red");
+									$("#listProgressIndicator")
+											.html('Failure');
+								},
+								complete : function() {
+									$("#listProgressIndicator").html("");
+									$("#i1div").height("10px");
+									$("#i1div").html("");
+									$("#listProgressDiv").hide();
+								}
+							});
+				}
+				
+			</script>
+
+			<fieldset style="padding: 10px; margin-top: 20px;">
+				<legend style="font-weight: bold">
+					{% trans "restore.list.legend" %}
+				</legend>
+
+				<div id="listProgressDiv"
+					style="padding-bottom: 5px; text-align: center;">
+					<span style="font-weight: normal; font-size: 1em;"
+						id="listProgressIndicator"></span>
+				</div>
+				<script type="text/javascript">
+					$("#listProgressDiv").hide();
+				</script>
+
+				<div id="tableContainer" class="tableContainer">
+					
+				</div>
+			</fieldset>
+			 
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+

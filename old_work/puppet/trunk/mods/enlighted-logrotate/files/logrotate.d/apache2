@@ -1,0 +1,16 @@
+# This file is managed by puppet
+/var/log/apache2/*.log {
+	weekly
+	missingok
+	rotate 7 
+	compress
+	delaycompress
+	notifempty
+	create 644 root adm
+	sharedscripts
+	postrotate
+                if /etc/init.d/apache2 status > /dev/null ; then \
+                    /etc/init.d/apache2 reload > /dev/null; \
+                fi;
+	endscript
+}

@@ -1,0 +1,110 @@
+@namespace s "library://ns.adobe.com/flex/spark"; 
+@namespace mx "library://ns.adobe.com/flex/mx";
+@namespace components "com.enlightedinc.components.*";
+
+.alertBox
+{
+	background-color : #F9EDBE;
+	padding-left : 10;
+	padding-right : 10;
+	font-size : 13;
+	font-weight : bold;
+	color : #000000;
+}
+
+.pinBox
+{
+	horizontal-align :right;
+	background-color : #999999;
+	border-style : solid;
+	padding-bottom : 3;
+	padding-left : 3;
+	padding-right : 3;
+	padding-top : 3;
+}
+
+.slidingToolsWindow
+{
+	horizontal-align : center;
+	border-style : solid;
+	background-color : #CCCCCC;
+}
+
+components|PanComponent
+{
+
+	background-color : #FFFFFF;
+	border-color : #000000;
+	border-style : solid;
+}
+
+mx|PlotChart
+{
+	chart-series-styles:series1,series2,series3,series4,series5
+}
+
+.series1
+{
+	radius:8;
+}
+
+.series2
+{
+	radius:10;
+}
+
+.series3
+{
+	radius:8;
+}
+
+.series4
+{
+	radius:16;
+}
+
+.series5
+{
+	radius:10;
+}
+
+.toolTipRenderer
+{
+	corner-radius : 5;
+	horizontal-align : center;
+	vertical-align : middle;
+	border-style : solid;
+	background-color : #FFFFFF;
+	padding-bottom : 10;
+	padding-left : 10;
+	padding-right : 10;
+	padding-top : 10;
+	background-alpha : 0;
+}
+
+.toolTipRendererBox
+{
+	padding-bottom : 10;
+	padding-left : 10;
+	padding-right : 10;
+	padding-top : 10;
+	horizontal-align : center;
+	background-alpha : 0;
+}
+
+.fixtureTooltipRenderer
+{
+	corner-radius : 5;
+	vertical-align : middle;
+	background-alpha : 0;
+	horizontal-align : center;
+	vertical-align : middle;
+}
+
+.fixtureLabelRenderer
+{
+	padding-bottom : 5;
+	padding-left : 5;
+	padding-right : 5;
+	padding-top : 5;
+}

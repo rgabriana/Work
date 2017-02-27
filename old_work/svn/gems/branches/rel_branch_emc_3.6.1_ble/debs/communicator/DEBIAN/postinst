@@ -1,0 +1,6 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+source /etc/environment
+
+sudo bash $OPT_ENLIGHTED/communicator/setcron_communicator.sh
+chmod +x $OPT_ENLIGHTED/communicator/scripts/ems_communicator.sh 

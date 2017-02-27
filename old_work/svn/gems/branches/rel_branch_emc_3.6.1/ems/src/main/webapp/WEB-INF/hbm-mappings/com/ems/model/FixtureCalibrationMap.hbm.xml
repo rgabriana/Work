@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.FixtureCalibrationMap" table="fixture_calibration_map">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">fixture_calibration_map_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-Area.xml 
+					containing the additional parameters and place it in your merge dir. -->
+			</generator>
+		</id>
+
+		<many-to-one name="fixtureLampCalibration" class="com.ems.model.FixtureLampCalibration"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="fixture_lamp_calibration_id" />
+
+		<property name="volt" type="java.lang.Double" update="true"
+			insert="true" column="volt" />
+		<property name="power" type="java.lang.Double" update="true"
+			insert="true" column="power" />
+		<property name="lux" type="java.lang.Double" update="true"
+			insert="true" column="lux" />
+		<property name="enabled" type="java.lang.Boolean" update="true"
+			insert="true" column="enabled" />
+	</class>
+</hibernate-mapping>

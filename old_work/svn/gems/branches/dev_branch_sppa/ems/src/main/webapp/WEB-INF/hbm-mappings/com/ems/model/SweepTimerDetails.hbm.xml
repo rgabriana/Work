@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+<hibernate-mapping>
+    <class
+        name="com.ems.model.SweepTimerDetails"
+        table="sweep_timer_details"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">sweep_timer_details_seq</param>
+            </generator>
+        </id>
+
+        <many-to-one
+            name="sweepTimer"
+            class="com.ems.model.SweepTimer"
+            update="false"
+            insert="true"
+            cascade="none"
+            outer-join="auto"
+            column="sweep_timer_id"
+        />
+        
+        <property
+            name="day"
+            update="true"
+            insert="true"
+            column="day_of_week"
+        >
+        	<type name="org.hibernate.type.EnumType">
+				<param name="enumClass">com.ems.types.DayType</param>
+				<param name="type">12</param>
+			</type>
+        </property>
+
+        <property
+            name="shortOrder"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="short_order"
+        />
+        
+        <property
+            name="overrideTimer"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="override_timer"
+        />
+
+		<property name="startTime1" type="java.lang.String" update="true"
+			insert="true" column="start_time_1" />
+
+		<property name="endTime1" type="java.lang.String" update="true"
+			insert="true" column="end_time_1" />
+
+		<property name="startTime2" type="java.lang.String" update="true"
+			insert="true" column="start_time_2" />
+
+		<property name="endTime2" type="java.lang.String" update="true"
+			insert="true" column="end_time_2" />
+		
+		<property name="startTime3" type="java.lang.String" update="true"
+			insert="true" column="start_time_3" />
+
+		<property name="endTime3" type="java.lang.String" update="true"
+			insert="true" column="end_time_3" />
+
+    </class>
+</hibernate-mapping>

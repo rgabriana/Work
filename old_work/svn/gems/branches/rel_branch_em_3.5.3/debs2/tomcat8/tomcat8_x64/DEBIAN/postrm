@@ -1,0 +1,3 @@
+#!/bin/bash -x
+sudo rm -rf /opt/tomcat
+sudo userdel tomcat

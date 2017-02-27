@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.Ballast"
+        table="ballasts"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+            	<param name="sequence">ballast_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-Ballast.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="itemNum"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="item_num"
+        />
+
+        <property
+            name="ballastName"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="ballast_name"
+        />
+
+        <property
+            name="inputVoltage"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="input_voltage"
+        />
+
+        <property
+            name="lampType"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="lamp_type"
+        />
+
+        <property
+            name="lampNum"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="lamp_num"
+        />
+
+        <property
+            name="ballastFactor"
+            type="java.lang.Double"
+            update="true"
+            insert="true"
+            column="ballast_factor"
+        />
+
+        <property
+            name="voltPowerMapId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="volt_power_map_id"
+        />
+
+        <property
+            name="wattage"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="wattage"
+        />
+
+        <property
+            name="ballastManufacturer"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="manufacturer"
+        />
+        
+        <property
+            name="displayLabel"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="display_label"
+        />
+        
+        <property
+            name="baselineLoad"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="baseline_load"
+        />
+        
+         <property
+            name="isDefault"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="is_default"
+        />
+
+        <property
+            name="ballastType"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="ballast_type"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-Ballast.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.DRTarget"
+        table="dr_target"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">dr_target_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-DRTarget.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="priceLevel"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="price_level"
+        />
+
+        <property
+            name="pricing"
+            type="java.lang.Double"
+            update="true"
+            insert="true"
+            column="pricing"
+        />
+
+        <property
+            name="duration"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="duration"
+        />
+
+        <property
+            name="targetReduction"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="target_reduction"
+        />
+
+        <property
+            name="enabled"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="enabled"
+        />
+
+        <property
+            name="startTime"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="start_time"
+        />
+        
+        <property
+            name="drIdentifier"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="dr_identifier"
+        />
+        
+        <property
+            name="drStatus"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="dr_status"
+        />
+        
+        <property
+            name="drType"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="dr_type"
+        />
+
+        <property
+            name="optIn"
+            type="java.lang.Boolean"
+            update="true"
+            insert="true"
+            column="opt_in"
+        />
+
+        <property
+            name="priority"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="priority"
+        />
+        
+        <property
+            name="uid"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="uid"
+        />
+        
+        <property
+            name="startAfter"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="start_after"
+        />
+        
+        <property
+            name="jitter"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="jitter"
+        />
+        
+        <property
+            name="cancelTime"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="cancel_time"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-DRTarget.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

@@ -1,0 +1,2 @@
+#!/bin/bash
+find -L /usr/share/zoneinfo -type f -not -path "*right/**" -not -path "*posix/**" -not -path "*System*/**" -not -path "*.tab" -not -path "*posixrules" -not -path "*localtime*" | sort |  sed 's/\/usr\/share\/zoneinfo\///' 

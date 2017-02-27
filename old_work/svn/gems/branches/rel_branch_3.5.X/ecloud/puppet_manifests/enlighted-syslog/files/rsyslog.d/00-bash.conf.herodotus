@@ -1,0 +1,7 @@
+#Log Kernel generated Bash log to file
+$template Remote, "syslog_archive/%FROMHOST%/%PROGRAMNAME%
+:msg,contains," bash " ?Remote
+& stop
+##########################################
+# This file is being controlled by puppet #
+###########################################

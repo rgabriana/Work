@@ -1,0 +1,7 @@
+source /etc/environment
+if [ `psql -q -Upostgres ems -t -c "select count(*) from users"`  ]
+    then
+	echo "upgrade"
+    else
+        su postgres -c $ENLIGHTED_HOME/installdb.sh > $ENLIGHTED_HOME/installdb.log
+fi

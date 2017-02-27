@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" creationComplete="initComponent()">
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="MMM DD, YYYY"/>
+		
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.common.CountsCalculator;
+			import com.enlightedinc.events.EnergySummaryDockEvent;
+			import com.enlightedinc.events.EnergySummaryFilterEvent;
+			import com.enlightedinc.events.LocationServiceEvent;
+			import com.enlightedinc.utils.GlobalUtils;
+			
+			import mx.collections.ArrayCollection;
+			import mx.core.FlexGlobals;
+			[Bindable]
+			private var headerLabel:String;
+			[Bindable]
+			private var currentPath:String;
+			[Bindable]
+			private var application:Object = FlexGlobals.topLevelApplication;
+			private var fromDate:String;  
+			private var toDate:String;  
+			[Bindable]
+			private var startTime:String;
+			[Bindable]
+			private var endTime:String;
+			
+			private function initComponent():void{
+				application.energySummaryView.addEventListener(LocationServiceEvent.LOCATION_CHANGE,locationChangeHandler);
+				//currentPath= "EnlightedInc->Main Campus->HQ Building->Engineering Floor";  
+			}
+			public function setGraphHeader(tdate:Date,fDate:Date):void{
+				application.energySummaryView.addEventListener(LocationServiceEvent.LOCATION_CHANGE,locationChangeHandler);
+				var diff:Number = GlobalUtils.dateCompare(fDate,new Date());
+				// If toDate is less than current date then
+				if(diff==-1)
+				{
+					//startTime = "00:00 AM";
+					//endTime ="12:00 PM";
+				}else
+				{
+					application.isFilterSelected = false;
+				}
+				dateFormatter.formatString="MMM DD, YYYY";
+				fromDate = dateFormatter.format(tdate);//fromDate is the latest date (current date)
+				toDate= dateFormatter.format(fDate); //toDate is the older date (current date - delta)
+				headerLabel = "Electricity (kWh) for "+fromDate + " "+ startTime +" to "+ toDate + " "+ endTime; 
+				legendTitle.text= "Energy Usage";
+			}
+			public function setHeaderTitle():void{
+				calculateHighLowTime();
+				var currentUnit:String = CountsCalculator.getInstance().currentUnitSelection;
+				if(currentUnit == Constants.POWER_UNIT)
+				{
+					headerLabel = "Electricity (kWh)"+ " for "+fromDate + " "+ startTime+" to "+ toDate+ " "+ endTime;
+					legendTitle.text= "Energy Usage";
+				}else if(currentUnit == Constants.CARBON_UNIT)
+				{
+					headerLabel = "CO2 (tons)" + " for "+fromDate + " "+ startTime +" to "+ toDate + " "+ endTime;
+					legendTitle.text= "CO2 Emissions";
+				}
+				else if(currentUnit == Constants.CURRENCY_UNIT)
+				{
+					headerLabel = "Cost ($)" + " for "+fromDate + " "+ startTime+" to "+ toDate+ " "+ endTime;
+					legendTitle.text= "Cost";
+				}
+				
+			}
+			private function locationChangeHandler(e:LocationServiceEvent ):void
+			{
+				e.currentTarget.removeEventListener(LocationServiceEvent.LOCATION_CHANGE,locationChangeHandler);
+				if(e.location!=null || e.location !="")
+				currentPath = e.location;
+			}
+			
+			private function calculateHighLowTime():void
+			{
+				var ecRawData:ArrayCollection = CountsCalculator.getInstance().energyConsumptionRawDataCollection;
+				var currentFixedPeriod :String = application.currentFixedperiod;
+				var currenTime:Date = new Date();
+				dateFormatter.formatString="KK:NN A";
+				if(ecRawData && ecRawData.length>0)
+				{
+					var timeStamp:String =ecRawData[0].captureon;
+					startTime = dateFormatter.format(timeStamp);
+					var endTimeStr:String = ecRawData[ecRawData.length-1].captureon;
+					if(!application.isFilterSelected)
+					{
+						if(currentFixedPeriod.toUpperCase() == Constants.DAY.toUpperCase())
+						{
+							if(endTimeStr)
+							endTime = dateFormatter.format(endTimeStr);
+							else
+								endTime = startTime;
+						}else
+						{
+							dateFormatter.formatString="KK:00 A";
+							endTime = dateFormatter.format(currenTime);
+						} 
+					}
+				}else
+				{
+					startTime = "";
+					endTime ="";
+				}
+			}
+		]]>
+	</fx:Script>
+	<s:VGroup width="100%">
+		<s:HGroup verticalAlign="middle" width="100%" paddingLeft="5">
+			<s:Group id="tasktuneupsaving">
+				<s:Rect height="10" width="30" >
+					<s:fill>
+						<mx:LinearGradient>
+							<mx:entries>
+								<mx:GradientEntry 
+									color="0xff9900" 
+									ratio="0" 
+									alpha="1"
+									/>
+								<mx:GradientEntry 
+									color="0xffb23e" 
+									ratio=".33" 
+									alpha="1"
+									/>
+							</mx:entries>
+						</mx:LinearGradient>
+					</s:fill>
+				</s:Rect>
+			</s:Group>
+			<s:Label id="legendTitle" text="" styleName="actualEnergyUsedHeader"/>
+			<mx:Spacer width="20%"/>
+			<s:Label id="energyGraphHeader" text="{headerLabel}" styleName="graphHeaderStyle"/>	
+		</s:HGroup>
+		<s:Label id="breadcrumLabel" text="{currentPath}" styleName="graphHeaderStyle"/>
+	</s:VGroup>
+</s:HGroup>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.GemsGroupFixture"
+        table="gems_group_fixture"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">gems_group_fixture_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-GemsGroupFixture.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <many-to-one
+            name="group"
+            class="com.ems.model.GemsGroup"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="group_id"
+        />
+
+        <many-to-one
+            name="fixture"
+            class="com.ems.model.Fixture"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="fixture_id"
+        />
+        
+        <property
+            name="needSync"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="need_sync"
+        />
+        
+        <property
+            name="userAction"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="user_action"
+        />
+
+	<one-to-one name="motionGrpFxDetails" property-ref="gemsGroupFixture" cascade="all"></one-to-one>
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-GemsGroupFixture.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

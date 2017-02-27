@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.Role" table="roles" mutable="false">
+
+		<cache usage="read-only" />
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">role_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-Role.xml 
+					containing the additional parameters and place it in your merge dir. -->
+			</generator>
+		</id>
+
+		<property name="roleType" update="true" insert="true" column="name">
+			<type name="org.hibernate.type.EnumType">
+				<param name="enumClass">com.ems.types.RoleType</param>
+				<!-- This is little wierd but hibernate takes number 12 for the String 
+					for enum in hbm file -->
+				<param name="type">12</param>
+			</type>
+		</property>
+
+
+		<set name="modulePermissions" lazy="true" inverse="true" cascade="delete"
+			sort="unsorted" outer-join="false">
+
+			<key column="role_id">
+			</key>
+
+			<one-to-many class="com.ems.model.ModulePermission" />
+
+		</set>
+
+		<!-- To add non XDoclet property mappings, create a file named hibernate-properties-Role.xml 
+			containing the additional properties and place it in your merge dir. -->
+
+	</class>
+
+</hibernate-mapping>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+<tiles-definitions>
+	<definition name="default-setup" template="/pages/tiles/setup.jsp">
+		<put-attribute name="header" value="/pages/main/header.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/pages/tiles/footer.jsp" />
+	</definition>
+	<definition name="companySetup" extends="default-setup">
+		<put-attribute name="body" value="/pages/setup/companySetup.jsp" />
+	</definition>
+	<definition name="createSite" extends="default-setup">
+		<put-attribute name="body" value="/pages/setup/createSite.jsp" />
+	</definition>
+	<definition name="termAndConditions" template="/pages/tiles/TermsAndConditions.jsp">
+	</definition>
+</tiles-definitions>

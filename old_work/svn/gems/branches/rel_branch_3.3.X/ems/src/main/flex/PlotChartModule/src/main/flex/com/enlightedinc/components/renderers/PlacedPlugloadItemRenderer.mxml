@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   xmlns:mx="library://ns.adobe.com/flex/mx" 
+		   width="100%" height="100%"
+		   name="{Constants.PLACED_PLUGLOAD_RENDERER}"
+		   buttonMode="true" >
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.assets.images.Images;
+			import com.enlightedinc.components.Constants;
+			import mx.core.FlexGlobals;
+			
+			public function onUpdateComplete() : void
+			{
+				if(data.item.isHopper == 1) 
+				{
+					placedPlugloadImage.source = Images.PlugloadDescribedLocatedIdentifiedHopper ;
+				}
+				else
+				{
+					placedPlugloadImage.source = Images.PlugloadDescribedLocatedIdentified ;
+				}
+			}
+
+		]]>
+	</fx:Script>
+	
+	<mx:Image id="placedPlugloadImage" width="16" height="16"/>
+	
+</mx:Canvas>

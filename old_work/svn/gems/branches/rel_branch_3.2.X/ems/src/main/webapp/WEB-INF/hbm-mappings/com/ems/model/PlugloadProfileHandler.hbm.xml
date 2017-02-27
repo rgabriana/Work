@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.PlugloadProfileHandler" table="plugload_profile_handler">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">plugload_profile_handler_seq</param>
+
+			</generator>
+		</id>
+
+		<many-to-one name="morningProfile" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="morning_profile_id" />
+
+		<many-to-one name="dayProfile" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="day_profile_id" />
+
+		<many-to-one name="eveningProfile" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="evening_profile_id" />
+
+		<many-to-one name="nightProfile" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="night_profile_id" />
+
+		<many-to-one name="morningProfileWeekEnd" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="morning_profile_weekend" />
+
+		<many-to-one name="dayProfileWeekEnd" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="day_profile_weekend" />
+
+		<many-to-one name="eveningProfileWeekEnd" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="evening_profile_weekend" />
+
+		<many-to-one name="nightProfileWeekEnd" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="night_profile_weekend" />
+
+		<many-to-one name="morningProfileHoliday" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="morning_profile_holiday" />
+
+		<many-to-one name="dayProfileHoliday" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="day_profile_holiday" />
+
+		<many-to-one name="eveningProfileHoliday" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="evening_profile_holiday" />
+
+		<many-to-one name="nightProfileHoliday" class="com.ems.model.PlugloadProfile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="night_profile_holiday" />
+
+		<many-to-one name="plugloadProfileConfiguration"
+			class="com.ems.model.PlugloadProfileConfiguration" cascade="save-update"
+			outer-join="auto" update="true" insert="true" column="profile_configuration_id" />
+
+
+
+		<property name="heartbeatInterval" type="java.lang.Integer"
+			update="true" insert="true" column="heartbeat_interval" />
+		<property name="heartbeatLingerPeriod" type="java.lang.Integer"
+			update="true" insert="true" column="heartbeat_linger_period" />
+		<property name="noOfMissedHeartbeats" type="java.lang.Integer"
+			update="true" insert="false" column="no_of_missed_heartbeats" />
+		<property name="safetyMode" type="java.lang.Integer" update="true"
+			insert="true" column="safety_mode" />
+		<property name="profileChecksum" type="java.lang.Short"
+			update="true" insert="true" column="profile_checksum" />
+
+		<property name="globalProfileChecksum" type="java.lang.Short"
+			update="true" insert="true" column="global_profile_checksum" />
+
+		<property name="standaloneMotionOverride" type="java.lang.Short"
+			update="true" insert="true" column="standalone_motion_override" />
+
+		<property name="drReactivity" type="java.lang.Byte" update="true"
+			insert="true" column="dr_reactivity" />
+
+
+
+		<property name="initialOnTime" type="java.lang.Integer"
+			update="true" insert="true" column="initial_on_time" />
+
+		<property name="initialOnLevel" type="java.lang.Byte" update="true"
+			insert="true" column="initial_on_level" />
+
+		<property name="profileGroupId" type="java.lang.Short"
+			update="true" insert="true" column="profile_group_id" />
+
+		<property name="profileFlag" type="java.lang.Byte" update="true"
+			insert="true" column="profile_flag" />
+
+
+		<property name="drLowLevel" type="java.lang.Byte" update="true"
+			insert="true" column="dr_low_level" />
+
+		<property name="drModerateLevel" type="java.lang.Byte"
+			update="true" insert="true" column="dr_moderate_level" />
+
+		<property name="drHighLevel" type="java.lang.Byte" update="true"
+			insert="true" column="dr_high_level" />
+
+		<property name="drSpecialLevel" type="java.lang.Byte" update="true"
+			insert="true" column="dr_special_level" />
+
+
+
+	</class>
+
+</hibernate-mapping>

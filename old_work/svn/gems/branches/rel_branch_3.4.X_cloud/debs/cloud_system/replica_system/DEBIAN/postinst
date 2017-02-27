@@ -1,0 +1,33 @@
+#!/bin/bash -x
+# Run this after installing this package, it requires root privilage
+
+REPLICA_HOME_DIR=/home/enlighted/replica_files
+TOMCAT_ENLIGHTED=/var/lib/tomcat6/Enlighted
+sudo cp $REPLICA_HOME_DIR/em_cloud_instance.war /var/lib/tomcat6/webapps
+sudo cp $REPLICA_HOME_DIR/connection_config.properties  $TOMCAT_ENLIGHTED/
+sudo chown tomcat6:tomcat6 $TOMCAT_ENLIGHTED/connection_config.properties
+sudo chmod 777 $TOMCAT_ENLIGHTED/connection_config.properties
+sudo cp -R $REPLICA_HOME_DIR/ems_log4j  $TOMCAT_ENLIGHTED/
+sudo chown -R tomcat6:tomcat6 $TOMCAT_ENLIGHTED/ems_log4j
+file=$TOMCAT_ENLIGHTED/logs
+if [ ! -e "$file" ] ; then
+	mkdir $TOMCAT_ENLIGHTED/logs
+	sudo chown -R tomcat6:tomcat6 $TOMCAT_ENLIGHTED/logs
+fi 
+
+sudo ufw allow 5432
+
+sudo cp $REPLICA_HOME_DIR/etc/apache2/apache2.conf /etc/apache2/
+sudo sed -i 's/\(CustomLog[\ ]*\/var\/log\/apache2\/access.log[\ ]*\).*/\1cust/' /etc/apache2/sites-enabled/000-default-replica
+
+#Restart all the services changes,used, installed,upgraded
+echo "Restarting all services"
+sudo service tomcat6 restart
+sudo service apache2 restart 
+sudo service postgresql restart
+sudo service cron restart
+
+
+
+
+

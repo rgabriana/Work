@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+<tiles-definitions>
+	<definition name="default-main" template="/pages/tiles/facilitiessetup.jsp">
+		<put-attribute name="header" value="/pages/main/header.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/pages/tiles/footer.jsp" />
+	</definition>
+	
+	<definition name="error/generic" extends="default-main">
+        <put-attribute name="body" value="/pages/error/generic.jsp" />
+    </definition>
+    
+    <definition name="max-upload-error" template="/pages/tiles/facilitiessetup.jsp">
+		<put-attribute name="header" value="" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="" />
+	</definition>
+	<definition name="error/maxuploaderror" extends="max-upload-error">
+        <put-attribute name="body" value="/pages/error/maxUploadError.jsp" />
+    </definition>
+	
+	<definition name="header-right-footer" extends="default-main">
+		<put-attribute name="header" value="/pages/main/header.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/pages/tiles/footer.jsp" />
+	</definition>
+	
+	<definition name="customer-gmb-report" extends="default-main">
+		<put-attribute name="header" value="" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/pages/tiles/footer.jsp" />
+	</definition>
+	
+	<definition name="facilities/tree" template="/pages/tiles/facilitiestreeviewsetup.jsp">
+		<put-attribute name="left" value="/pages/facilities/facility_tree.jsp" />
+	</definition>
+
+	<definition name="default-dialog" template="/pages/tiles/dialogtemplate.jsp">
+		<put-attribute name="body" value="" />
+	</definition>
+	
+	<definition name="default-frame" template="/pages/tiles/tabframetemplate.jsp">
+		<put-attribute name="body" value="" />
+	</definition>
+	
+	<definition name="dialog-with-tree" template="/pages/tiles/dialog_with_tree_template.jsp">
+		<put-attribute name="left" value="/pages/facilities/facility_tree.jsp" />
+		<put-attribute name="body" value="" />
+	</definition>
+
+	<definition name="index" extends="default-main">
+		<put-attribute name="body" value="/index.jsp" />
+	</definition>
+	
+	<definition name="createCustomer" extends="header-right-footer">
+		<put-attribute name="body" value="/pages/setup/create_edit_customer.jsp" />
+	</definition>
+	
+	<definition name="listUnregEms" extends="header-right-footer">
+		<put-attribute name="body" value="/pages/eminstance/eminstance_unreg_list.jsp" />
+	</definition>
+	
+	<definition name="eminstance/viewdetails" extends="header-right-footer">
+		<put-attribute name="body" value="/pages/eminstance/eminstance_main.jsp" />
+	</definition>
+		
+	<definition name="listEmStatus" extends="header-right-footer">
+		<put-attribute name="body" value="/pages/eminstance/eminstance_status_list.jsp" />
+	</definition>
+	
+	<definition name="loadEmTaskListByEmInstanceId" extends="default-frame">
+		<put-attribute name="body" value="/pages/eminstance/eminstance_task_list.jsp" />
+	</definition>
+	
+	<definition name="replicaserver/list" extends="header-right-footer">
+		<put-attribute name="body" value="/pages/replicaserver/replicaserver_list.jsp" />
+	</definition>
+		
+	<definition name="setup/edit/customer" extends="default-dialog">
+		<put-attribute name="body" value="/pages/setup/customer_edit_dialog.jsp" />
+	</definition>
+	
+	<definition name="setup/gmb/customerReport" extends="customer-gmb-report">
+		<put-attribute name="body" value="/pages/setup/customer_gmb_report.jsp" />
+	</definition>
+	
+	<definition name="setup/gmb/customerInvoice" extends="customer-gmb-report">
+		<put-attribute name="body" value="/pages/setup/customer_gmb_invoice.jsp" />
+	</definition>
+	
+	<definition name="customer/invoice" extends="default-dialog">
+		<put-attribute name="body" value="/pages/setup/customer_invoice_prompt.jsp" />
+	</definition>
+	
+	<definition name="setup/gmb/customerInvoicePrompt" extends="default-dialog">
+		<put-attribute name="body" value="/pages/setup/customer_gmb_invoice_prompt.jsp" />
+	</definition>
+	
+	<definition name="setup/add/customer" extends="default-dialog">
+		<put-attribute name="body" value="/pages/setup/customer_edit_dialog.jsp" />
+	</definition>
+	
+	<definition name="eminstance/list" extends="header-right-footer">
+		<put-attribute name="body" value="/pages/eminstance/eminstance_list.jsp" />
+	</definition>
+	
+	<definition name="upgrades/list" extends="header-right-footer">
+		<put-attribute name="body" value="/pages/upgrades/upgrades_list.jsp" />
+	</definition>
+	
+	<definition name="emInstance/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/eminstance/emInstance_details.jsp" />
+	</definition>
+	
+	<definition name="replicaserver/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/replicaserver/replicaserver_details.jsp" />
+	</definition>
+	
+	<definition name="emActivate/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/eminstance/emActivate_details.jsp" />
+	</definition>
+	
+	<definition name="emScheduleUpgrade/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/eminstance/emScheduleUpgrade_details.jsp" />
+	</definition>
+	
+	<definition name="scheduleEmUpgrade/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/eminstance/eminstance_task_details.jsp" />
+	</definition>
+	
+	<definition name="loadEmEvents" extends="default-frame">
+		<put-attribute name="body" value="/pages/eminstance/emevents_list.jsp" />
+	</definition>
+	  
+	<definition name="eminstance/viewemstats" extends="header-right-footer">
+		<put-attribute name="body" value="/pages/emstats/emstats_list.jsp" />
+	</definition>
+	
+	<definition name="eminstance/loademstats" extends="default-frame">
+		<put-attribute name="body" value="/pages/emstats/emstats_eminstance_list.jsp" />
+	</definition>
+	
+	<definition name="eminstance/loademstate" extends="default-frame">
+		<put-attribute name="body" value="/pages/emstate/emstate_eminstance_list.jsp" />
+	</definition>
+	
+	<definition name="eminstance/detailsView" extends="default-frame">
+		<put-attribute name="body" value="/pages/eminstance/eminstance_details_view.jsp" />
+	</definition>
+	
+	
+	<definition name="header-left-right-footer" template="/pages/tiles/facilitiestreeviewsetup.jsp">
+		<put-attribute name="header" value="/pages/main/header.jsp" />
+		<put-attribute name="left" value="/pages/facilities/facility_tree.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/pages/tiles/footer.jsp" />
+	</definition>	
+	
+	<definition name="facilities/home" extends="header-left-right-footer">
+		<put-attribute name="body" value="/pages/facilities/facilities.jsp" />
+	</definition>
+
+	<definition name="eminstance/map" extends="header-right-footer">
+		<put-attribute name="body" value="/pages/eminstance/eminstance_mapping.jsp" />
+	</definition>
+
+
+</tiles-definitions>

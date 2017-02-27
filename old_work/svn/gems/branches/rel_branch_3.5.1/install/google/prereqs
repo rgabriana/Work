@@ -1,0 +1,1 @@
+sudo apt-get -y install authbind tomcat6 postgresql postgresql-pltcl postgresql-plperl

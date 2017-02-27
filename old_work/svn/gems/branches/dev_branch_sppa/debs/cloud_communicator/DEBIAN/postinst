@@ -1,0 +1,12 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+
+if [ ! -f /var/lib/tomcat6/Enlighted/communicator.properties ]
+then
+        cp /opt/enLighted/communicator.properties /var/lib/tomcat6/Enlighted/
+    	sudo chmod 777 /var/lib/tomcat6/Enlighted/communicator.properties
+    	sudo chown tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/communicator.properties 
+fi
+
+sudo bash /opt/enLighted/communicator/communicatorsetcron.sh
+sudo service cron restart

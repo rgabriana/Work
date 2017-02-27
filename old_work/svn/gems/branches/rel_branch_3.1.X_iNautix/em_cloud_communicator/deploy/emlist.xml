@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sppa>
+	<server>in-pu-m-d-6854f5000006.enlightedcloud.net</server>
+	<port>443</port>
+	<emlist>
+		<em>
+			<mac>68:54:f1:00:23:77</mac>
+			<version>2.2.0.200</version>
+		</em>
+	</emlist>
+</sppa>

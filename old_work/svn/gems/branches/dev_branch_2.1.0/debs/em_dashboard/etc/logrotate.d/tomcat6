@@ -1,0 +1,8 @@
+/var/lib/tomcat6/logs/catalina.out {  
+	 copytruncate  
+	 daily  
+	 rotate 7  
+	 compress  
+	 missingok  
+	 size 10M  
+}  

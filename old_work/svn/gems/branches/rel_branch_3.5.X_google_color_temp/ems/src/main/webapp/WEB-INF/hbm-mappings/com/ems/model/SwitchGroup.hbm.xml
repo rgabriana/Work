@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.SwitchGroup"
+        table="switch_group"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">switch_group_seq</param>
+            </generator>
+        </id>
+
+        <property
+            name="groupNo"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="group_no"
+        />
+        
+       <many-to-one name="gemsGroup" class="com.ems.model.GemsGroup"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="gems_group_id" />
+        
+        <property
+            name="fixtureVersion"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="fixture_version"
+        />
+    </class>
+
+</hibernate-mapping>

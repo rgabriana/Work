@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.enlightedinc.hvac.model.SensorHistory" table="sensor_history">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+		</id>
+		
+		<property name="macAddress" type="java.lang.String" update="true"
+			insert="true" column="mac_address" />
+
+		<property name="captureAt" type="java.util.Date" update="true"
+			insert="true" column="capture_at" />
+
+		<property name="motionBits" type="java.lang.Long" update="true"
+			insert="true" column="motion_bits" />
+
+		<property name="avgTemperature" type="java.lang.Short" update="true"
+			insert="true" column="avg_temperature" />
+
+		<property name="avgAmbientLight" type="java.lang.Short" update="true"
+			insert="true" column="avg_ambient_light" />
+
+		<property name="zeroBucket" type="java.lang.Short" update="true"
+			insert="true" column="zero_bucket" />
+			
+        <property
+            name="powerUsed"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="power_used"
+        />
+        
+        <property
+            name="basePowerUsed"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="base_power_used"
+        />
+	  
+	</class>
+
+</hibernate-mapping>

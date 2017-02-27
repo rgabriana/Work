@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.Building"
+        table="building"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">building_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-Building.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="name"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="name"
+        />
+
+        <many-to-one
+            name="campus"
+            class="com.ems.model.Campus"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="campus_id"
+        />
+
+        <set
+            name="floors"
+            lazy="true"
+            inverse="true"
+            cascade="delete"
+            sort="unsorted"
+            outer-join="false"
+        >
+
+            <key
+                column="building_id"
+            >
+            </key>
+
+            <one-to-many
+                  class="com.ems.model.Floor"
+            />
+
+        </set>
+
+        <many-to-one
+            name="profileHandler"
+            class="com.ems.model.ProfileHandler"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="profile_handler_id"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-Building.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+        <many-to-one
+            name="tenant"
+            class="com.ems.model.Tenant"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="tenant_id"
+        />
+        
+		<property name="sweepTimerId" type="java.lang.Long" update="true"
+			insert="true" column="sweep_timer_id" />
+		
+		<property
+	        name="latitude"
+	        type="java.lang.Float"
+	        update="true"
+	        insert="true"
+	        column="latitude"
+	    />	
+	    <property
+	        name="longitude"
+	        type="java.lang.Float"
+	        update="true"
+	        insert="true"
+	        column="longitude"
+	    />
+	    
+	    <property
+	        name="useOrgLocation"
+	        type="java.lang.Boolean"
+	        update="true"
+	        insert="true"
+	        column="use_org_location"
+	    />
+	    
+	    <property
+        name="visible"
+        type="java.lang.Boolean"
+        update="true"
+        insert="true"
+        column="visible"
+        />
+
+	<property
+            name="uid"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="uid"
+        />
+		
+    </class>
+
+</hibernate-mapping>

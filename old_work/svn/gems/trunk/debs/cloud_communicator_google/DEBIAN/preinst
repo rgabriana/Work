@@ -1,0 +1,52 @@
+#!/bin/bash -x
+source /etc/environment
+# Run this before removing this package, it requires root privilage
+if [ -d $OPT_ENLIGHTED/communicator ]
+then
+        echo "$OPT_ENLIGHTED/communicator Directory exists!!!!"
+else
+        echo "Creating $OPT_ENLIGHTED/communicator directory"
+        mkdir $OPT_ENLIGHTED/communicator
+fi
+if [ -d $ENLIGHTED_HOME/clouddata ]
+then
+        echo "$ENLIGHTED_HOME/clouddata Directory exists!!!!"
+else
+        echo "Creating $ENLIGHTED_HOME/clouddata directory"
+        mkdir $ENLIGHTED_HOME/clouddata
+		chown $TOMCAT_USER:$TOMCAT_USER $ENLIGHTED_HOME/clouddata
+fi
+a=0
+while [ $a -lt 10 ]
+do
+	communicatorProcess=$(ps -ef | grep -E "em_cloud_communicator\.jar")
+	if [[ $communicatorProcess =~ "em_cloud_communicator.jar" ]]
+	then
+		ps -ef | grep em_cloud_communicator.jar | grep -v grep | head -n 1 | awk -v OFS=" " '$1=$1' | cut -d" " -f2 | xargs sudo kill -9    
+	else
+		break
+	fi
+done
+
+sudo mv $OPT_ENLIGHTED/uem/communicator/start.sh $OPT_ENLIGHTED/uem/communicator/start.sh_backup
+
+a=0
+while [ $a -lt 10 ]
+do
+	communicatorProcess=$(ps -ef | grep -E "em_uem_communicator\.jar")
+	if [[ $communicatorProcess =~ "em_uem_communicator.jar" ]]
+	then
+		ps -ef | grep em_uem_communicator.jar | grep -v grep | head -n 1 | awk -v OFS=" " '$1=$1' | cut -d" " -f2 | xargs sudo kill -9    
+	else
+		break
+	fi
+done
+
+EMUEMCOMPID=`ps auxwww | grep -i EMUEMCOM | grep -v grep | awk '{print $2}'`
+if [ ! -z "${EMUEMCOMPID}" ]
+then
+	kill -9 ${EMUEMCOMPID}
+fi
+
+
+

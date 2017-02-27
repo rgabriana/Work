@@ -1,0 +1,11 @@
+Package: enlighted-replica
+Version: 3.6.0
+Section: misc
+Priority: optional
+Architecture: all
+Essential: no
+Depends: 
+Suggests: no
+Maintainer:  enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: enLighted cloud replica

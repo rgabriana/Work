@@ -1,0 +1,60 @@
+#!/bin/sh
+#
+# bacnet This shell script takes care of starting and stopping bacnet gateway.
+#
+
+BACNET_PROG="bacnetd"
+BACNET_CONF_FILE="/var/lib/tomcat6/Enlighted/bacnet.conf"
+PROCMON_CRON_FILE="/var/lib/tomcat6/Enlighted/procmon.cron"
+TMP_CRON_FILE="/tmp/procmon_cron.tmp"
+# bacnet service is started by tomcat hence using tomcat6 user.
+USERNAME="tomcat6"
+
+kill_process() {
+    local name="${BACNET_PROG}"
+    local pid=""
+
+    pid="$(pgrep ${BACNET_PROG} 2>/dev/null)"
+    kill "${pid}" 2>/dev/null
+}
+
+case "$1" in
+  start)
+    # Start daemon.
+    if $(pgrep ${BACNET_PROG} 2>/dev/null)
+    then
+    	# Stop daemon.
+        kill_process
+    fi
+    /usr/sbin/${BACNET_PROG} -f ${BACNET_CONF_FILE} &
+
+    crontab -l -u ${USERNAME} | grep -v procmon 2>/dev/null >${TMP_CRON_FILE}
+    cat ${PROCMON_CRON_FILE} 2>/dev/null >>${TMP_CRON_FILE}
+
+    # Add procmon cron entry.
+    crontab -u ${USERNAME} ${TMP_CRON_FILE} 2>/dev/null
+    rm -f ${TMP_CRON_FILE} 2>/dev/null
+    ;;
+  stop)
+    # Stop daemon.
+    # Remove procmon cron entry.
+    crontab -l -u ${USERNAME} | grep -v procmon 2>/dev/null >${TMP_CRON_FILE}
+    # Add remaining cron entries.
+    crontab -u ${USERNAME} ${TMP_CRON_FILE} 2>/dev/null
+    rm -f ${TMP_CRON_FILE} 2>/dev/null
+
+    kill_process
+    ;;
+  status)
+    ;;
+  restart)
+    $0 stop
+    $0 start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|status|restart}"
+    exit 1
+esac
+
+exit 0
+

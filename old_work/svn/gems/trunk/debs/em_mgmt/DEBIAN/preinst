@@ -1,0 +1,25 @@
+#!/bin/bash -x
+source /etc/environment
+# Run this before removing this package, it requires root privilage
+t1=$(sudo service $TOMCAT_SUDO_SERVICE status)
+if [[ $t1 =~ "is running"  ]]
+then
+        echo "Tomcat is running......."
+        sudo service $TOMCAT_SUDO_SERVICE stop
+else
+        echo "Tomcat not running ..........:"
+fi
+
+
+TOMCAT_PATH=$ENL_APP_HOME
+mkdir -p ${TOMCAT_PATH}/Enlighted/tempExtract
+
+echo "Taking backup of Existing application.."
+
+sudo cp ${TOMCAT_PATH}/webapps/ems_mgmt.war ${TOMCAT_PATH}/Enlighted/tempExtract/ems_mgmt_bkp.war
+
+echo "Undeploying application.."
+sudo rm -f ${TOMCAT_PATH}/webapps/ems_mgmt.war
+sudo rm -fr ${TOMCAT_PATH}/webapps/ems_mgmt
+sudo rm -fr ${TOMCAT_PATH}/work/Catalina/localhost/ems_mgmt
+

@@ -1,0 +1,6 @@
+dbName=em_150_2261
+masterIp=in-pu-m-kc.enlightedcloud.net
+replicaIp=in-pu-r-kc.enlightedcloud.net
+sensors=1:c9:7,1:cb:39,1:ff:7f
+appVersion=3.1.8.5390
+emMac=8c:89:a5:1f:ae:20

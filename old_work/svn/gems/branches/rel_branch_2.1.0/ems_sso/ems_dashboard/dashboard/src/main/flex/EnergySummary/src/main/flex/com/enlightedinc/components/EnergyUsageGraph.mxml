@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="100%" height="100%">
+	
+	<fx:Declarations>
+		
+		<mx:DateFormatter id="dateFormatter" formatString="MMM DD"/>
+		<mx:DateFormatter id="yearDateFormatter" formatString="MMM YYYY"/>
+		
+		<mx:SolidColor id="areaFill" color="#B78148"/>
+		
+		<mx:SolidColorStroke id="energyAxisStroke" color="#000000" weight="1" alpha=".25" caps="square"/>
+		<mx:SolidColorStroke id="costAxisStroke" color="#006400" weight="2"/>
+		
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.charts.HitData;
+			import mx.charts.chartClasses.IAxis;
+			import mx.charts.series.items.LineSeriesItem;
+			import mx.collections.ArrayCollection;
+			[Bindable]
+			public var dataPeriod:String = Constants.DAY;
+			
+			private function timeLabelFunction(categoryValue:Object, previousCategoryValue:Object, axis:CategoryAxis, categoryItem:Object) : String
+			{
+				var time:Date = new Date(Date.parse(categoryValue));
+				// TODO - Handle the dates as per local time. Currently displayed in UTC timings. Need to decide if this should be handled in Webservicec / UI.
+				// Date returned by webservices cannot be read by flex. So sliced the required values
+				if(dataPeriod == Constants.WEEK || dataPeriod == Constants.MONTH)
+				{
+					return categoryValue.slice(8,10) + "/" + categoryValue.slice(5,7) + "/" + categoryValue.slice(2,4);
+				}	
+				if(dataPeriod == Constants.DAY)
+				{
+					return categoryValue.slice(11,16);
+				}	
+				if(dataPeriod == Constants.YEAR)
+				{
+					return categoryValue.slice(5,7) + "/" + categoryValue.slice(2,4);
+				}	
+				return "";
+			}
+			
+			private function energyLabelFunction(categoryValue:Object, previousCategoryValue:Object, axis:LinearAxis) : String
+			{
+				return Number(categoryValue) + "Wh";
+			}
+			
+			private function costLabelFunction(labelValue:Object, previousLabelValue:Object, axis:IAxis):String
+			{
+				return "$ " + Number(labelValue).toFixed(4);
+			}   
+			
+			private function chartDataTipFunction(item:HitData):String 
+			{
+				if (item.element is ColumnSeries)
+				{
+					var costSavings:int = (item.item.price * 100) / item.item.basecost;
+					var energySavings:int = (item.item.EN * 100) / item.item.basepowerused;
+					
+					if (ColumnSeries(item.element) == this.actualEnergySeries)
+						return " Actual Energy: " + item.item.EN + "Wh"
+							+"\n Energy Savings: " + energySavings.toPrecision(4) + "%"
+							+"\n Actual Cost: $" + item.item.price
+							+"\n Cost Savings: " + costSavings.toPrecision(4) + "%";
+					else if (ColumnSeries(item.element) == this.baseLineEnergySeries)
+						return " BaseLine Energy: " + item.item.basepowerused
+							+"\n BaseLine Cost: $" + item.item.basecost;
+				}
+				if (item.element is LineSeries)
+				{
+					if (LineSeries(item.element) == this.costSeries)
+						return "Cost: $" + LineSeriesItem(item.chartItem).yValue;
+				}
+				return "";
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<!--<mx:Style>
+	@font-face{
+	src:url("../assets/fonts/Arial.swf");
+	fontFamily: "Arial";
+	}
+	
+	ColumnChart {
+	fontFamily: Arial;
+	fontSize: 20;
+	}
+	</mx:Style>-->
+	
+	<mx:ColumnChart id="energyUsageGraph" 
+					width="100%" height="300"
+					type="overlaid"
+					showDataTips="true"
+					columnWidthRatio="1.0"
+					dataTipFunction="chartDataTipFunction">
+		
+		<mx:horizontalAxis>
+			<mx:CategoryAxis id="dateAxis" categoryField="captureon" title="Time Interval" labelFunction="timeLabelFunction"/>
+		</mx:horizontalAxis>
+		<mx:verticalAxis>
+			<mx:LinearAxis id="energyAxis" title="Energy per day" labelFunction="energyLabelFunction"/>
+		</mx:verticalAxis>
+		
+		<!--<mx:horizontalAxisRenderers>
+			<mx:AxisRenderer axis="{dateAxis}" canDropLabels="true"/>
+		</mx:horizontalAxisRenderers>-->
+		<mx:verticalAxisRenderers>
+			<mx:AxisRenderer axis="{energyAxis}"
+							 verticalAxisTitleAlignment="vertical"/>
+			<mx:AxisRenderer axis="{costAxis}"
+							 verticalAxisTitleAlignment="vertical" placement="right" />
+		</mx:verticalAxisRenderers>
+		
+		<mx:series>
+			<mx:ColumnSeries id="baseLineEnergySeries"
+							 xField="captureon" yField="basepowerused"
+							 stroke="{energyAxisStroke}" 
+							 alpha="0.2" fill="{areaFill}"/>
+			
+			<mx:ColumnSeries id="actualEnergySeries"
+							 xField="captureon" yField="EN"
+							 stroke="{energyAxisStroke}" 
+							 alpha="0.7" fill="{areaFill}"/>
+			
+			<mx:LineSeries id="costSeries"
+						   xField="captureon" yField="price" 
+						   stroke="{costAxisStroke}">
+				<mx:lineStroke>
+					<mx:SolidColorStroke color="#006400" weight="2"/>
+				</mx:lineStroke>
+				<mx:verticalAxis>
+					<mx:LinearAxis id="costAxis" title="Cost($) per day" labelFunction="costLabelFunction"/>
+				</mx:verticalAxis>
+				<mx:itemRenderer>
+					<fx:Component>
+						<mx:DiamondItemRenderer/>
+					</fx:Component>
+				</mx:itemRenderer>
+			</mx:LineSeries>
+		</mx:series>
+		
+	</mx:ColumnChart>
+	
+</mx:VBox>

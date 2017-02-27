@@ -1,0 +1,59 @@
+{% extends "pages/layouts/mainLayout.html" %}
+
+{% load i18n %}
+
+{% load customtemplatetags %}
+
+{% block body %}
+
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.tablesorter.min.js"> </script>
+
+<div class="pgset">
+<div class="outermostdiv">
+	<div class="outerContainer">
+		<span id="userlist_header_text">{% trans "history.title" %}</span>
+    <div class="i1"></div>
+    <a style="padding-right: 20px" target="_blank" href="{{ STATIC_URL }}logs/download/?file=dailybackup"><button>{% trans "history.download.dailybackup.log" %}</button></a>
+    <a style="padding-right: 20px" target="_blank" href="{{ STATIC_URL }}logs/download/?file=tomcat"><button>{% trans "history.download.tomcat.log" %}</button></a>
+		<div style="margin-top: 15px; width:100%;">
+			<fieldset style="padding: 10px;">
+				<legend style="font-weight: bold">{% trans "history.list.legend" %}</legend>
+				<div>				
+					<div id="tableContainer">
+						<table id="logslisttable" class="tablesorter entable" width="100%">
+						<thead>
+							<tr>
+								<th>{% trans "history.label.list.modified.time" %}</th>
+								<th>{% trans "restore.label.list.file" %}</th>
+								<th>{% trans "history.label.list.download.log" %}</th>
+							</tr>
+						</thead>
+						<tbody>
+                {% for file in filelist %}
+								<tr id="{{ forloop.counter }}Trow" >
+									<td id="{{ forloop.counter }}Tdate" >{{ file.lastModifiedDate }}</td>
+									<td id="{{ forloop.counter }}Tname" >{{ file.filename }}</td>
+									<td class="alignright">
+										<a target="_blank" href="{{ STATIC_URL }}logs/download/?file={{ file.filename }}"><input class="action" id="{{ forloop.counter }}Tdownload" type="button" value="{% trans 'action.download' %}" /> </a>
+									</td>
+								</tr>
+                {% endfor %}
+						</tbody>
+						</table>
+					</div>
+				</div>
+			</fieldset>
+			</div>
+			<script type="text/javascript">
+			  $("#logslisttable").tablesorter({
+							  sortList: [[0,1]],
+							  headers: { 0: {sorter:'text'}, 1: {sorter: 'text'}, 2: {sorter: false} }
+				  });
+			</script>
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+

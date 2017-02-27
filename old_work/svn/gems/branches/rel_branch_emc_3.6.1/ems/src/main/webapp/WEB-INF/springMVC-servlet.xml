@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+ http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+ http://www.springframework.org/schema/context 
+    http://www.springframework.org/schema/context/spring-context-2.5.xsd
+    http://www.springframework.org/schema/aop 
+    http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+http://www.springframework.org/schema/mvc
+http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+
+	<mvc:annotation-driven />
+	<!-- <aop:aspectj-autoproxy />
+
+	<context:component-scan base-package="com.ems" />
+	  -->
+
+	<bean class="com.ems.mvc.util.LoggingExceptionResolver">
+		<property name="exceptionMappings">
+			<props>
+				<prop
+					key="org.springframework.web.multipart.MaxUploadSizeExceededException">error/maxuploaderror</prop>
+				<prop key="java.lang.Exception">error/generic</prop>
+
+			</props>
+		</property>
+	</bean>
+	
+	<bean id="xmlViewResolver" class="org.springframework.web.servlet.view.XmlViewResolver">
+	    <property name="location">
+	        <value>/WEB-INF/spring-pdf-views.xml</value>
+	    </property>
+    </bean>
+
+<!-- Configures Interceptors -->
+ <!-- <mvc:interceptors>
+     <mvc:interceptor>
+          <mvc:mapping path="/**"></mvc:mapping>
+          <bean class="com.ems.security.PenTestInterceptor"></bean>
+     </mvc:interceptor>
+</mvc:interceptors>  -->
+
+</beans>

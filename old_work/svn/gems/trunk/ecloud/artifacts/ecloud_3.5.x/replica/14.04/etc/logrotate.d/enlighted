@@ -1,0 +1,9 @@
+/var/log/enlighted/*
+{
+	rotate 12
+	weekly
+	create 644 enlighted enlighted
+	missingok
+	notifempty
+	delaycompress
+}

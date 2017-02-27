@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.Floor"
+        table="floor"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">floor_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-Floor.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="name"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="name"
+        />
+
+        <property
+            name="description"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="description"
+        />
+
+        <many-to-one
+            name="building"
+            class="com.ems.model.Building"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="building_id"
+        />
+
+        <set
+            name="fixtures"
+            lazy="true"
+            inverse="true"
+            cascade="delete"
+            sort="unsorted"
+            outer-join="false"
+        >
+
+            <key
+                column="floor_id"
+            >
+            </key>
+
+            <one-to-many
+                  class="com.ems.model.Fixture"
+            />
+
+        </set>
+
+        <set
+            name="areas"
+            lazy="true"
+            inverse="true"
+            cascade="delete"
+            sort="unsorted"
+            outer-join="false"
+        >
+
+            <key
+                column="floor_id"
+            >
+            </key>
+
+            <one-to-many
+                  class="com.ems.model.Area"
+            />
+
+        </set>
+
+        <many-to-one
+            name="profileHandler"
+            class="com.ems.model.ProfileHandler"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="profile_handler_id"
+        />
+
+        <property
+            name="floorPlanUrl"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="floorplan_url"
+        />
+
+        <many-to-one
+            name="planMap"
+            class="com.ems.model.PlanMap"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="plan_map_id"
+        />
+
+        <set
+            name="gateways"
+            lazy="true"
+            inverse="true"
+            cascade="delete"
+            sort="unsorted"
+            outer-join="false"
+        >
+
+            <key
+                column="floor_id"
+            >
+            </key>
+
+            <one-to-many
+                  class="com.ems.model.Gateway"
+            />
+
+        </set>
+
+        <property
+            name="noInstalledSensors"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="no_installed_sensors"
+        />
+
+        <property
+            name="noInstalledFixtures"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="no_installed_fixtures"
+        />
+        
+        <property
+            name="uploadedOn"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="floor_plan_uploaded_time"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-Floor.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+        <many-to-one
+            name="tenant"
+            class="com.ems.model.Tenant"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="tenant_id"
+        />
+        
+		<property name="sweepTimerId" type="java.lang.Long" update="true"
+			insert="true" column="sweep_timer_id" />
+			
+    </class>
+
+</hibernate-mapping>

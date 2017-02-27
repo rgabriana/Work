@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+<hibernate-mapping>
+    <class
+        name="com.ems.model.MotionBitsScheduler"
+        table="motion_bits_scheduler"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">motion_bits_scheduler_seq</param>
+            </generator>
+        </id>
+        
+        <many-to-one
+            name="motionBitGroup"
+            class="com.ems.model.GemsGroup"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="group_id"
+        />
+        
+
+		<property name="name" type="java.lang.String" update="true"
+			insert="true" column="name" />
+
+		<property name="captureStart" type="java.lang.String" update="true"
+			insert="true" column="motion_bits_capture_start" />
+
+		<property name="captureEnd" type="java.lang.String" update="true"
+			insert="true" column="motion_bits_capture_end" />
+
+		<property name="transmitFreq" type="java.lang.Integer"
+			update="true" insert="true" column="transmit_frequency" />
+
+		<property name="bitLevel" type="java.lang.Short"
+			update="true" insert="true" column="bit_level" />
+
+		<property name="daysOfWeek" type="java.lang.Short"
+			update="true" insert="true" column="days_of_week" />
+		
+		<property name="displayName" type="java.lang.String"
+			update="true" insert="true" column="display_name" />
+
+    </class>
+</hibernate-mapping>

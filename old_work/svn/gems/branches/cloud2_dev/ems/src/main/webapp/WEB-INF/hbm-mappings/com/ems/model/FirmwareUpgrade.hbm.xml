@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.FirmwareUpgrade"
+        table="firmware_upgrade"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">firmware_upgrade_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-FirmwareUpgrade.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <many-to-one
+            name="user"
+            class="com.ems.model.User"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="user_id"
+        />
+
+        <property
+            name="fileName"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="file_name"
+        />
+
+        <property
+            name="version"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="version"
+        />
+
+        <property
+            name="upgradeOn"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="upgrade_on"
+        />
+
+        <property
+            name="deviceType"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="device_type"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-FirmwareUpgrade.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

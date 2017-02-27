@@ -1,0 +1,23 @@
+#!/bin/bash -x
+
+sudo ufw allow 80
+
+
+if [ ! -f /etc/enlighted/CA/ssl/certs/ecloud_replica.pem ]
+then
+	/etc/enlighted/CA/scripts/generateClientcert.sh ecloud_replica
+fi
+
+sudo chown -R enlighted:enlighted /etc/enlighted/CA/
+
+cd /home/enlighted/upgrade/
+
+cp monitor_servers.py /home/enlighted/utils/monitoring/
+cp monitor_em.py /home/enlighted/utils/monitoring/
+
+psql -U postgres emscloud < ecloud_upgrade.sql
+sudo rm -rf /var/lib/tomcat6/webapps/ecloud*
+sudo rm -rf /var/lib/tomcat6/work/Catalina/localhost/ecloud/
+sudo cp ecloud.war /var/lib/tomcat6/webapps/
+sudo service tomcat6 restart
+sudo service apache2 restart

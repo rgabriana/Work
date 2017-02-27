@@ -1,0 +1,106 @@
+#!/bin/bash -x
+
+cd /home/enlighted/apache2/installation/
+
+sudo chmod 755 -R /var/www/em_mgmt/
+
+sudo mkdir -p /var/lib/tomcat6/Enlighted/UpgradeImages
+ 
+sudo chmod 775 /var/lib/tomcat6/Enlighted/UpgradeImages
+
+sudo chown tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/UpgradeImages
+
+sudo rm -f /media/usb
+
+sudo cp /home/enlighted/usbmount.conf /etc/usbmount/
+sudo chown root:root  /etc/usbmount/usbmount.conf
+sudo chmod 644 /etc/usbmount/usbmount.conf
+
+sudo chmod 751 /var/log/tomcat6/
+
+if [ ! -f "/var/lib/tomcat6/Enlighted/adminpasswd" ]
+then
+	adminpass=$(psql -U postgres -x ems -c "select password from users where email = 'admin' limit 1" | grep password | cut -d " " -f3)
+	if test -z "$adminpass"
+	then
+		echo -n "admin" | md5sum | cut -d" " -f1 > /var/lib/tomcat6/Enlighted/adminpasswd
+	else
+		echo "$adminpass" > /var/lib/tomcat6/Enlighted/adminpasswd
+	fi
+	sudo chmod 775 /var/lib/tomcat6/Enlighted/adminpasswd
+	sudo chown tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/adminpasswd
+fi
+
+sudo chmod 755 /bin/authadmin.sh
+
+# Remove tomcat-manager and tomcat-host-manager
+sudo rm -f /var/lib/tomcat6/conf/Catalina/localhost/manager.xml
+sudo rm -f /var/lib/tomcat6/conf/Catalina/localhost/host-manager.xml
+
+		fstabcheck=$(grep usb1 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb1"* ]]
+		then
+			echo "/dev/usb1 /media/usb1 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		fstabcheck=$(grep usb2 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb2"* ]]
+		then
+			echo "/dev/usb2 /media/usb2 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		fstabcheck=$(grep usb3 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb3"* ]]
+		then
+			echo "/dev/usb3 /media/usb3 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		fstabcheck=$(grep usb4 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb4"* ]]
+		then
+			echo "/dev/usb4 /media/usb4 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		sudo cp /home/enlighted/99-usb.rules /etc/udev/rules.d/99-usb.rules
+		sudo chown root:root /etc/udev/rules.d/99-usb.rules
+		
+		sudo cp /home/enlighted/addUSB.sh /etc/udev/addUSB.sh
+		sudo chown root:root /etc/udev/addUSB.sh
+		sudo chmod 755 /etc/udev/addUSB.sh
+		
+		sudo cp /home/enlighted/removeUSB.sh /etc/udev/removeUSB.sh
+		sudo chown root:root /etc/udev/removeUSB.sh
+		sudo chmod 755 /etc/udev/removeUSB.sh
+		
+		sudo chmod 777 /var/lib/tomcat6/Enlighted/emsmode
+		
+		sudo cp /home/enlighted/checkandsetemmode.sh /bin/checkandsetemmode.sh
+		sudo chown root:root /bin/checkandsetemmode.sh
+		sudo chmod 755 /bin/checkandsetemmode.sh
+		
+		sudo service udev restart
+		
+		sudo cp /home/enlighted/rc.local /etc/rc.local
+		sudo chown root:root /etc/rc.local
+		sudo chmod 755 /etc/rc.local
+		
+		sudo cp /home/enlighted/dailybackup.sh /opt/enLighted/DB/dailybackup.sh
+		
+		chmod 0440 ./sudoers
+		sudo cp ./sudoers /etc/
+		sudo chown root:root /etc/sudoers
+		
+		cp ./server.xml /etc/tomcat6/server.xml
+		
+		cp ./web.xml /etc/tomcat6/web.xml
+		
+		# Add www-data to tomcat6 group
+		sudo sed -i.bak  's/\(tomcat6:x:[0-9]*:\).*/\1www-data/' /etc/group
+		
+		mkdir /home/enlighted/django_cache
+		
+		sudo updatedb
+		
+
+#Future backups should not use the stale ec data which might be based on different schema.
+rm -f /opt/enLighted/DB/DBBK/daily_ec_dump.backup

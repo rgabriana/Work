@@ -1,0 +1,671 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   backgroundColor="#CCCCCC"
+			   width="100%" height="100%"
+			   xmlns:components="com.enlightedinc.components.*"
+			   creationComplete="onCreationComplete(event)"
+			   preinitialize="onPreinitialize()">
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<fx:Declarations>
+		
+		<mx:DateFormatter id="dateFormatter" formatString="YYYYMMDDJJNNSS"/>
+		
+		<s:HTTPService id="xmlHttpService"
+					   url="/ems_dashboard/services/org/load/gemdata"   
+					   resultFormat="e4x"
+					   result="xmlServiceResultHandler(event)" 
+					   fault="xmlServiceFaultHandler(event)"/>
+		
+		<s:HTTPService id="postDataService"
+					   url="/ems_dashboard/services/org/save/gemdata"   
+					   resultFormat="e4x"
+					   method="POST"
+					   contentType="application/xml"
+					   result="saveXmlServiceResultHandler(event)" 
+					   fault="saveXmlServiceFaultHandler(event)"/>
+		
+		<s:HTTPService id="removeNodeService"
+					   url="/ems_dashboard/services/org/remove/gemdata"   
+					   resultFormat="e4x"
+					   method="POST"
+					   contentType="application/xml"
+					   result="removeNodeServiceResultHandler(event)" 
+					   fault="removeNodeServiceFaultHandler(event)"/>
+		
+		<!-- Service to get Energy Usage and Energy Meter data at gems level-->
+		<s:HTTPService id="gemsEnergyMeterService"
+					   resultFormat="e4x"
+					   result="gemsEnergyMeterResultHandler(event)"
+					   fault="gemsEnergyMeterFaultHandler(event)"/>
+		
+		<!-- Service to get current energy meter data at gems level-->
+		<s:HTTPService id="gemsCurrentEnergyMeterService"
+					   resultFormat="e4x"
+					   result="gemsCurrentEnergyMeterResultHandler(event)"
+					   fault="gemsCurrentEnergyMeterFaultHandler(event)"/>
+		
+		<!-- Service to get profile data at gems level -->
+		<!--<s:HTTPService id="gemsPieChartService"
+		resultFormat="e4x"
+		result="gemsPieChartResultHandler(event)"
+		fault="gemsPieChartFaultHandler(event)"/>-->
+		
+		<!-- Service to get energy consumption data at gems level -->
+		<s:HTTPService id="gemsEnergyConsumptionService"
+					   resultFormat="e4x"
+					   result="gemsECResultHandler(event)"
+					   fault="gemsECFaultHandler(event)"/>
+		
+		<!-- Service to get Energy Usage and Energy Meter data at company level-->
+		<s:HTTPService id="companyEnergyMeterService"
+					   resultFormat="e4x"
+					   result="companyEnergyMeterResultHandler(event)"
+					   fault="companyEnergyMeterFaultHandler(event)"/>
+		
+		<!-- Service to get profile data at company level -->
+		<!--<s:HTTPService id="companyPieChartService"
+		resultFormat="e4x"
+		result="companyPieChartResultHandler(event)"
+		fault="companyPieChartFaultHandler(event)"/>-->
+		
+		<!-- Service to get Energy Usage and Energy Meter data at company level-->
+		<s:HTTPService id="companyEnergyGraphService"
+					   resultFormat="e4x"
+					   result="companyECResultHandler(event)"
+					   fault="companyECFaultHandler(event)"/>
+		
+	</fx:Declarations>
+	
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@namespace components "com.enlightedinc.components.*";
+		.alertBox
+		{
+			background-color : #F9EDBE;
+			padding-left : 10;
+			padding-right : 10;
+			font-size : 13;
+			font-weight : bold;
+			color : #000000;
+		}
+	</fx:Style>
+	
+	<!--
+	
+	TODO LIST:
+	
+	1) Add traces to all the fault handlers
+	2) Get Master GEMS data for
+	a) Energy Meter for period
+	b) Energy Meter got current
+	c) Profile data
+	3) Get Mini GEMS data for
+	a) Profile data
+	
+	-->
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.assets.images.Images;
+			import com.enlightedinc.common.Constants;
+			import com.enlightedinc.common.ErrorCode;
+			import com.enlightedinc.components.BusyStateManager;
+			import com.enlightedinc.events.EnergySummaryEvent;
+			import com.enlightedinc.events.TimePeriodFilterEvent;
+			
+			import mx.collections.ArrayCollection;
+			import mx.core.UIComponentGlobals;
+			import mx.events.DynamicEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.xml.SimpleXMLDecoder;
+			
+			public var treeDataCollection:XML;
+			private var currentPeriod:String;
+			private var currentIp:String;
+			
+			private var globalErrorMessage:String;
+			
+			public var Gems:Class = Images.Gems;
+			
+			private var timer:Timer;
+			
+			private function onCreationComplete(event:FlexEvent):void
+			{
+				xmlHttpService.send();
+				timer = new Timer(300000, 0); // 5 minutes timer
+				timer.addEventListener(TimerEvent.TIMER, onRefresh);
+				timer.start();
+			}
+			
+			private function onPreinitialize():void 
+			{
+				// setup global error handling
+				UIComponentGlobals.catchCallLaterExceptions = true;
+				systemManager.addEventListener("callLaterError", handleErrors);
+			}
+			
+			private function treeCreationComplete(event:FlexEvent):void
+			{
+				orgTree.addEventListener(EnergySummaryEvent.OPENURL, openURLHandler);
+			}
+			
+			private function openURLHandler(e:EnergySummaryEvent):void
+			{
+				var item:Object = orgTree.selectedItem;
+				var url:String = "https://"+item.@ip+"/ems/ems_dashboard";
+				navigateToURL(new URLRequest(url),"_blank");
+			}
+			
+			private function getFromDate(usageRange:String):Date 
+			{
+				var date:Date = new Date();
+				var returnDate:Date = new Date(date.time);
+				
+				switch (usageRange)
+				{
+					case Constants.CURRENT_TYPE:
+					{
+						returnDate["minutes"] -= 9;
+						returnDate["seconds"] -= 59;
+						break;
+					}
+						
+					case Constants.DAY:
+					{
+						returnDate["date"] -= 1;
+						break;
+					}case Constants.WEEK:
+					{
+						returnDate["date"] -= 7;
+						break;
+					}
+					case Constants.MONTH:
+					{
+						returnDate["date"] -= 30;
+						break;
+					}
+					case Constants.YEAR:
+					{
+						returnDate["date"] -= 365;
+						break;
+					}
+				}	
+				return returnDate;
+			}
+			
+			private function handleErrors(event:Event):void 
+			{
+				if (event is DynamicEvent && event.hasOwnProperty("error")) 
+				{
+					var error:Error = DynamicEvent(event).error as Error;
+					trace("Error!\n" + error.getStackTrace()); 
+					energySummaryView.alertBox.alertText =globalErrorMessage;
+					if (ExternalInterface.available)
+					{
+						ExternalInterface.call("handleApplicationError");
+					}
+				}
+				else
+				{
+					energySummaryView.alertBox.alertText ="There has been an error in the application";
+					trace (event);
+				} 
+			}
+			
+			private function throwError():void
+			{
+				throw new Error();
+			}
+			
+			private function filterperiodchangeHandler(event:TimePeriodFilterEvent):void
+			{
+				var item:Object = orgTree.selectedItem;
+				
+				if (item!=null && orgTree.dataDescriptor.isBranch(item))
+				{
+					getEnergySummaryData(item.@type, "", event.label, false);
+				}else
+				{
+					getEnergySummaryData(item.@type, item.@ip, event.label, false);
+				}
+			}
+			
+			private function onRefresh( event:TimerEvent = null) : void
+			{
+				var item:Object = orgTree.selectedItem;
+				if(!item)
+					return;
+				getEnergySummaryData(item.@type, item.@ip, currentPeriod, true);
+				energySummaryView.alertBox.alertText = Constants.REFRESH_MSG;
+			}
+			
+			private function onTreeClick(evt:ListEvent):void
+			{
+				
+				energySummaryView.alertBox.reset();
+				var item:Object = Tree(evt.currentTarget).selectedItem;
+				if (orgTree.dataDescriptor.isBranch(item))
+				{
+					energySummaryView.removeGems.enabled =false;
+				}else
+				{
+					energySummaryView.setSelectedButton=energySummaryView.Day;
+					energySummaryView.removeGems.enabled =true;
+				}
+				getEnergySummaryData(item.@type, item.@ip, Constants.DAY, false);
+			}
+			
+			private function getEnergySummaryData(structureType:String, ip:String, period:String, refresh:Boolean) : void
+			{
+				// Avoid sending same service request, if the user clicks on the same button multiple times.
+				if((ip == currentIp) && (period == currentPeriod) && (!refresh))
+				{
+					return;
+				}
+				
+				currentPeriod = period;
+				currentIp = ip;
+				
+				var toDate:String = dateFormatter.format(new Date());
+				var fromDate:String = dateFormatter.format(this.getFromDate(period));
+				
+				var version:String;
+				var gemID:String;
+				var URL;
+				if(structureType == "company")
+				{
+					var ipList:XMLList = treeDataCollection.gem;
+					energySummaryView.resetMasterGems(ipList.length());
+					
+					for(var j:int = 0; j < ipList.length(); j++)
+					{
+						//version = ipList[j].@version;
+						URL=Constants.URL1;
+						
+						if(version=="2")
+						{
+							gemID = ipList[j].@ip;
+						}
+						else
+						{
+							gemID = ipList[j].@id;
+							URL=Constants.URL2;
+						}
+						
+						
+						energySummaryView.fixturesService.url = URL + "count/fcp/company/1/current/" + toDate + "/" + gemID;
+						energySummaryView.fixturesService.send();
+						
+						companyEnergyMeterService.url = URL + "md/company/1/" + fromDate + "/" + toDate + "/" + gemID;
+						companyEnergyMeterService.send();
+						
+						// TODO - Yet to be implemented. Service is not available
+						/* companyPieChartService.url = Constants.URL + "/load/areareport/piechart/" + period + "/" + ip;
+						companyPieChartService.send(); */
+						
+						companyEnergyGraphService.url = URL + "cp/company/1/" + period + "/" + toDate + "/" + gemID;
+						companyEnergyGraphService.send();
+					}
+				}
+				else if(structureType == "gems")
+				{
+					var item:Object = Tree(orgTree).selectedItem;
+					version = item.@version;
+					URL=Constants.URL1;
+					
+					if(version=="2")
+					{
+						gemID = item.@ip;
+						URL=Constants.URL1;
+					}
+					else
+					{
+						gemID = item.@id;
+						URL=Constants.URL2;
+					}
+					
+					energySummaryView.resetMiniGemsData();
+					
+					gemsEnergyMeterService.url = URL + "md/company/1/" + fromDate + "/" + toDate + "/" + gemID;
+					gemsEnergyMeterService.send();
+					
+					// TODO - Yet to be implemented. Service is not available
+					/* gemsPieChartService.url = Constants.URL + "/load/areareport/piechart/" + period + "/" + ip;
+					gemsPieChartService.send(); */
+					
+					gemsEnergyConsumptionService.url = URL + "cp/company/1/" + period + "/" + toDate + "/" + gemID;
+					gemsEnergyConsumptionService.send();
+					
+					//Resetting period to Current to get current meter data
+					fromDate = dateFormatter.format(this.getFromDate(Constants.CURRENT_TYPE));
+					gemsCurrentEnergyMeterService.url = URL + "md/company/1/" + fromDate + "/" + toDate + "/" + gemID;
+					gemsCurrentEnergyMeterService.send();
+				}
+				
+				BusyStateManager.getInstance().showAsBusy(energySummaryView.energyCanvas.name);
+				BusyStateManager.getInstance().showAsBusy(energySummaryView.usageByProfileCanvas.name);
+				BusyStateManager.getInstance().showAsBusy(energySummaryView.energyMeterCanvas.name);
+				BusyStateManager.getInstance().showAsBusy(energySummaryView.summaryFormCanvas.name);
+				
+				energySummaryView.summaryLabel.label = period + " Summary";
+			}
+			
+			private function xmlServiceResultHandler(event:ResultEvent):void
+			{
+				/*
+				var xml:XMLDocument = new XMLDocument(event.result.toString());
+				if(event.result.toString() == "")
+					return;
+				var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+				var resultObj:Object = decoder.decodeXML(xml);
+				if(resultObj == 1)
+				{
+					energySummaryView.gemEntryXMLForm(null);
+					return;
+				}*/
+				var xmlObj:XML =  event.result as XML;
+				var lst:XMLList = xmlObj.children();
+				var treeXML:XML;
+				if(lst.length()>0)
+				{
+					treeXML = <GEMS name="GEMS" type="company"></GEMS>;
+					for (var pname:String in xmlObj.gems)
+					{
+						var ip:String = xmlObj.gems.gemsIpAddress[pname]+":443";
+						var name:String = xmlObj.gems.name[pname];
+						var id:String= xmlObj.gems.id[pname];
+						var version:String = xmlObj.gems.version[pname];
+						var XMlNode:String = "<gem icon=\"Gems\" type=\"gems\" name=\""+ name +"\" ip=\""+ip + "\" id=\""+id + "\" version=\""+version + "\"/>";
+						var xmlList:XMLList = XMLList(XMlNode);
+						treeXML.appendChild(xmlList);
+					}
+				}else
+				{
+					energySummaryView.gemEntryXMLForm(null);
+					return;	
+				}
+				treeDataCollection = treeXML;
+				orgTree.dataProvider = treeXML;
+				orgTree.openItems = treeXML;
+				orgTree.validateNow();
+				orgTree.expandItem(treeXML[0], true);
+
+				getEnergySummaryData("company", "" , Constants.DAY, false);
+			}
+			
+			private function xmlServiceFaultHandler(event:FaultEvent):void
+			{
+				//trace(event.fault.faultDetail.toString());
+				globalErrorMessage=ErrorCode.IO_ERROR;
+				callLater(throwError);
+			}
+			
+			private function saveXmlServiceResultHandler(event:ResultEvent):void
+			{
+				xmlHttpService.send();
+				globalErrorMessage=ErrorCode.SAVE_SUCESS;
+				callLater(throwError);
+			}
+			
+			private function saveXmlServiceFaultHandler(event:FaultEvent):void
+			{
+				trace(event.fault.faultDetail.toString());
+				globalErrorMessage=ErrorCode.SAVE_FAIL;
+				callLater(throwError);
+			}
+			private function removeNodeServiceResultHandler(e:ResultEvent):void{
+				var xml:XMLDocument = new XMLDocument(e.result.toString());
+				if(e.result.toString() == "")
+					return; // TODO - How to handle the screen when there is no data
+				var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+				var resultObj:Object = decoder.decodeXML(xml);
+				if(resultObj == 0)
+				{
+					energySummaryView.removeItemfromTree();
+					globalErrorMessage=ErrorCode.REMOVE_SUCESS;
+					callLater(throwError);
+					
+				}
+			}
+			private function removeNodeServiceFaultHandler(e:FaultEvent):void{
+				globalErrorMessage=ErrorCode.REMOVE_FAIL;
+				callLater(throwError);
+			}
+			private function gemsEnergyMeterResultHandler(event:ResultEvent) : void
+			{
+				BusyStateManager.getInstance().removeBusyCursor(energySummaryView.energyMeterCanvas.name);
+				BusyStateManager.getInstance().removeBusyCursor(energySummaryView.summaryFormCanvas.name);
+				
+				var xml:XMLDocument = new XMLDocument(event.result.toString());
+				if(event.result.toString() == "")
+					return; // TODO - How to handle the screen when there is no data
+				var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+				var resultObj:Object = decoder.decodeXML(xml);
+				
+				if(resultObj == 1)
+					return;
+				
+				energySummaryView.energyMeterObj = resultObj.meterRecords.meterRecord;
+			}
+			
+			private function gemsEnergyMeterFaultHandler(event:FaultEvent) : void
+			{
+				BusyStateManager.getInstance().removeBusyCursor(energySummaryView.energyMeterCanvas.name);
+				BusyStateManager.getInstance().removeBusyCursor(energySummaryView.summaryFormCanvas.name);
+				globalErrorMessage=ErrorCode.NET_CONNECTION_FAILED;
+				callLater(throwError);
+				// TODO - trace(data.fault.faultDetail.toString());
+			}
+			
+			private function gemsCurrentEnergyMeterResultHandler(event:ResultEvent):void
+			{
+				var xml:XMLDocument = new XMLDocument(event.result.toString());
+				if(event.result.toString() == "")
+					return; // TODO - How to handle the screen when there is no data
+				var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+				var resultObj:Object = decoder.decodeXML(xml);
+				
+				if(resultObj == 1)
+					return;
+				
+				energySummaryView.currentEnergyMeterObj = resultObj.meterRecords.meterRecord;
+			}
+			
+			private function gemsCurrentEnergyMeterFaultHandler(event:FaultEvent):void
+			{
+				globalErrorMessage=ErrorCode.NET_CONNECTION_FAILED;
+				callLater(throwError);
+			}
+			
+			// TODO - Waiting for service call. Yet to be implemented
+			/* private function gemsPieChartResultHandler(event:ResultEvent) : void
+			{
+			BusyStateManager.getInstance().removeBusyCursor(energySummaryView.usageByProfileCanvas.name);
+			// TODO - energySummaryView.setPieChartData(data);
+			}
+			
+			private function gemsPieChartFaultHandler(event:FaultEvent) : void
+			{
+			BusyStateManager.getInstance().removeBusyCursor(energySummaryView.usageByProfileCanvas.name);
+			globalErrorMessage=ErrorCode.NET_CONNECTION_FAILED;
+			callLater(throwError);
+			} */
+			
+			private function gemsECResultHandler(event:ResultEvent) : void
+			{
+				BusyStateManager.getInstance().removeBusyCursor(energySummaryView.energyCanvas.name);
+				
+				var xml:XMLDocument = new XMLDocument(event.result.toString());				
+				var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+				var resultObj:Object = decoder.decodeXML(xml);
+				
+				if(resultObj == 1)
+					return;
+				
+				if(resultObj)
+				{
+					var tempData:ArrayCollection = new ArrayCollection();
+					(resultObj.avgrecords.avgrecord is ArrayCollection) ? (tempData = resultObj.avgrecords.avgrecord) : (tempData.addItem(resultObj.avgrecords.avgrecord));
+					energySummaryView.energyUsageGraph.energyUsageGraph.dataProvider = tempData;
+					energySummaryView.energyUsageGraph.dataPeriod = currentPeriod;
+				}
+			}
+			
+			private function gemsECFaultHandler(event:FaultEvent) : void
+			{
+				BusyStateManager.getInstance().removeBusyCursor(energySummaryView.energyCanvas.name);
+				globalErrorMessage=ErrorCode.NET_CONNECTION_FAILED;
+				callLater(throwError);
+			}
+			
+			private function companyEnergyMeterResultHandler(event:ResultEvent) : void
+			{
+				var xml:XMLDocument = new XMLDocument(event.result.toString());
+				if(event.result.toString() == "")
+				{
+					setEMFinalAggregatedData();
+					return;
+					
+				}
+				var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+				var resultObj:Object = decoder.decodeXML(xml);
+				
+				if(resultObj == 1)
+				{
+					setEMFinalAggregatedData();
+					return;
+				}
+				
+				energySummaryView.calcCompanyEMData(resultObj.meterRecords.meterRecord);
+			}
+			
+			private function companyEnergyMeterFaultHandler(event:FaultEvent) : void
+			{
+				setEMFinalAggregatedData();
+				BusyStateManager.getInstance().removeBusyCursor(energySummaryView.summaryFormCanvas.name);
+				BusyStateManager.getInstance().removeBusyCursor(energySummaryView.energyMeterCanvas.name);
+				
+				globalErrorMessage=ErrorCode.NET_CONNECTION_FAILED;
+				callLater(throwError);
+			}
+			
+			/* TODO - Waiting for service.
+			private function companyPieChartResultHandler(event:ResultEvent) : void
+			{
+			energySummaryView.calcCompanyPieChartData(name, data);
+			}
+			
+			private function companyPieChartFaultHandler(event:FaultEvent) : void
+			{
+			BusyStateManager.getInstance().removeBusyCursor(energySummaryView.usageByProfileCanvas.name);
+			globalErrorMessage=ErrorCode.NET_CONNECTION_FAILED;
+			callLater(throwError);
+			}  */
+			
+			private function companyECResultHandler(event:ResultEvent) : void
+			{
+				var xml:XMLDocument = new XMLDocument(event.result.toString());	
+				
+				if(event.result.toString() == "")
+				{
+					setEGFinalAggregatedData();
+					return;
+					
+				}
+				var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+				var resultObj:Object = decoder.decodeXML(xml);
+				
+				if(resultObj == 1)
+				{
+					setEGFinalAggregatedData();
+					return;
+				}
+				
+				if(resultObj)
+				{
+					var tempData:ArrayCollection = new ArrayCollection();
+					(resultObj.avgrecords.avgrecord is ArrayCollection) ? (tempData = resultObj.avgrecords.avgrecord) : (tempData.addItem(resultObj.avgrecords.avgrecord));
+					energySummaryView.energyUsageGraph.dataPeriod = currentPeriod;
+					energySummaryView.calcCompanyECData(tempData);
+				}
+			}
+			
+			private function companyECFaultHandler(event:FaultEvent) : void
+			{
+				//trace(data.fault.faultDetail.toString());
+				BusyStateManager.getInstance().removeBusyCursor(energySummaryView.energyCanvas.name);
+				setEGFinalAggregatedData();
+				globalErrorMessage=ErrorCode.NET_CONNECTION_FAILED;
+				callLater(throwError);
+			}
+			
+			/**
+			 * This function will set data ( ENERGY METER ) for all GEMS from which data is coming irrespective of the fault coming from any GEMS.
+			 * e.g.There are 3 GEMS and out of which 2 GEMS are returning data and 1 GEMS is not returing data, then this function will make sure
+			 * to show data for other 2 GEMS on UI.
+			 */
+			private function setEMFinalAggregatedData():void
+			{
+				if(energySummaryView.currentEMCount == treeDataCollection.gem.length())
+				{
+					energySummaryView.setCompanyEMData();
+				}
+				
+				energySummaryView.currentEMCount ++;
+			}
+			
+			/**
+			 * This function will set data ( ENERGY GRAPH ) for all GEMS from which data is coming irrespective of the fault coming from any GEMS.
+			 * e.g.There are 3 GEMS and out of which 2 GEMS are returning data and 1 GEMS is not returing data, then this function will make sure
+			 * to show data for other 2 GEMS on UI.
+			 */
+			private function setEGFinalAggregatedData():void
+			{
+				if(energySummaryView.currentEGCount == treeDataCollection.gem.length())
+				{
+					energySummaryView.setCompanyECData();
+				}
+				
+				energySummaryView.currentEGCount ++;
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Scroller width="100%" height="100%">
+		<s:Group>
+			<mx:HBox width="100%" height="100%">
+				<mx:VBox width="15%" height="100%">
+					<mx:Tree id="orgTree" 
+							 width="100%" height="100%" minWidth="150" 
+							 selectedIndex="0"
+							 labelField="@name" 
+							 iconField="@icon"
+							 creationComplete="treeCreationComplete(event)"
+							 itemClick="onTreeClick(event);"  
+							 itemRenderer="com.enlightedinc.components.itemrenderer.CustomTreeItemRenderer"/>
+				</mx:VBox>
+				<mx:VBox width="85%" height="100%">
+					<mx:TabNavigator width="100%" height="100%">
+						<components:EnergySummaryView id="energySummaryView"
+													  label="Energy Summary"
+													  minWidth="1024"
+													  filterperiodchange="filterperiodchangeHandler(event as TimePeriodFilterEvent)"
+													  refresh="onRefresh(null)"/>
+					</mx:TabNavigator>
+					
+				</mx:VBox>
+			</mx:HBox>
+		</s:Group>
+	</s:Scroller>
+	
+</s:Application>

@@ -1,0 +1,242 @@
+#!/bin/bash -x
+
+cd /home/enlighted/apache2/installation/
+
+sudo chmod 755 -R /var/www/em_mgmt/
+
+sudo mkdir -p /var/lib/tomcat6/Enlighted/UpgradeImages
+ 
+sudo chmod 775 /var/lib/tomcat6/Enlighted/UpgradeImages
+
+sudo chown tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/UpgradeImages
+
+sudo rm -f /media/usb
+
+sudo cp /home/enlighted/usbmount.conf /etc/usbmount/
+sudo chown root:root  /etc/usbmount/usbmount.conf
+sudo chmod 644 /etc/usbmount/usbmount.conf
+
+sudo chmod 751 /var/log/tomcat6/
+
+if [ ! -f "/var/lib/tomcat6/Enlighted/adminpasswd" ]
+then
+	adminpass=$(psql -U postgres -x ems -c "select password from users where email = 'admin' limit 1" | grep password | cut -d " " -f3)
+	if test -z "$adminpass"
+	then
+		echo -n "admin" | md5sum | cut -d" " -f1 > /var/lib/tomcat6/Enlighted/adminpasswd
+	else
+		echo "$adminpass" > /var/lib/tomcat6/Enlighted/adminpasswd
+	fi
+	sudo chmod 775 /var/lib/tomcat6/Enlighted/adminpasswd
+	sudo chown tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/adminpasswd
+fi
+
+sudo chmod 755 /bin/authadmin.sh
+
+# Remove tomcat-manager and tomcat-host-manager
+sudo rm -f /var/lib/tomcat6/conf/Catalina/localhost/manager.xml
+sudo rm -f /var/lib/tomcat6/conf/Catalina/localhost/host-manager.xml
+
+startapache=$(sudo /etc/init.d/apache2 start)
+if [[ "$startapache" =~ "done" ]]
+    then
+    	check=$(apache2ctl -t -D DUMP_MODULES)
+    	if [[ "$check" =~ "wsgi_module" ]]
+    	then
+    		echo "*** wsgi_module is already installed ***"
+    	else
+    		echo "*** Installing wsgi_module... ***"
+    		sudo rm -rf mod_wsgi-3.3/
+			sudo tar -xvf mod_wsgi-3.3.tar.gz
+			cd mod_wsgi-3.3/
+			sudo make install
+			
+			if [ $? -eq 0 ]
+			then
+				cd /home/enlighted/apache2/installation/
+				
+				sudo cp ./mod_wsgi.load /etc/apache2/mods-available/
+				sudo chown root:root /etc/apache2/mods-available/mod_wsgi.load
+				cd /etc/apache2/mods-enabled/
+				sudo ln -s ../mods-available/mod_wsgi.load
+				echo "*** wsgi_module is installed successfully ***"
+			else 
+				echo "*** Could Not install wsgi module successfully. Exit ***"
+				exit 1
+			fi
+    	fi
+        
+		check=$(sudo django-admin.py --version)
+    	if [[ "$check" =~ "1.4" ]]
+    	then
+    		echo "*** Django is already installed ***"
+    	else
+    	
+    		echo "*** Installing Django framework... ***"
+			cd /home/enlighted/apache2/installation/
+			
+			sudo rm -rf Django-1.4/
+			sudo tar -xvzf Django-1.4.tar.gz
+			cd ./Django-1.4 
+			sudo python setup.py install
+			if [ $? -eq 0 ]
+			then
+				echo "*** Django is installed successfully ***"
+			else 
+				echo "*** Could Not install Django successfully. Exit ***"
+				exit 1
+			fi
+		fi
+		
+		cd /home/enlighted/apache2/installation/
+		
+		sudo a2enmod mod_wsgi
+		sudo a2enmod ssl
+		sudo a2enmod rewrite
+		sudo a2enmod proxy
+		sudo a2enmod proxy_http
+        sudo a2enmod headers
+		
+		sudo cp ./httpd.conf /etc/apache2/httpd.conf
+		sudo chown root:root /etc/apache2/httpd.conf
+		
+		sudo mkdir /etc/apache2/ssl
+		sudo cp apache.key /etc/apache2/ssl/
+		sudo cp apache.pem /etc/apache2/ssl/
+		sudo chown -R root:root /etc/apache2/ssl/
+		
+		sudo cp apache2.conf /etc/apache2/apache2.conf
+		sudo chown root:root /etc/apache2/apache2.conf
+		
+		sudo cp ports.conf /etc/apache2/ports.conf
+		sudo chown root:root /etc/apache2/ports.conf
+		
+		sudo cp default /etc/apache2/sites-available/default
+		sudo chown root:root /etc/apache2/sites-available/default
+		
+		sudo cp proxy.conf /etc/apache2/mods-enabled/proxy.conf
+		sudo chown root:root /etc/apache2/mods-enabled/proxy.conf
+		
+		chmod 744 rewrite_prg.pl
+		sudo cp rewrite_prg.pl /etc/apache2/rewrite_prg.pl
+		sudo chown root:root /etc/apache2/rewrite_prg.pl
+		
+		fstabcheck=$(grep usb1 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb1"* ]]
+		then
+			echo "/dev/usb1 /media/usb1 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		fstabcheck=$(grep usb2 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb2"* ]]
+		then
+			echo "/dev/usb2 /media/usb2 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		fstabcheck=$(grep usb3 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb3"* ]]
+		then
+			echo "/dev/usb3 /media/usb3 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		fstabcheck=$(grep usb4 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb4"* ]]
+		then
+			echo "/dev/usb4 /media/usb4 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		sudo cp /home/enlighted/99-usb.rules /etc/udev/rules.d/99-usb.rules
+		sudo chown root:root /etc/udev/rules.d/99-usb.rules
+		
+		sudo cp /home/enlighted/addUSB.sh /etc/udev/addUSB.sh
+		sudo chown root:root /etc/udev/addUSB.sh
+		sudo chmod 755 /etc/udev/addUSB.sh
+		
+		sudo cp /home/enlighted/removeUSB.sh /etc/udev/removeUSB.sh
+		sudo chown root:root /etc/udev/removeUSB.sh
+		sudo chmod 755 /etc/udev/removeUSB.sh
+		
+		sudo chmod 777 /var/lib/tomcat6/Enlighted/emsmode
+		
+		sudo cp /home/enlighted/checkandsetemmode.sh /bin/checkandsetemmode.sh
+		sudo chown root:root /bin/checkandsetemmode.sh
+		sudo chmod 755 /bin/checkandsetemmode.sh
+		
+		sudo service udev restart
+		
+		sudo cp /home/enlighted/rc.local /etc/rc.local
+		sudo chown root:root /etc/rc.local
+		sudo chmod 755 /etc/rc.local
+		
+		sudo cp /home/enlighted/dailybackup.sh /opt/enLighted/DB/dailybackup.sh
+		
+		chmod 0440 ./sudoers
+		sudo cp ./sudoers /etc/
+		sudo chown root:root /etc/sudoers
+		
+		cp ./server.xml /etc/tomcat6/server.xml
+		
+		cp ./web.xml /etc/tomcat6/web.xml
+		
+		# Add www-data to tomcat6 group
+		sudo sed -i.bak  's/\(tomcat6:x:[0-9]*:\).*/\1www-data/' /etc/group
+		
+		mkdir /home/enlighted/django_cache
+		
+		sudo updatedb
+		
+		check=$(sudo locate "distribute-0.6.27-py2.6.egg/easy_install.py")
+		if [[ "$check" =~ "/usr/local/lib/python2.6/dist-packages/distribute-0.6.27-py2.6.egg/easy_install.py" ]]
+    	then
+    		echo "*** Django Easy Install is already installed ***"
+    	else
+			sudo rm -rf distribute-0.6.27/
+			sudo tar -xvzf distribute-0.6.27.tar.gz
+			cd ./distribute-0.6.27
+			sudo python setup.py install
+			if [ $? -eq 0 ]
+			then
+				echo "*** Django Easy Install is installed successfully ***"
+			else 
+				echo "*** Could Not install Django Easy Install successfully. Exit ***"
+				exit 1
+			fi
+		fi
+		
+		cd /home/enlighted/apache2/installation/
+		
+		check=$(sudo locate "piston/resource.py")
+		if [[ "$check" =~ "/usr/local/lib/python2.6/dist-packages/" ]]
+    	then
+    		echo "*** Django Piston is already installed ***"
+    	else
+			sudo rm -rf django-piston-0.2.3/
+			sudo tar -xvzf django-piston-0.2.3.tar.gz
+			cd ./django-piston-0.2.3
+			sudo python setup.py egg_info
+			sudo python setup.py install
+			if [ $? -eq 0 ]
+			then
+				echo "*** Django Piston is installed successfully ***"
+			else 
+				echo "*** Could Not install Django Piston successfully. Exit ***"
+				exit 1
+			fi
+		fi
+
+	else
+		echo "*** Could Not Start Apache Server. Contact Admin ***"
+		exit 1
+fi
+
+#Future backups should not use the stale ec data which might be based on different schema.
+rm -f /opt/enLighted/DB/DBBK/daily_ec_dump.backup
+
+
+if [ ! -f "/var/lib/tomcat6/Enlighted/emsmode" ]
+then
+	sudo cp /home/enlighted/emsmode /var/lib/tomcat6/Enlighted/
+	sudo chmod 777 /var/lib/tomcat6/Enlighted/emsmode
+	sudo chown tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/emsmode
+fi
+

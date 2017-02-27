@@ -1,0 +1,11 @@
+<root xmlns:enl="http://www.enlightedinc.com/schema">
+	<enl:request>
+		<enl:messageType>1</enl:messageType>
+		<enl:body>
+			<enl:loginRequest>
+				<enl:userName>admin</enl:userName>
+				<enl:password>xxxxx</enl:password>
+			</enl:loginRequest>
+		</enl:body>
+	</enl:request>
+</root>

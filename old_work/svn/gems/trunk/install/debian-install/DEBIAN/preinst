@@ -1,0 +1,23 @@
+#!/bin/bash -x
+source /etc/environment
+# Run this before removing this package, it requires root privilage
+
+TOMCAT_PATH=$ENL_APP_HOME
+
+echo "*** Undeploying EM application.. ***"
+sudo rm -f ${TOMCAT_PATH}/webapps/ems.war
+sudo rm -fr ${TOMCAT_PATH}/webapps/ems/
+sudo rm -fr ${TOMCAT_PATH}/work/Catalina/localhost/ems
+
+sudo rm -f ${TOMCAT_PATH}/webapps/ems_mgmt.war
+sudo rm -fr ${TOMCAT_PATH}/webapps/ems_mgmt/
+sudo rm -fr ${TOMCAT_PATH}/work/Catalina/localhost/ems_mgmt/
+
+
+if [ -d $OPT_ENLIGHTED/adr ]
+then
+        echo "$OPT_ENLIGHTED/ard Directory exists!!!!"
+else
+        echo "Creating $OPT_ENLIGHTED/adr directory"
+        mkdir -p $OPT_ENLIGHTED/adr
+fi

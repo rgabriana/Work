@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.Wds"
+        table="wds"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">wds_seq</param>
+            </generator>
+        </id>
+        
+        <property
+            name="name"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="name"
+        />
+        
+        <property
+            name="macAddress"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="mac_address"
+        />
+        
+        <property
+            name="state"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="state"
+        />
+        
+		<property
+            name="gatewayId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="gateway_id"
+        />
+        
+		<property
+            name="floorId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="floor_id"
+        />
+        
+		<property
+            name="buildingId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="building_id"
+        />
+        
+		<property
+            name="campusId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="campus_id"
+        />
+        
+		<property
+            name="areaId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="area_id"
+        />
+        
+        
+		<property
+            name="xaxis"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="x"
+        />
+        
+        
+		<property
+            name="yaxis"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="y"
+        />
+        
+       <many-to-one name="wdsSwitch" class="com.ems.model.Switch"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="switch_id" />
+			
+       <many-to-one name="wdsModelType" class="com.ems.model.WdsModelType"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="wds_model_type_id" />
+			
+       <many-to-one name="buttonMap" class="com.ems.model.ButtonMap"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="button_map_id" />
+			
+       <many-to-one name="switchGroup" class="com.ems.model.SwitchGroup"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="switch_group_id" />
+			
+		<property
+            name="wdsNo"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="wds_no"
+        />
+		
+		<property
+            name="associationState"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="association_state"
+        />
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-PlanMap.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

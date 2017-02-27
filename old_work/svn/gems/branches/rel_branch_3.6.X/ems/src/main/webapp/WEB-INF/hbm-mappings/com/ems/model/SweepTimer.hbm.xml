@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+<hibernate-mapping>
+	<class name="com.ems.model.SweepTimer" table="sweep_timer">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">sweep_timer_seq</param>
+			</generator>
+		</id>
+
+		<bag name="sweepTimerDetails" lazy="false" inverse="true" cascade="save-update, delete"
+			order-by="short_order asc" outer-join="false">
+			<key column="sweep_timer_id">
+			</key>
+			<one-to-many class="com.ems.model.SweepTimerDetails" />
+		</bag>
+
+		<property name="name" type="java.lang.String" update="true"
+			insert="true" column="name" />
+
+	</class>
+</hibernate-mapping>

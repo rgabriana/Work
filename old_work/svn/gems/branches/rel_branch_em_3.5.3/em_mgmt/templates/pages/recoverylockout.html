@@ -1,0 +1,203 @@
+{% extends "pages/layouts/mainLayout.html" %}
+
+{% load i18n %}
+
+{% load customtemplatetags %}
+
+{% block body %}
+
+<script type="text/javascript"> 
+
+$().ready(function(){
+			$("#securityKeyForm").validate({
+				rules: {
+					usersecuritykey: {
+						required: true
+					}
+				},
+				messages: {
+					usersecuritykey: {
+						required: 'Field is required',
+					}
+				}
+				
+			});
+			
+			$("#file").click(function(){
+				   
+				   label = $('label[for="'+ $(this).attr('id') +'"]');
+				   $(this).removeClass('error');
+				   label.hide();
+				  
+			});
+			
+			{% if savestatus == "0" %}
+			$("#savestatus").css("color", "green");
+			$("#savestatus").html("Security Key created successfully.");
+
+	        {% endif %}
+	        
+	        {% if savestatus == "1" %}
+	        $("#savestatus").css("color", "red");
+			$("#savestatus").html("Security Key is not created successfully. Please try again.");
+	         
+	        {% endif %}
+	        
+	          
+	        $(".outermostdiv").css("minHeight", $(window).height() - 85);
+	        
+});
+
+function generateSecurityKey(){
+	var isValid = $('#securityKeyForm').valid();		
+	if(isValid){
+		$('#securityKeyForm').submit();
+	}
+	
+}
+
+function validateValidSecurityKey()
+{
+	$("#uploadSecurityKeyProgressDiv").show();
+	var isFileValid = false;
+	var form = $('#uploadSecurityKeyForm');
+	var file = $('input[type="file"]', form).val();
+	var exts = ['key'];
+	if ( file ) {
+		var get_ext = file.split('.');
+		get_ext = get_ext.reverse();
+		if ( $.inArray ( get_ext[0].toLowerCase(), exts ) > -1 ){
+			isFileValid = true;
+		} else {
+			console.log("Error " + 1);
+			$("#uploadSecurityKeyProgressIndicator").html("<span style='color:red'>.key extension is only allowed. Please check the selected file format.</span>");
+		}
+	}else{
+		console.log("Error " + 2);
+		$("#uploadSecurityKeyProgressIndicator").html("<span style='color:red'>Please Select the file.</span>");
+	}
+	return isFileValid;
+}
+function uploadSecurityKey() {		
+	var isValid = $('#uploadSecurityKeyForm').valid();	
+	var isFileValid = validateValidSecurityKey();
+	if(isFileValid) {	                
+        $('#uploadSecurityKeysubmit').attr('disabled', 'disabled');
+		$("#uploadSecurityKeyProgressDiv").show();
+		var loadingImageString = "<img alt='loading' src='{{ STATIC_URL }}static/themes/default/images/ajax-loader_small.gif'>";
+		$("#uploadSecurityKeyProgressIndicator").html("<span>" + "{% trans 'restore.upload.wait' %}" + loadingImageString + "</span><span id='uploadSecurityKeySizeIndicator'></span>");
+        var uploadPollServer = setInterval( function() {
+		 	  $.ajax({
+				   type: "POST",
+				   cache: false,
+				   dataType: "json",
+				   url: '{{ STATIC_URL }}services/upload/size/',
+				   beforeSend: function() {
+				   },
+				   success: function(data){
+			          $.each(data, function(key, val) {
+			              msg = val;
+			          });
+				   	  if(msg != "-1") {
+				   		$("#uploadSecurityKeySizeIndicator").text(msg);
+				   	  }
+				    } 
+				   });
+				   }, 5000);
+	       	$("#uploadSecurityKeyForm").submit();
+	}
+}
+
+</script>
+
+<div class="pgset">
+<div class="outermostdiv">
+	<div class="outerContainer">
+		<div class="i1"></div>
+    	<div style="margin-top: 15px; width:100%;">
+			<fieldset style="padding: 10px;font-weight:normal;font-size: 1em;">
+			<legend style="font-weight: bold">{% trans "em.cloud.recoverylockout" %}</legend>
+			<form id="securityKeyForm" action="{{ STATIC_URL }}generaterecoverykey/" method="post">	
+			{% csrf_token %}
+			<table cellspacing="10px">
+				<tr>
+					<td class="formPrompt" style="font-weight:normal;font-size: 1em;">Enter A Security Key:</td>
+					<td class="formValue"><input id="usersecuritykey" path="usersecuritykey" name="usersecuritykey" class="biginput" /></td>
+					
+				</tr>
+				
+				<tr>
+					<td class="formPrompt"><span></span></td>
+					<td class="formValue"><input style="display: inline; margin-right: 10px;" id="saveCloudBtn" type="button"
+						value="Generate Key" onclick="generateSecurityKey();" /><span id="savestatus" style="font-size: 1.1em; display: inline"></span></td>
+				</tr>
+				{% if downloadCertEnable == 0 %}
+				<tr>
+				<td class="formPrompt"><span></span></td>
+				<td class="formValue">
+				<input type="button" id="btnDownload" value="Download Key" 	onclick="window.location = '{{ STATIC_URL }}downloadrecoverykey/'" /> 
+				</td>
+				</tr>
+				{% endif %}
+			</table>
+			
+			</form>	
+			
+			<div>
+			</div>
+			</fieldset>
+			</div>
+			
+			
+			<div class="i1"></div>
+			<div>
+				<fieldset style="padding: 10px;">
+				<legend style="font-weight: bold">Enter Recovery File</legend>
+				
+					<form id="uploadSecurityKeyForm" action="{{ STATIC_URL }}uploadrecoverykey/" method="post" enctype="multipart/form-data">
+					<table>
+					<tr>
+						<td class="formPrompt" style="font-weight:normal;font-size: 1em;">Enter The Security Key:</td>
+						<td class="formValue"><input id="confirmsecuritykey" path="confirmsecuritykey" name="confirmsecuritykey" class="biginput" /></td>
+						
+					</tr>
+					</table>
+			        {% csrf_token %}
+							<div class="field">
+								<div class="formPrompt"><span>Recovery file to be uploaded</span></div>
+								<div class="formValue">
+									<input type="file" name="file" id="file" />
+								</div>
+							</div>
+							<div id="uploadSecurityKeyProgressDiv" class="field">
+								<div class="formPrompt"><span></span></div>
+								<div class="formValue" id="uploadSecurityKeyProgressIndicator"></div>
+							</div>
+							<script type="text/javascript">
+			          {% if uploadStatus == 'F' %}
+			     	      $("#uploadSecurityKeyProgressIndicator").html("<span style='color:red'>"+ "{% trans 'error.restore.upload.internal' %}" +"</span>");
+			          {% else %} {% if uploadStatus == 'S' and fileuploadconfirmation %}
+			          
+			         	 {% if filemismatch == 'F' %}
+			            	$("#uploadSecurityKeyProgressIndicator").html("<span style='color:red'>Recovery file provided is invalid, Please contact Enlighted support.</span>");
+			             {% endif %}
+			          {% else %}
+			            $("#uploadSecurityKeyProgressDiv").hide();
+			          {% endif %} {% endif %}
+							</script>
+							<div class="field">
+								<div class="formPrompt"><span></span></div>
+								<div class="formValue">
+									<input class="navigation" id="uploadSecurityKeysubmit" type="button" onclick="uploadSecurityKey();" value="{% trans 'action.upload' %}"/>
+								</div>
+							</div>
+					  </form>
+				</fieldset>
+			</div>
+		
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+

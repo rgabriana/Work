@@ -1,0 +1,13 @@
+Package: enLighted-cloud-communicator
+Version: 2.2.1
+Section: misc
+Priority: optional
+Architecture: i386
+Essential: no
+Depends:
+Replaces: 
+Pre-Depends: libxml2
+Suggests: no
+Maintainer: enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: enLighted cloud communicator upgrqade utility

@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="100%" height="100%"
+		 xmlns:components="com.enlightedinc.components.*" paddingTop="5" creationComplete="initComponent()">
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.common.CountsCalculator;
+			import com.enlightedinc.events.CurrentSavingChartUpdate;
+			import com.enlightedinc.events.EnergySummaryUnitBarEvent;
+			import com.enlightedinc.events.PeriodSavingChartUpdate;
+			
+			import mx.core.FlexGlobals;
+			
+			import spark.components.Button;
+
+			private var currSelButton:Button;
+			[Bindable]
+			private var countsCalculator:CountsCalculator= CountsCalculator.getInstance();
+			private var application:Object = FlexGlobals.topLevelApplication;
+			private function initComponent():void{
+				countsCalculator.addEventListener(CurrentSavingChartUpdate.CHART_UPDATE,chartUpdate);
+				application.energySummaryView.addEventListener(CurrentSavingChartUpdate.CHART_RESET,chartReset);
+				application.energySummaryDock.energySummaryUnitBar.addEventListener(EnergySummaryUnitBarEvent.UNIT_CHANGE,unitChangeHandler);
+				application.energySummaryView.addEventListener(EnergySummaryUnitBarEvent.UNIT_CHANGE,unitChangeHandler);
+				countsCalculator.addEventListener(PeriodSavingChartUpdate.PERIOD_CHART_UPDATE,periodSavingChartUpdate);
+				countsCalculator.addEventListener(PeriodSavingChartUpdate.PERIOD_CHART_RESET,periodSavingChartReset);
+				application.energySummaryView.addEventListener(PeriodSavingChartUpdate.PERIOD_CHART_RESET,periodSavingChartReset);
+			}
+			private function percetPrecision(value:Number):String{
+				if(!isNaN(value))
+				{
+					if(value<100)
+						return Number(value).toString()+"%";
+					else
+						return "100%";
+				}
+				else
+					return "0%";
+			}
+			private function powerPrecision(value:Number):String{
+				var power:Number=0;
+				var unitSuffix:String ="Wh";
+				if(!isNaN(value))
+				{
+					if(value<=999)
+					{
+						power = Number(value);
+						unitSuffix = "Wh";
+					}
+					else if(value >= 1000 && value < 1000000)
+					{
+						power =Number(value* 0.001);
+						unitSuffix = "kWh";
+					}
+					else if(value>= 1000000)
+					{
+						power = Number(value* 0.000001);
+						unitSuffix = "MWh";
+					}
+					 
+				    //Do Rounding at the time of display only 
+					numberFormatter.precision =-1;
+				     if(unitSuffix!="Wh"){
+						 numberFormatter.precision =1;
+						 power = Number(power);
+					 }else{
+						 power = Math.round(power);
+					 }
+					suffixSignSymbol.text = unitSuffix;
+					return numberFormatter.format(power).toString();// +" "+unitSuffix
+				}
+				else
+				{
+					suffixSignSymbol.text = unitSuffix;
+					return "0";
+				}
+			}
+			private function co2Precision(labelValue:Number):String
+			{
+				var unitSuffix:String ="";
+				var co2:Number=0;
+				if(!isNaN(labelValue))
+				{
+					if (Number(labelValue)>= 1000000)
+					{
+						unitSuffix = "Mt";
+						co2 =  Number(labelValue * 0.000001);
+					}
+					else if (Number(labelValue) >= 1000)
+					{
+						unitSuffix = "kt";
+						co2 = Number(labelValue * 0.001);
+					}
+					else if(Number(labelValue) < 1000 && Number(labelValue) >= 1 )
+					{
+						unitSuffix = "tons";
+						co2 = Number((labelValue));
+					}else
+					{
+						//1 mt = 2204.622 lb
+						unitSuffix = "lb";
+						co2 = Number((labelValue * Constants.METRIC_POUND_CONVERSION_FACTOR));
+					}
+					
+					
+					//Do Rounding at the time of display only 
+					numberFormatter.precision =-1;
+					if(co2>0 && co2<10)
+					{
+						numberFormatter.precision =2;
+						co2 = Number(co2.toFixed(2));
+					}else
+					{
+						co2= Math.round(co2);
+					}
+					suffixSignSymbol.text = unitSuffix;
+					return numberFormatter.format(co2).toString();
+				}else
+				{
+					suffixSignSymbol.text = unitSuffix;
+					return "0";
+				}
+			}
+			private function powerPrecisionCurrent(value:Number,type:String):String{
+				var power:Number=0;
+				var currentUnitSuffix:String ="W";
+				if(!isNaN(value))
+				{
+					if(value<=999)
+					{
+						power = Number(value);
+						currentUnitSuffix = "W";
+					}
+					else if(value >= 1000 && value < 1000000)
+					{
+						power = Number(value* 0.001);
+						currentUnitSuffix = "kW";
+					}
+					else if(value>= 1000000)
+					{
+						power = Number(value * 0.000001);
+						currentUnitSuffix = "mW";
+					}
+					// C: CurrentLoad, P: Peak Load, B: BaseLoad
+					if(type == "C")
+					{
+						currentsuffixSignSymbol1.text = currentUnitSuffix;
+					}else if(type == "P")
+					{
+						currentsuffixSignSymbol2.text = currentUnitSuffix;
+					}else if(type == "B")
+					{
+						currentsuffixSignSymbol3.text = currentUnitSuffix;
+					}
+					
+					//Do Rounding at the time of display only
+					numberFormatter.precision =-1;
+					if(currentUnitSuffix!="W"){
+						numberFormatter.precision =1;
+						power = Number(power);
+					}else{
+						power = Math.round(power);
+					}
+					return numberFormatter.format(power).toString();// +" "+unitSuffix
+				}
+				else
+				{
+					currentsuffixSignSymbol1.text = currentUnitSuffix;
+					currentsuffixSignSymbol2.text = currentUnitSuffix;
+					currentsuffixSignSymbol3.text = currentUnitSuffix;
+					return "0";
+				}
+			}
+			
+			private function unitChangeHandler(e:EnergySummaryUnitBarEvent):void
+			{
+				if(e.label==Constants.CURRENCY_UNIT)
+				{
+					prefixSignSymbol.visible =true;
+					suffixSignSymbol.visible = false;
+					countsCalculator.currentUnitSelection= Constants.CURRENCY_UNIT;
+					countsCalculator.calculateMoneyCounts(countsCalculator.energyConsumptionRawDataCollection);
+					var totalSaveCost:Number =0;
+					totalSaveCost = countsCalculator.totalSavedCost;
+					if(totalSaveCost>=0)
+					{
+						numberFormatter.precision=-1;
+						if(totalSaveCost>0 && totalSaveCost<10)
+						{
+							numberFormatter.precision =2;
+							totalSaveCost= Number(totalSaveCost.toFixed(2));
+						}else
+						{
+							totalSaveCost = Math.round(totalSaveCost);
+						}
+						savingSoFar.text =numberFormatter.format(totalSaveCost);
+					}
+				}else if(e.label==Constants.POWER_UNIT)
+				{
+					prefixSignSymbol.visible =false;
+					suffixSignSymbol.visible = true;
+					countsCalculator.currentUnitSelection= Constants.POWER_UNIT;
+					countsCalculator.calculateKwhCounts(countsCalculator.energyConsumptionRawDataCollection);
+					savingSoFar.text = powerPrecision(Math.round(countsCalculator.totalSavedPower));
+					
+				}else if(e.label==Constants.CARBON_UNIT)
+				{
+					prefixSignSymbol.visible =false;
+					suffixSignSymbol.visible = true;
+					countsCalculator.currentUnitSelection= Constants.CARBON_UNIT;
+					countsCalculator.calculateCO2Counts(countsCalculator.energyConsumptionRawDataCollection);
+					//Converting totalSavedPower to kwh bcoz totalSavedPower value is in wh
+					var totalSavedPower:Number = countsCalculator.totalSavedPower;
+					totalSavedPower = (totalSavedPower/1000)
+					var carbonCount:Number = Constants.CARBON_FACTOR * totalSavedPower;
+					savingSoFar.text= co2Precision(carbonCount);
+				}
+				application.energyGraphHeader.setHeaderTitle();
+
+			}
+			
+			private function chartUpdate(e:CurrentSavingChartUpdate):void
+			{
+				if(countsCalculator.savingMeterData.length>0)
+					energySavingGraph.chartData = countsCalculator.savingMeterData;
+			}
+			private function chartReset(e:CurrentSavingChartUpdate):void{
+				savingCurrPerc.text ="0%";
+				energySavingGraph.resetUI();
+			}
+			
+			private function periodSavingChartUpdate(e:PeriodSavingChartUpdate):void
+			{
+				if(countsCalculator.periodSavingChartData.length>0)
+				{
+					periodSavingChart.chartData= countsCalculator.periodSavingChartData;
+				}
+			}
+			
+			private function periodSavingChartReset(e:PeriodSavingChartUpdate):void
+			{
+				periodSavingChart.resetUI();
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<mx:NumberFormatter id="numberFormatter" useThousandsSeparator="true"  />
+	</fx:Declarations>
+		<s:HGroup width="100%" paddingLeft="0" height="110" gap="-1">
+			<s:filters>
+				<s:DropShadowFilter distance="3" angle="90" color="#b1b1b1"/>
+			</s:filters>
+			<components:GroupBox height="100%" width="100%" label="{Constants.PERIOD_SAVING}" skinClass="com.enlightedinc.components.skins.GroupBoxLegendSkin" >
+				<s:VGroup verticalAlign="middle" paddingLeft="10" paddingTop="10">
+					<s:HGroup verticalAlign="middle">
+						<s:BorderContainer id="brdr"
+								  width="115" height="60"
+								  horizontalCenter="0" verticalCenter="0"
+								  styleName="savingPercBorderStyle">
+							<s:Label id="savingSoFarPerc" styleName="savingPercLabelStyle"  text="{percetPrecision(countsCalculator.savingSoFarPercVal)}" 
+									 width="115" height="60"/>
+							<components:EnergySavingChart id="periodSavingChart" x="83" y="0" maxHeight="57" />
+						</s:BorderContainer>
+						<s:VGroup paddingLeft="0">
+							<s:HGroup>
+								<s:Rect height="10" width="20">
+									<s:fill>
+										<s:SolidColor color="#9EE9FE"/>
+									</s:fill>
+								</s:Rect>
+								<s:Label text="Task Tuning" styleName="taskTunegraphBarlabel"  />
+							</s:HGroup>
+							
+							<mx:Spacer width="5"/>
+							<s:HGroup>
+								<s:Rect height="10" width="20">
+									<s:fill>
+										<s:SolidColor color="#F5FE71"/>
+									</s:fill>
+								</s:Rect>
+								<s:Label text="Daylight Harvesting" styleName="DHgraphBarlabel" />
+							</s:HGroup>
+							
+							<mx:Spacer width="5"/>
+							<s:HGroup>
+								<s:Rect height="10" width="20">
+									<s:fill>
+										<s:SolidColor color="#C0FA75"/>
+									</s:fill>
+								</s:Rect>
+								<s:Label text="Occupancy" styleName="OccgraphBarlabel" />
+							</s:HGroup>
+						</s:VGroup>
+						<s:VGroup gap="5" horizontalAlign="center">
+							<s:HGroup gap="0">
+								<s:Label id="prefixSignSymbol" text="$" styleName="prefixSignStyle" height="100%" width="15" />
+								<s:BorderContainer width="170" height="32" cornerRadius="5">
+									<s:borderStroke> 
+										<mx:SolidColorStroke 
+											color="#CCCCCC" 
+											weight="1"/> 
+									</s:borderStroke> 
+									<s:backgroundFill>
+										<!-- 180 rotation creates right to left gradient --> 
+										<s:LinearGradient rotation="90">
+											<s:GradientEntry color="0xa2a2a2" />
+											<s:GradientEntry color="0x353535" />
+										</s:LinearGradient>
+									</s:backgroundFill> 
+									<s:Label id="savingSoFar"  styleName="odometerText" width="170" height="32" trackingRight="4"  />
+								</s:BorderContainer>
+								<s:Label id="suffixSignSymbol" styleName="suffixSignStyle" height="100%" width="50" />	
+							</s:HGroup>
+						</s:VGroup>
+				</s:HGroup>
+				</s:VGroup>	
+			
+			</components:GroupBox>
+			<components:GroupBox height="100%" width="100%" label="{Constants.CURRENT_SAVING}" skinClass="com.enlightedinc.components.skins.GroupBoxLegendSkin" >
+				<s:VGroup verticalAlign="middle" paddingLeft="10" paddingTop="10">
+					<s:HGroup verticalAlign="middle" gap="0">
+						<s:BorderContainer id="brdr2"
+										   width="115" height="60"
+										   horizontalCenter="0" verticalCenter="0"
+										   styleName="savingPercBorderStyle">
+							<s:Label id="savingCurrPerc" styleName="savingPercLabelStyle" text="{percetPrecision(countsCalculator.savingRightNowPercVal)}"  width="115" height="60"/>
+							<components:EnergySavingChart id="energySavingGraph" x="83" y="0" maxHeight="57"  />
+						</s:BorderContainer>
+						<s:VGroup paddingLeft="6">
+							<s:HGroup>
+								<s:Rect height="10" width="20">
+									<s:fill>
+										<s:SolidColor color="#9EE9FE"/>
+									</s:fill>
+								</s:Rect>
+								<s:Label text="Task Tuning" styleName="taskTunegraphBarlabel"  />
+							</s:HGroup>
+							
+							<mx:Spacer width="5"/>
+							<s:HGroup>
+								<s:Rect height="10" width="20">
+									<s:fill>
+										<s:SolidColor color="#F5FE71"/>
+									</s:fill>
+								</s:Rect>
+								<s:Label text="Daylight Harvesting" styleName="DHgraphBarlabel" />
+							</s:HGroup>
+							
+							<mx:Spacer width="5"/>
+							<s:HGroup>
+								<s:Rect height="10" width="20">
+									<s:fill>
+										<s:SolidColor color="#C0FA75"/>
+									</s:fill>
+								</s:Rect>
+								<s:Label text="Occupancy" styleName="OccgraphBarlabel" />
+							</s:HGroup>
+						</s:VGroup>
+					</s:HGroup>
+				</s:VGroup>
+				
+			</components:GroupBox>
+		
+			<components:GroupBox height="100%" width="100%" label="{Constants.LOAD}" skinClass="com.enlightedinc.components.skins.GroupBoxLegendSkin" >
+				<s:HGroup width="100%" height="100%" gap="0" >
+					<s:VGroup verticalAlign="middle" paddingTop="10" paddingLeft="10" gap="20">
+						<s:Label text="{Constants.CURRENT}"  styleName="currentLabels"/>
+						<s:Label text="{Constants.PERIOD_PEAK}" styleName="currentLabels" />
+						<s:Label text="{Constants.BASE_LINE}" styleName="currentLabels" />
+					</s:VGroup>
+					<s:VGroup verticalAlign="middle" width="100%" gap="0">
+						<s:HGroup gap="0">
+						<s:BorderContainer  width="137" height="30"  cornerRadius="5" >
+							<s:borderStroke> 
+								<mx:SolidColorStroke 
+									color="#CCCCCC" 
+									weight="1"/> 
+							</s:borderStroke> 
+							<s:backgroundFill>
+								<!-- 180 rotation creates right to left gradient --> 
+								<s:LinearGradient rotation="90">
+									<s:GradientEntry color="0xa2a2a2"/>
+									<s:GradientEntry color="0x353535"/>
+								</s:LinearGradient>
+							</s:backgroundFill>
+							<s:Label id="currentLoad" text="{powerPrecisionCurrent(countsCalculator.currentLoad,'C')}" styleName="odometerTextCurrent" width="137" height="30" trackingRight="4"/>
+						</s:BorderContainer>
+						<s:Label id="currentsuffixSignSymbol1" styleName="suffixSignStyle" height="100%" width="50" />	
+						</s:HGroup>
+						<s:HGroup gap="0">
+						<s:BorderContainer width="137" height="30"  cornerRadius="5" >
+							<s:borderStroke> 
+								<mx:SolidColorStroke 
+									color="#CCCCCC" 
+									weight="1"/> 
+							</s:borderStroke> 
+							<s:backgroundFill>
+								<!-- 180 rotation creates right to left gradient --> 
+								<s:LinearGradient rotation="90">
+									<s:GradientEntry color="0xa2a2a2"/>
+									<s:GradientEntry color="0x353535"/>
+								</s:LinearGradient>
+							</s:backgroundFill>
+							<s:Label id="periodPeak" text="{powerPrecisionCurrent(countsCalculator.periodPeak,'P')}"  styleName="odometerTextCurrent" width="137" height="30" trackingRight="4"/>
+						</s:BorderContainer>
+						<s:Label id="currentsuffixSignSymbol2" styleName="suffixSignStyle" height="100%" width="50" />
+						</s:HGroup>
+						<s:HGroup gap="0">
+						<s:BorderContainer width="137" height="30"  cornerRadius="5" >
+							<s:borderStroke> 
+								<mx:SolidColorStroke 
+									color="#CCCCCC" 
+									weight="1"/> 
+							</s:borderStroke> 
+							<s:backgroundFill>
+								<!-- 180 rotation creates right to left gradient --> 
+								<s:LinearGradient rotation="90">
+									<s:GradientEntry color="0xa2a2a2"/>
+									<s:GradientEntry color="0x353535"/>
+								</s:LinearGradient>
+							</s:backgroundFill>
+							<s:Label id="baselinePower" text="{powerPrecisionCurrent(countsCalculator.baseLine,'B')}" styleName="odometerTextCurrent" width="137" height="30" trackingRight="4"/>
+						</s:BorderContainer>
+						<s:Label id="currentsuffixSignSymbol3" styleName="suffixSignStyle" height="100%" width="50" />
+						</s:HGroup>
+					</s:VGroup>
+				</s:HGroup>
+			</components:GroupBox>
+		</s:HGroup>
+</s:VGroup> 

@@ -1,0 +1,10 @@
+# this file is managed by puppet
+/var/log/checksecurity.log /var/log/diskfree.log /var/log/setuid/setuid.changes /var/log/checksecurity/socket.changes {
+    weekly
+    rotate 10
+    compress
+    missingok
+    notifempty
+    create 0640 root adm
+}
+

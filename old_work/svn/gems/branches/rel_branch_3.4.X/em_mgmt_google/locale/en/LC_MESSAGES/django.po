@@ -1,0 +1,542 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-07-17 05:24-0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: templates/pages/upgrade.html:22
+msgid "error.above.field.required"
+msgstr "Above field is required."
+
+#: templates/pages/upgrade.html:72
+msgid "upgrade.title"
+msgstr "EM Upgrade"
+
+#
+msgid "error.deb.extension.required"
+msgstr "enLighted backup file '.deb' extension is only allowed. Please check the selected filename."
+
+#
+msgid "restore.upload.wait"
+msgstr "Please wait while the file is uploaded..."
+
+#
+msgid "upgrade.upload.legend"
+msgstr "Upload an upgrade image"
+
+#
+msgid "upgrade.label.image.upload"
+msgstr "Image file to be uploaded :"
+
+#
+msgid "error.restore.upload.internal"
+msgstr "File upload was not successful due to internal error."
+
+#
+msgid "action.upload"
+msgstr "Upload"
+
+#
+msgid "action.download"
+msgstr "Download"
+
+#
+msgid "deletion.confirmation.title"
+msgstr "Confirmation"
+
+#
+msgid "delete.image.wait"
+msgstr "Please wait while the upgrade file is deleted..."
+
+#
+msgid "error.backup.delete"
+msgstr "Deletion was not successful due to internal error."
+
+#
+msgid "error.connection.server"
+msgstr "Error connecting to server. Please try later."
+
+#
+msgid "error.process.already.running"
+msgstr "Theres already a backup/restore/upgrade process going on. Please try later."
+
+#
+msgid "error.upgrade.internal"
+msgstr "Upgrade was not successful due to internal error."
+
+#
+msgid "error.upgrade.connection.server"
+msgstr "Upgrade might have happened successfully. However the server connectivity is lost. Please check after sometime by accessing 	application and checking logs at /var/lib/tomcat6/Enlighted/adminlogs/upgradegems_error.log."
+
+#
+msgid "upgrade.successful"
+msgstr "Upgrade Successful"
+
+#
+msgid "error.no.server.access"
+msgstr "You haven not been able to connect to the server in a while. If you are not able to access em application in couple of minutes, please raise an alarm."
+
+#
+msgid "upgrade.list.legend"
+msgstr "List of all Upgrade Images"
+
+#
+msgid "upgrade.label.list.creation.time"
+msgstr "Creation Time"
+
+#
+msgid "restore.label.list.file"
+msgstr "File"
+
+#
+msgid "restore.label.list.file.size"
+msgstr "File Size (Kb)"
+
+#
+msgid "upgrade.label.list.version"
+msgstr "Version"
+
+#
+msgid "restore.label.list.action"
+msgstr "Action"
+
+#
+msgid "action.upgrade"
+msgstr "Upgrade"
+
+#
+msgid "action.delete"
+msgstr "Delete"
+
+#
+msgid "upload.size.indicator"
+msgstr "%(size)s KB of data is uploaded."
+
+#
+msgid "file.upload.successful"
+msgstr "File %(filename)s was uploaded successfully."
+
+#
+msgid "file.delete.successful"
+msgstr "'File '+ %(filename)s + ' was deleted successfully.'"
+
+#
+msgid "file.delete.conform"
+msgstr "'Are you sure you want to delete '+ %(filename)s + '?'"
+
+#
+msgid "file.upgrade.conform"
+msgstr "'This will change your existing EM application. Are you sure you want to upgrade to '+ %(filename)s +' ?'"
+
+#
+msgid "file.restore.conform"
+msgstr "'This will clean any data in your existing database. Please take the backup of your existing database before if you want to keep the copy of it. Are you sure you want to restore '+ %(filename)s +' ?'"
+
+#
+msgid "upgrade.confirmation.title"
+msgstr "Confirmation"
+
+#
+msgid "check.progress"
+msgstr "Check the progress here."
+
+#
+msgid "upgrade.wait.message"
+msgstr "'Please wait while EM is upgraded to ' + %(filename)s +''"
+
+#
+msgid "backup.wait.message"
+msgstr "'Please wait while EM database backup bundle ' + %(filename)s + ' is created'"
+
+#
+msgid "restore.wait.message"
+msgstr "'Please wait while EM database is restored to ' + %(filename)s + ''"
+
+#
+msgid "upgrade.progress.title"
+msgstr "Progress of the upgrade"
+
+#
+msgid "backup.progress.title"
+msgstr "Progress of the backup"
+
+#
+msgid "upgrade.progress.validatedebian"
+msgstr "Validate Debian & Prepare EM Components for upgrade"
+
+#
+msgid "upgrade.progress.embackup"
+msgstr "Take EM backup"
+
+#
+msgid "upgrade.progress.emapplication"
+msgstr "Upgrade EM Application"
+
+#
+msgid "upgrade.progress.emserver"
+msgstr "Upgrade EM Server"
+
+#
+msgid "upgrade.progress.emcommunicator"
+msgstr "Upgrade EM Communicator"
+
+#
+msgid "upgrade.progress.emmanagement"
+msgstr "Upgrade EM Management"
+
+#
+msgid "upgrade.progress.dbupgrade"
+msgstr "Upgrade Database"
+
+#
+msgid "upgrade.progress.restartservices"
+msgstr "Restart Services"
+
+#
+msgid "logs.error.heading"
+msgstr "ERROR: "
+
+#
+msgid "click.close.window"
+msgstr "Click <a onclick='jQuery.unblockUI()'>here</a> to close this window."
+
+#
+msgid "click.refresh.page"
+msgstr "Click <a onclick='location.reload();'>here</a> to refresh the page."
+
+#
+msgid "username.required"
+msgstr "Username is required."
+
+#
+msgid "password.required"
+msgstr "Password is required."
+
+#
+msgid "enlighted.energy.manager.title"
+msgstr "Enlighted Energy Manager"
+
+#
+msgid "version.label"
+msgstr "v "
+
+#
+msgid "sign.in"
+msgstr "Sign in"
+
+#
+msgid "username.text"
+msgstr "Username"
+
+#
+msgid "password.text"
+msgstr "Password"
+
+#
+msgid "login.incorrect"
+msgstr "Login details are incorrect. Please try again."
+
+#
+msgid "session.expired"
+msgstr "Your session has expired."
+
+#
+msgid "security.exception"
+msgstr "Unknown Security Exception. Please Contact Administrator."
+
+#
+msgid "enlighted.copyright"
+msgstr "Copyright &copy; (2011 - 2014) EnLighted Inc. All Rights Reserved."
+
+#
+msgid "enlighted.contactus"
+msgstr "Contact Us"
+
+#
+msgid "enlighted.corporate.headquaters"
+msgstr "Corporate Headquarters:"
+
+#
+msgid "enlighted.corporate.address1"
+msgstr "930 Benecia Avenue"
+
+#
+msgid "enlighted.corporate.address2"
+msgstr "Sunnyvale, CA 94085"
+
+#
+msgid "enlighted.corporate.phone"
+msgstr "Phone: 650.964.1094"
+
+#
+msgid "enlighted.corporate.fax"
+msgstr "Fax: 650.964.1094"
+
+#
+msgid "enlighted.corporate.email"
+msgstr "Email: info@enlightedinc.com"
+
+#
+msgid "enlighted.sales.heading"
+msgstr "For Sales:"
+
+#
+msgid "enlighted.sales.email"
+msgstr "Email: sales@enlightedinc.com"
+
+#
+msgid "enlighted.sales.phone"
+msgstr "Phone:650.964.1155"
+
+#
+msgid "enlighted.customerservice.heading"
+msgstr "For Customer Service:"
+
+#
+msgid "enlighted.customerservice.email"
+msgstr "Email: support@enlightedinc.com"
+
+#
+msgid "enlighted.customerservice.phone"
+msgstr "Phone: 650.964.1155 or 866-377-4111"
+
+#
+msgid "enlighted.mangement.title"
+msgstr "Enlighted Management"
+
+#
+msgid "back.main.page"
+msgstr "Go back to main page"
+
+#
+msgid "enlighted.mangement.administration"
+msgstr "Administration"
+
+#
+msgid "current.server.time"
+msgstr "Current Server Time"
+
+#
+msgid "enlighted.eula"
+msgstr "EULA"
+
+#
+msgid "welcome.message"
+msgstr "Welcome"
+
+#
+msgid "error.message"
+msgstr "The server is experiencing problem in handling the request or the request is not authorized. Please contact Administrator."
+
+#
+msgid "system.maintenance"
+msgstr "'System is under maintenance. Please come back after some time. For details, click <a href=' + %(url)s + '>here</a>.'"
+
+#
+msgid "error.file.restricted.characters"
+msgstr "Only alphabets, digits or underscores are allowed."
+
+#
+msgid "backup.wait"
+msgstr "Please wait while back up takes place..."
+
+#
+msgid "error.backup.internal"
+msgstr "Backup was not successful due to internal error."
+
+#
+msgid "backup.successful"
+msgstr "Backup Successful."
+
+#
+msgid "backup.header"
+msgstr "Backup"
+
+#
+msgid "backup.legend.title"
+msgstr "Enter a filename"
+
+#
+msgid "backup.note"
+msgstr "Note: File will automatically be appended with creation time and created with tar.gz extension."
+
+#
+msgid "backup.label.file.name"
+msgstr "Backup File Name :"
+
+#
+msgid "action.start"
+msgstr "Start"
+
+#
+msgid "error.tar.gz.extension.required"
+msgstr "Only backup file 'tar.gz' extension is allowed. Please check the selected filename."
+
+#
+msgid "restore.header"
+msgstr "Restore"
+
+#
+msgid "restore.upload.legend"
+msgstr "Upload a backupfile to restore"
+
+#
+msgid "restore.label.backup.upload"
+msgstr "Backup file to be uploaded :"
+
+#
+msgid "delete.wait"
+msgstr "Please wait while the backup file is deleted..."
+
+#
+msgid "error.restore.internal"
+msgstr "Restore was not successful due to internal error."
+
+#
+msgid "error.restore.connection.server"
+msgstr "Restore might have happened successfully. However the server connectivity is lost. Please check after sometime by accessing application and checking logs at /var/lib/tomcat6/Enlighted/adminlogs/backuprestore_error.log."
+
+#
+msgid "restore.successful"
+msgstr "Restore Successful."
+
+#
+msgid "restore.list.legend"
+msgstr "List of all backup files"
+
+#
+msgid "restore.label.list.creation.time"
+msgstr "Creation Time"
+
+#
+msgid "action.restore"
+msgstr "Restore"
+
+#
+msgid "backup.database.dump"
+msgstr "Generating database dump"
+
+#
+msgid "backup.database.version"
+msgstr "Get version information"
+
+#
+msgid "backup.bundle.files"
+msgstr "Compress and bundle the database dump and versioning details"
+
+#
+msgid "error.deb.name.format"
+msgstr "Please check your debian file.It should be of the format &ltrev&gt_em_all.deb"
+
+#
+msgid "restore.pre.sanity"
+msgstr "Pre-restore sanity"
+
+#
+msgid "restore.shutdown.em"
+msgstr "Shutdown EM application if it is up"
+
+#
+msgid "restore.recreate.database"
+msgstr "Re-create EM database"
+
+#
+msgid "restore.database"
+msgstr "Restore database"
+
+#
+msgid "restore.start.em"
+msgstr "Start EM application"
+
+#
+msgid "error.backup.nospace"
+msgstr "No space available on server to process more backups. Please delete some previous records from the below list."
+
+#
+msgid "error.invalid.file"
+msgstr "Invalid file or it no longer exists on server."
+
+#
+msgid "ongoing.process"
+msgstr "Ongoing critical process: "
+
+#
+msgid "em.upgrade"
+msgstr "EM Upgrade"
+
+#
+msgid "em.backup.restore"
+msgstr "Backup Restore"
+
+#
+msgid "em.history"
+msgstr "History"
+
+#
+msgid "em.cloud.manage"
+msgstr "Global EM Settings"
+
+#
+msgid "em.uem.manage"
+msgstr "EM Orchestrator Settings"
+
+#
+msgid "em.uemsettings.title"
+msgstr "EM Orchestrator Settings"
+
+#
+msgid "em.cloudsettings.title"
+msgstr "Global EM Settings"
+
+#
+msgid "image.upgrade"
+msgstr "Image Upgrade"
+
+#
+msgid "database.backup"
+msgstr "Database Backup"
+
+#
+msgid "database.restore"
+msgstr "Database Restore"
+
+#
+msgid "history.list.legend"
+msgstr "List of activities"
+
+#
+msgid "history.title"
+msgstr "Management History"
+
+#
+msgid "history.label.list.modified.time"
+msgstr "Last Modified Time"
+
+#
+msgid "history.label.list.download.log"
+msgstr "Download Logs"
+
+#
+msgid "history.download.dailybackup.log"
+msgstr "Download Daily Backup Logs"
+
+#
+msgid "history.download.tomcat.log"
+msgstr "Download Recent Tomcat Logs"
+
+#
+msgid "login.verify.again"
+msgstr "For admin, please verify again."
+

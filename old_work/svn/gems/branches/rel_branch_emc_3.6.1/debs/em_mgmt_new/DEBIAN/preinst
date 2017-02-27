@@ -1,0 +1,18 @@
+#!/bin/bash -x
+source /etc/environment
+APACHE2_PATH=`echo "$EM_MGMT_BASE"`
+if [ -z "$APACHE2_PATH" ];
+then
+        APACHE2_PATH=/var/www
+fi
+sudo mkdir -p ${APACHE2_PATH}/tempExtract
+sudo mkdir -p ${APACHE2_PATH}/em_mgmt
+
+echo "*** Taking backup of Existing application ***"
+
+sudo cp -R ${APACHE2_PATH}/em_mgmt/ ${APACHE2_PATH}/tempExtract/
+
+sudo rm -rf ${APACHE2_PATH}/em_mgmt/
+
+sudo rm -rf $ENLIGHTED_HOME/apache2/installation/*
+

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			 xmlns:s="library://ns.adobe.com/flex/spark" 
+			 xmlns:mx="library://ns.adobe.com/flex/mx"
+			 width="100%" height="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			
+			private function bulbLife(obj:Object,column:DataGridColumn):String
+			{
+				if (obj.bulblife < 25)
+				{
+					return "Almost Dead";
+				}						
+				else if(obj.bulblife < 75 && obj.bulblife >= 25)
+				{
+					return "Mid Life Crisis";
+				}
+				else
+				{
+					return "Full Healthy";
+				}
+				return "";
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<mx:columns>
+		<mx:DataGridColumn headerText="Fixture Name" dataField="name"/>
+		<mx:DataGridColumn headerText="Floor Name" dataField="location"/>
+		<mx:DataGridColumn headerText="Bulb Life" labelFunction="bulbLife"/>
+	</mx:columns>
+</mx:DataGrid>

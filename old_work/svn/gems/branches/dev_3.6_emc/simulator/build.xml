@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project Simulator">
+	<property name="dest.dir" value="bin" />
+	<property name="deploy.dir" value="deploy" />
+
+	<!--this file was created by Eclipse Runnable JAR Export Wizard-->
+	<!--ANT 1.7 is required                                        -->
+	<target name="create_run_jar" depends="compile">
+		<jar destfile="${deploy.dir}/Simulator.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader" />
+				<attribute name="Rsrc-Main-Class" value="com.ems.Simulator" />
+				<attribute name="Class-Path" value="." />
+				<attribute name="Rsrc-Class-Path" value="./ sqljet-1.1.6.jar antlr-runtime-3.4.jar jetty-all.jar gson-2.6.2.jar" />
+			</manifest>
+			<zipfileset src="jar-in-jar-loader.zip" />
+			<fileset dir="${dest.dir}" />
+			<zipfileset dir="lib" includes="sqljet-1.1.6.jar" />
+			<zipfileset dir="lib" includes="antlr-runtime-3.4.jar" />
+			<zipfileset dir="lib" includes="jetty-all.jar" />
+			<zipfileset dir="lib" includes="gson-2.6.2.jar" />
+		</jar>
+	</target>
+
+	<target name="clean">
+		<echo message="Now cleaning output folder, jar/war" />
+		<delete dir="${dest.dir}" />
+		<delete file="${deploy.dir}/Simulator.jar" />
+	</target>
+
+	<target name="compile">
+		<echo message="Now Compiling...: ${ant.project.name}" />
+		<mkdir dir="${dest.dir}" />
+
+		<javac deprecation="on" verbose="off" nowarn="on" debug="true" srcdir="src" destdir="${dest.dir}" classpath="lib/sqljet-1.1.6.jar:lib/antlr-runtime-3.4.jar:lib/jetty-all.jar:lib/gson-2.6.2.jar" target="1.6" source="1.6">
+			<compilerarg value="-Xlint" />
+			<compilerarg value="-Xlint:-serial" />
+			<compilerarg value="-Xlint:-unchecked" />
+			<include name="**/*.java" />
+		</javac>
+	</target>
+</project>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.User" table="users">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">user_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-User.xml 
+					containing the additional parameters and place it in your merge dir. -->
+			</generator>
+		</id>
+
+		<many-to-one name="tenant" class="com.ems.model.Tenant"
+			fetch="select">
+			<column name="tenant_id" />
+		</many-to-one>
+
+		<property name="email" type="java.lang.String" update="true"
+			insert="true" column="email" />
+
+		<property name="password" type="java.lang.String" update="true"
+			insert="true" column="password" />
+
+		<property name="firstName" type="java.lang.String" update="true"
+			insert="true" column="first_name" />
+
+		<property name="lastName" type="java.lang.String" update="true"
+			insert="true" column="last_name" />
+
+		<property name="createdOn" type="java.util.Date" update="true"
+			insert="true" column="created_on" />
+			
+			<property name="passwordChangedAt" type="java.util.Date" update="true"
+			insert="true" column="password_changed_at" />
+
+		<many-to-one name="role" class="com.ems.model.Role"
+			cascade="none" outer-join="auto" update="true" insert="true" column="role_id" />
+
+		<property name="locationId" type="java.lang.Long" update="true"
+			insert="true" column="location_id" />
+
+		<property name="locationType" type="java.lang.String" update="true"
+			insert="true" column="location_type" />
+
+		<property name="contact" type="java.lang.String" update="true"
+			insert="true" column="contact" />
+
+		<property name="oldPasswords" type="java.lang.String" update="true"
+			insert="true" column="old_passwords" />
+
+		<property name="approvedLocationId" type="java.lang.Long"
+			update="true" insert="true" column="approved_location_id" />
+
+		<property name="approvedLocationType" type="java.lang.String"
+			update="true" insert="true" column="approved_location_type" />
+
+		<property name="status" update="true" insert="true" column="status">
+			<type name="org.hibernate.type.EnumType">
+				<param name="enumClass">com.ems.types.UserStatus</param>
+				<!-- This is little wierd but hibernate takes number 12 for the String 
+					for enum in hbm file -->
+				<param name="type">12</param>
+			</type>
+		</property>
+		
+		<property name="termConditionAccepted" type="boolean"
+			update="true" insert="true" column="term_condition_accepted" />
+
+		<set name="userLocations" lazy="true" inverse="true">
+			<key column="user_id" />
+			<one-to-many class="com.ems.model.UserLocations" />
+		</set>
+
+		<property name="noOfLoginAttempts" type="java.lang.Long"
+			update="true" insert="true" column="no_login_attempts" />
+
+		<property name="forgotPasswordIdentifier" type="java.lang.String"
+			update="true" insert="true" column="identifier_forgot_password" />
+		<property name="unlockTime" type="java.util.Date"
+            update="true" insert="true" column="unlock_time" />
+		<!-- To add non XDoclet property mappings, create a file named hibernate-properties-User.xml 
+			containing the additional properties and place it in your merge dir. -->
+
+	</class>
+
+</hibernate-mapping>

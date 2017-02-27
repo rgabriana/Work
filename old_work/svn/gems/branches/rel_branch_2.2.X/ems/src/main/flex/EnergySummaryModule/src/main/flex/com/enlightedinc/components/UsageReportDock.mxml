@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%"
+		  >
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:DateValidator id="todateValidator" property="text" requiredFieldError="Please choose a date" />
+	</fx:Declarations>
+	<fx:Metadata>
+		[Event(type="com.enlightedinc.events.EnergySummaryFilterEvent", name="filterEnergySummary")]
+		[Event(type="com.enlightedinc.events.EnergySummaryDockEvent", name="dockClick")]
+	</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.events.EnergySummaryDockEvent;
+			import com.enlightedinc.events.EnergySummaryFilterEvent;
+			import com.enlightedinc.utils.GlobalUtils;
+			
+			import flash.text.engine.FontWeight;
+			
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
+			import mx.events.ValidationResultEvent;
+			import mx.validators.ValidationResult;
+			
+			import org.alivepdf.colors.RGBColor;
+			import org.alivepdf.data.Grid;
+			import org.alivepdf.data.GridColumn;
+			import org.alivepdf.display.Display;
+			import org.alivepdf.drawing.Joint;
+			import org.alivepdf.fonts.FontFamily;
+			import org.alivepdf.fonts.Style;
+			import org.alivepdf.images.ResizeMode;
+			import org.alivepdf.layout.Align;
+			import org.alivepdf.layout.Layout;
+			import org.alivepdf.layout.Orientation;
+			import org.alivepdf.layout.Size;
+			import org.alivepdf.layout.Unit;
+			import org.alivepdf.pdf.PDF;
+			import org.alivepdf.saving.Method;
+			// Define mismatch error messsage
+			private var dateMismatchError : String = "From date should be smaller than To date?";
+			private var results:Array;
+			private var currSelButton:Button;
+			private var filterButton:Button;
+			
+			private var _setSelectedButton:String;
+			
+			public function get setSelectedButton():String
+			{
+				return _setSelectedButton;
+			}
+			
+			public function set setSelectedButton(value:String):void
+			{
+				_setSelectedButton = value;
+				showButtonSelected(_setSelectedButton);
+			}
+			private function filterData(event:MouseEvent) : void
+			{
+				filterButton = event.currentTarget as Button;
+				filterButton.emphasized =true;
+				filterButton.setStyle('fontWeight', FontWeight.BOLD);
+				filterButton.setStyle("accentColor",0x000000);
+				
+				//Reset Current Selected Period button
+				if(currSelButton)
+				{
+					currSelButton.clearStyle('fontWeight');
+					currSelButton.emphasized =false;
+				}
+				var nowDate:Date = GlobalUtils.getServerTime();
+				var fDate:Date = DateField.stringToDate(fromDate.text, "MM/DD/YYYY");
+				fDate.setDate(fDate.getDate());
+				fDate.setHours(nowDate.getHours());
+				fDate.setMinutes(nowDate.getMinutes());
+				fDate.setSeconds(nowDate.getSeconds());
+				var tDate:Date = DateField.stringToDate(toDate.text, "MM/DD/YYYY");
+				tDate.setHours(nowDate.getHours());
+				tDate.setMinutes(nowDate.getMinutes());
+				tDate.setSeconds(nowDate.getSeconds());
+				if(validateEmptyDate())
+					dispatchEvent( new EnergySummaryFilterEvent( EnergySummaryFilterEvent.FILTER_ENERGY_SUMMARY, fDate, tDate) );
+			}
+			private function getData(event:MouseEvent) : void
+			{
+				showButtonSelected((event.currentTarget as Button).name);
+				dispatchEvent( new EnergySummaryDockEvent( EnergySummaryDockEvent.CLICK_EVENT, event.target.name) );
+			}
+			private function showButtonSelected(buttonName:String):void
+			{
+				var selectedButton:Button;
+				switch(buttonName)
+				{
+					case Constants.DAY :
+						selectedButton = this.getChildByName(Constants.DAY) as Button;
+						break;
+					case Constants.WEEK: 
+						selectedButton = this.getChildByName(Constants.WEEK) as Button;
+						break;
+					case Constants.MONTH:
+						selectedButton = this.getChildByName(Constants.MONTH) as Button;
+						break;
+					case Constants.YEAR:
+						selectedButton = this.getChildByName(Constants.YEAR) as Button;
+						break;
+				}
+				//Reset Filter Button
+				if(currSelButton)
+				{
+					currSelButton.clearStyle('fontWeight');
+					currSelButton.emphasized =false;
+				}
+				//Reset Filter Button
+				if(filterButton)
+				{
+					filterButton.clearStyle('fontWeight');
+					filterButton.emphasized =false;
+				}
+				currSelButton= selectedButton;
+				selectedButton.emphasized =true;
+				selectedButton.setStyle('fontWeight', FontWeight.BOLD);
+				selectedButton.setStyle("accentColor",0x000000);
+			}
+			private function validateDateRange(startDate:Date, endDate:Date):Array
+			{
+				results = [];
+				todateValidator.source= toDate;
+				var StartTimestamp : Number = startDate.getTime (); // create milisec vrom start date
+				var EndTimestamp : Number = endDate.getTime ();    // create milisec vrom end date    	
+				
+				if (StartTimestamp == EndTimestamp){// start date same as end date = OKAY
+					return results;
+				} else if (StartTimestamp < EndTimestamp){ //end date bigger then start date = OKAY
+					return results;
+				} else { // error - From date should be smaller than To date?, 
+					todateValidator.validate();
+					todateValidator.requiredFieldError = dateMismatchError;
+					results.push(new ValidationResult(true, null, "Date Error", dateMismatchError));
+					return results;
+				}
+			}
+			private function validateEmptyDate():Boolean
+			{
+				todateValidator.source= toDate;
+				var flag:Boolean = true;
+				var result:ValidationResultEvent = todateValidator.validate();
+				if(result.results!=null && result.results.length>0)
+					flag=false;
+				return 	flag;			
+			}
+			private function onFromDateChange() : void
+			{
+				var secs:Number = 1000 * 60 * 60 * 24;
+				var fdate:Date = DateField.stringToDate(fromDate.text, "MM/DD/YYYY");
+				var tDateStr:String= toDate.text;
+				var tDate:Date = DateField.stringToDate(tDateStr, "MM/DD/YYYY");
+				
+				var nextDay:Date = GlobalUtils.getServerTime();
+				nextDay.setTime(fdate.getTime() + secs);
+				toDate.selectableRange= {rangeStart : nextDay, rangeEnd : GlobalUtils.getServerTime()};
+				
+				if(tDateStr!=null && tDateStr.length>0)
+				{
+					var result:Array = validateDateRange(fdate,tDate);
+					
+					if(result.length>0)
+					{
+						toDate.selectedDate = null
+					}else
+					{
+						//Keep the Original selected todate as it is
+						toDate.selectedDate = DateField.stringToDate(tDateStr, "MM/DD/YYYYY");
+						
+					}
+				}
+			}
+			private function printData(e:MouseEvent):void{
+				var printContainer:UIComponent = this.parentDocument.baseGroup;
+				var printPDF:PDF = new PDF( Orientation.LANDSCAPE, Unit.MM, Size.LETTER );
+				printPDF.setDisplayMode( Display.FULL_PAGE, Layout.SINGLE_PAGE);
+				
+				var strLocation:String = "";
+				var strPeriod:String = "";
+				strPeriod = this.parentDocument.filterPeriodlabel.text;
+				strLocation = this.parentDocument.breadscrumLabel.text;
+				printPDF.addPage();
+				printPDF.setFont(FontFamily.ARIAL, Style.NORMAL, 11);
+				printPDF.textStyle(new RGBColor (0x000000));
+				printPDF.addText(strPeriod,125,10);
+				printPDF.addText(strLocation,20,10);
+				printPDF.addImage( printContainer, 20, 12, printContainer.width/5, printContainer.height/5, 'PNG', 100, 1, ResizeMode.FIT_TO_PAGE);
+				// PRINT DATA GRID
+				var gridColumns:Array = new Array();
+				var gridColumnName:GridColumn = new GridColumn("Group", "name", 40, Align.CENTER, Align.LEFT);
+				gridColumns.push(gridColumnName);
+				var gridColumnEnergyUsed:GridColumn = new GridColumn("Energy Used (kWh)", "powerused", 30, Align.CENTER, Align.RIGHT);
+				gridColumns.push(gridColumnEnergyUsed);
+				var gridColumnTotalFixture:GridColumn = new GridColumn("No. of fixtures", "totalfixtures", 30, Align.CENTER, Align.RIGHT);
+				gridColumns.push(gridColumnTotalFixture);
+				var gridColumnCost:GridColumn = new GridColumn("Cost ($)", "savedcost", 30, Align.CENTER, Align.RIGHT);
+				gridColumns.push(gridColumnCost);
+				var gridColumnSavedPower:GridColumn = new GridColumn("Saving (kWh)", "savedpower", 30, Align.CENTER, Align.RIGHT);
+				gridColumns.push(gridColumnSavedPower);
+				
+				printPDF.setDisplayMode( Display.REAL, Layout.SINGLE_PAGE );
+				var grid:Grid = new Grid( this.parentDocument.profileUsageData.toArray(), 400, 600, new RGBColor( 0xE6E6E6 ), new RGBColor( 0xE6E6E6 ), new RGBColor( 0 ), false, new RGBColor( 0x0 ),1, Joint.MITER );
+				grid.columns = gridColumns;
+				printPDF.addPage();
+				printPDF.addText(strPeriod,125,10);
+				printPDF.addText(strLocation,20,10);
+				printPDF.textStyle( new RGBColor(0), 1 );
+				printPDF.setFont( FontFamily.ARIAL, Style.BOLD, 8 );
+				printPDF.addGrid( grid, 5, 5 );
+				
+				
+				var f:FileReference = new FileReference();
+				f.addEventListener(IOErrorEvent.IO_ERROR,ioErrorHander,false,0,true);
+				var bytes:ByteArray = printPDF.save(Method.LOCAL);
+				f.save(bytes, "usage_by_profile.pdf");
+			}
+			private function ioErrorHander(e:IOErrorEvent):void
+			{
+				Alert.show("Error Occured while saving, Please close file if open any");
+			}
+		
+		]]>
+	</fx:Script>
+	<s:Button name="{Constants.DAY}" label="{Constants.DAY}" toolTip="{Constants.ONE_DAY}" buttonMode="true" click="getData(event)" />
+	<s:Button name="{Constants.WEEK}" label="{Constants.WEEK}" toolTip="{Constants.ONE_WEEK}" buttonMode="true" click="getData(event)"/>
+	<s:Button name="{Constants.MONTH}" label="{Constants.MONTH}" toolTip="{Constants.ONE_MONTH}" buttonMode="true" click="getData(event)"/>
+	<s:Button name="{Constants.YEAR}" label="{Constants.YEAR}" toolTip="{Constants.ONE_YEAR}" buttonMode="true" click="getData(event)"/>
+	<mx:VRule height="100%"/>
+	<s:HGroup verticalAlign="middle">
+		<s:Label text="From:"/>
+		<mx:DateField id="fromDate" yearNavigationEnabled="true"
+					  selectableRange="{{rangeEnd : GlobalUtils.getServerTime()}}"
+					  change="onFromDateChange()"/>
+		<s:Label text="To:"/>
+		<mx:DateField id="toDate" yearNavigationEnabled="true" 
+					  selectableRange="{{rangeEnd : GlobalUtils.getServerTime()}}" />
+		<s:Button id="filterBtn" label="{Constants.APPLY}" click="filterData(event)"/>
+	</s:HGroup>
+	<mx:Spacer width="100%"/>
+	<s:Button name="{Constants.SAVEPDF}" label="{Constants.SAVEPDF}" toolTip="{Constants.SAVEPDF}" buttonMode="true" click="printData(event)"/>
+</s:HGroup>

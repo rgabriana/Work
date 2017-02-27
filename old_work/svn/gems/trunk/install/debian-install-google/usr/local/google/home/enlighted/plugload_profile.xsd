@@ -1,0 +1,205 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="plugloadProfilehandler">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="xs:byte" name="id"  minOccurs="1" maxOccurs="1" />
+        <xs:element name="morningProfile"  minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="dayProfile" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="eveningProfile" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="nightProfile" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="morningProfileWeekEnd" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="dayProfileWeekEnd" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="eveningProfileWeekEnd" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="nightProfileWeekEnd" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="morningProfileHoliday" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="dayProfileHoliday" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="eveningProfileHoliday" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="nightProfileHoliday" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="plugloadProfileConfiguration" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element name="weekDays" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+                    <xs:element type="xs:string" name="day"  minOccurs="0" maxOccurs="1" />
+                    <xs:element type="xs:integer" name="shortOrder"  minOccurs="0" maxOccurs="1" />
+                    <xs:element type="xs:string" name="type"  minOccurs="0" maxOccurs="1" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element type="xs:string" name="morningTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:string" name="dayTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:string" name="eveningTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:string" name="nightTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element type="xs:byte" name="holidayLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element name="override5" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="override6" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="override7" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="override8" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:byte" name="mode"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="activeMotion"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="manualOverrideTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element type="xs:short" name="profileChecksum"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:short" name="globalProfileChecksum"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="initialOnLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:short" name="profileGroupId"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="profileFlag"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="initialOnTime"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="drHighLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="drModerateLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="drLowLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="drSpecialLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="heartbeatInterval"  minOccurs="0" maxOccurs="1" />
+         <xs:element type="xs:integer" name="heartbeatLingerPeriod"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="noOfMissedHeartbeats"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="safetyMode"  minOccurs="0" maxOccurs="1" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  
+  	<title>Scene Page</title>
+  	
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	
+	    
+  </head>
+ 
+	<body >
+		
+		<div id="scenePage" data-role="page" >
+
+			<div data-role="header" data-position="fixed" >
+				<!-- <a data-icon="arrow-l" class="ui-btn-left" onclick= "backToSwitches()">Switches</a> -->
+				<a data-icon="arrow-l" onclick= "backToSwitches()">Switches</a>
+				<h1 id="switchName" style="padding-left: 10px"></h1>
+			</div>
+			
+	    	<div data-role="content" id="ScenePageContent" align="center">				
+				
+				<div data-role="controlgroup" data-type="horizontal">
+					<a href="#" data-role="button" id="autoButton" data-inline="true">Auto</a>
+					<a href="#" data-role="button" id="dimButton" data-inline="true">Dim</a>
+					<a href="#" data-role="button" id="brightButton" data-inline="true">Brighten</a>
+				</div> 
+				
+				
+	         	<ul id="attachedSceneList" data-role="listview" data-filter="false" data-inset="true">
+	         	</ul>         	
+			
+			</div>
+			
+			<div data-role="footer"  data-position="fixed" data-id="myfooter">
+				<div data-role="navbar" data-iconpos="top">
+					<ul>
+						<li><a   data-icon="info"    onclick="infoDialog()" >About</a></li>
+						<li><a   data-icon="refresh" onclick="backToSwitches()">Refresh</a></li>
+						<li><a   data-icon="delete" onclick="logoutLayer()">Logout</a></li>
+					</ul>
+				</div>
+			</div>	
+		
+		</div>
+		
+		
+	</body>
+	
+</html>

@@ -1,0 +1,9 @@
+/home/enlighted/utils/gencerts.log {
+        rotate 50
+        size 50M
+        missingok
+        compress
+        delaycompress
+        notifempty
+        copytruncate
+}

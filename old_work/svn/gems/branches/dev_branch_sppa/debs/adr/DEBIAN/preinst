@@ -1,0 +1,48 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+if [ -d /opt/enLighted/adr ]
+then
+        echo "/opt/enLighted/ard Directory exists!!!!"
+else
+        echo "Creating /opt/enLighted/adr directory"
+        mkdir /opt/enLighted/adr
+fi
+ADR_PATH=/opt/enLighted/adr
+DBUSER=postgres
+DBHOST=localhost
+DB=adr
+ps -ef |grep postgresql |grep -v grep > /dev/null
+if [ $? -eq 0 ]
+        then
+                if [ `psql -q -U ${DBUSER} -h ${DBHOST}  -t -c "select count(*) from pg_database where datname='${DB}'"` -eq 1 ]
+                        then
+
+                                mkdir -p ${ADR_PATH}/tempExtract
+                                dumpfileprefix=adr_dump_preupgradebkp
+
+                                #-- Take backup of existing war and database
+
+                                echo "Taking backup of Existing application.."
+
+                                sudo cp ${ADR_PATH}/adr.jar ${ADR_PATH}/tempExtract/adr_bkp.jar
+
+                                echo "Taking backup of database.."
+                                /usr/bin/pg_dump -U $DBUSER -h $DBHOST -b -f "${ADR_PATH}/tempExtract/${dumpfileprefix}.sql" $DB
+
+				p1=`ps -eaf | grep adr.jar | grep -v grep | wc -l`
+                       		if [ ${p1} -eq 0 ]
+                       		then
+                                	echo "Closing the existing adr.jar process!!!!"
+                             		ps -eaf | grep adr.jar | grep -v grep | sed 's/ \+ /\ /g' | cut -d " " -f2 | xargs kill
+				fi
+                                echo "Undeploying application.."
+                                sudo rm -fr ${ADR_PATH}/adr.jar
+
+                        else
+                                 echo "First time install"
+
+                fi
+        else
+                echo "Postgres not running. Maybe first time install"
+fi
+

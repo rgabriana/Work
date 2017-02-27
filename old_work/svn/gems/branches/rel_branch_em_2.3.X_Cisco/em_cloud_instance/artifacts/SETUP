@@ -1,0 +1,3 @@
+1. Copy the em_cloud_instance/artifacts/config.properties file to /var/lib/tomcat6/Enlighted/config.properties
+2. Set the ecloudIp (INTERNAL IP OF MASTER SERVER) value at /var/lib/tomcat6/Enlighted/config.properties in order for replica server
+	to communicate with the master server.

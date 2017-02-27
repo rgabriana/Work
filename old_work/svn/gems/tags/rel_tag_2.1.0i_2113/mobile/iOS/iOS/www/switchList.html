@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+  
+  </head>
+ 
+	<body>
+		
+		<div data-role="page" id="switchListPage">
+
+			<div data-role="header" data-position="fixed">
+				
+				<h1>Switch List</h1>
+				
+			</div>
+			
+			<div data-role="content" >
+	         	<ul id="switchList" data-role="listview" data-filter="false" ></ul>
+	    	</div>
+			
+			<div data-role="footer"  data-position="fixed" data-id="myfooter">
+				<div data-role="navbar" data-iconpos="top">
+					<ul>
+						<li><a    data-icon="info"   onclick="infoDialog()">About</a></li>
+						<li><a   data-icon="refresh" onclick="refreshSwitchListLayer()">Refresh</a></li>
+						<li><a   data-icon="delete" onclick="logoutLayer()">Logout</a></li>
+					</ul>
+				</div>
+			</div>	
+		
+		</div>
+		
+	</body>
+	
+</html>

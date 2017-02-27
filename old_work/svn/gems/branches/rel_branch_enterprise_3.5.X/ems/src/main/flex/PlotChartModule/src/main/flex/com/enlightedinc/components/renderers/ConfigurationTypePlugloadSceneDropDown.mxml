@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009"
+		   xmlns:mx="library://ns.adobe.com/flex/mx"
+		   xmlns:s="library://ns.adobe.com/flex/spark" horizontalScrollPolicy="off" focusEnabled="true">
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.components.PlotChartView;
+			import com.enlightedinc.components.ReportTable;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.events.ListEvent;
+			[Bindable]
+			public var isEnable:Boolean = true;
+			[Bindable]
+			public var application:Object = FlexGlobals.topLevelApplication;
+			
+			[Bindable]
+			private var plugloadSceneGrpPgTypeDp:ArrayCollection = new ArrayCollection([
+				{label:"ON", val:100},
+				{label:"OFF", val:0}
+			]);    
+			
+			override public function set data(value:Object):void {
+				if(value != null) {
+					super.data = value;
+					var selVal:Number = Number(data.lightlevel);
+					if(selVal==0)
+					{
+						scenePlugloadsCombo.selectedIndex=1;
+					}else
+					{
+						scenePlugloadsCombo.selectedIndex=0;
+					}
+					
+				}
+			}
+			protected function plugloadScenePlugloadCombo_changeHandler(event:ListEvent):void
+			{
+				var value:String = (event.currentTarget as ComboBox).selectedItem.val;
+				var plData:Object= ((event.currentTarget as ComboBox).owner as ConfigurationTypePlugloadSceneDropDown).data; 
+				application.plotChartView.updatePlugloadSceneDetail(value,plData);
+			}
+		]]>
+	</fx:Script>
+	<mx:ComboBox id="scenePlugloadsCombo" dataProvider="{plugloadSceneGrpPgTypeDp}" width="100%"  change="plugloadScenePlugloadCombo_changeHandler(event)" enabled="{isEnable}"/>
+</mx:Canvas>

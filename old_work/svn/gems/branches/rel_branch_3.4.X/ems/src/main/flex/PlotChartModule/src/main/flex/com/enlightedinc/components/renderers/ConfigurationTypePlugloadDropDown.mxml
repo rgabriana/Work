@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009"
+		   xmlns:mx="library://ns.adobe.com/flex/mx"
+		   xmlns:s="library://ns.adobe.com/flex/spark" horizontalScrollPolicy="off" focusEnabled="true">
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.components.PlotChartView;
+			import com.enlightedinc.components.ReportTable;
+			import mx.core.FlexGlobals;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.ListEvent;
+			
+			[Bindable]
+			public var application:Object = FlexGlobals.topLevelApplication;
+			
+			[Bindable]
+			public var isEnable:Boolean = false;
+			
+			[Bindable]
+			private var motionGrpPgTypeDp:ArrayCollection = new ArrayCollection([
+				{label:"Act Only", val:1}
+			]);    
+			
+			override public function set data(value:Object):void {
+				if(value != null) {
+					super.data = value;
+					motionPlugloadsCombo.selectedIndex=data.type;
+					isEnable = false;
+				}
+			}
+			protected function motionPlugloadCombo_changeHandler(event:ListEvent):void
+			{
+				
+			}
+		]]>
+	</fx:Script>
+	<mx:ComboBox id="motionPlugloadsCombo" dataProvider="{motionGrpPgTypeDp}" width="100%"  change="motionPlugloadCombo_changeHandler(event)" enabled="{isEnable}" />
+</mx:Canvas>

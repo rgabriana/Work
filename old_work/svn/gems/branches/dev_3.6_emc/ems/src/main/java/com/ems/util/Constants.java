@@ -1,0 +1,186 @@
+package com.ems.util;
+
+import java.util.Map;
+
+
+
+public class Constants {
+
+
+	public static final int PERM_READ = 1;
+
+	public static final int PERM_UPDATE = 2;
+
+	public static final int PERM_ADD = 4;
+
+	public static final int PERM_DELETE = 8;
+	
+	public static final String SESSION_KEY_USER = "USER";
+
+	public static final String OPERATION_READ = "read";
+
+	public static final String OPERATION_UPDATE = "update";
+
+	public static final String OPERATION_ADD = "add";
+
+	public static final String OPERATION_DELETE = "delete";
+	
+	public static final String ROLE_ADMIN = "Admin";
+	
+	public static final String ROLE_AUDITOR = "Auditor";
+	
+	public static final String ROLE_EMPLOYEE = "Employee";
+	
+	public static final String XML_PATH = "C:\\Program Files\\Apache Software Foundation\\apache-tomcat-6.0.18\\webapps\\ems\\data\\";
+	
+	public static final String WEEK_DAY = "weekday";
+	
+	public static final String WEEK_END = "weekend";
+	
+	public static final String HOLIDAY = "holiday";
+	
+	public static final String SEVERITY_CRITICAL = "Critical";
+	
+	public static final String SEVERITY_WARNING = "Warning";
+	
+	public static final String SEVERITY_INFORMATIONAL = "Info";
+	
+	public static final String SEVERITY_MAJOR = "Major";
+	
+	public static final String SEVERITY_MINOR = "Minor";
+	
+	public static final String SEVERITY_CLEAR = "CLEAR";
+	
+	public static final String COMPANY_STRUCTURE_TYPE = "Company";
+	
+	public static final String CAMPUS_STRUCTURE_TYPE = "Campus";
+	
+	public static final String BUILDING_STRUCTURE_TYPE = "Building";
+	
+	public static final String FLOOR_STRUCTURE_TYPE = "Floor";
+	
+	public static final String AREA_STRUCTURE_TYPE = "Area";
+	
+	public static final String SUBAREA_STRUCTURE_TYPE = "Sub Area";
+	
+	public static final String PARENTGROUP_STRUCTURE_TYPE = "ParentGroup";
+	
+	public static final String GROUPS_STRUCTURE_TYPE = "Groups";
+	
+	public static final String FIXTURE_STRUCTURE_TYPE = "Fixture";
+	
+	public static final int RECORDS_PER_PAGE = 20;
+	
+	public static final int DR_RECORDS_PER_PAGE = 10;
+	
+	public static final int PRICING_RECORDS_PER_PAGE = 3;
+	
+	public static final Long DEFAULT_MOTION_SENSITIVITY = 1L;
+	
+	public static final Long DEFAULT_RAMP_UP_TIME = 0L;
+
+	public static final int DEFAULT_AMBIENT_SENSITIVITY = 5;
+
+	public static final short DEFAULT_STANDALONE_MOTION_OVERRIDE = 0;
+
+	public static final byte DEFAULT_DR_REACTIVITY = 0;
+	
+	public static final byte MAX_LOGIN_ATTEMPTS = 3;
+	public static final byte MAX_LOGIN_ATTEMPTS_ADMINS = 5;
+	
+	public static final String NO_LOGIN_ATTEMPT_COLUMN = "no_login_attempts";
+	
+	public static final String PASSWORD_COLUMN = "password";
+	
+	public static final String EXCLUDE_PATH = "/services/org/public/nonsecure";
+	
+	public static final String BACnet_CONFIG_PATH = "/api/bacnetconfig/alldetails";
+	
+	public static final String BACNET_GROUPHEADER = "Group Point Configuration";
+	public static final String BACNET_INDIVIDUALHEADER = "Individual Point Configuration";
+	public static final String BACNET_EMSUBHEADER = "Energy Manager";
+	public static final String BACNET_AREASUBHEADER = "Area";
+	public static final String BACNET_ECLIGHTING = "Energy Consumption - Lighting";
+	public static final String BACNET_ECPLUGLOAD = "Energy Consumption - Plugload";
+	public static final String BACNET_EMERGENCY = "Emergency";
+	public static final String BACNET_DRLEVEL = "Demand Response Level";
+	public static final String BACNET_OCCUPANCY = "Occupancy";
+	public static final String BACNET_FIXOUTAGECOUNT = "Fixture Outage Count";
+	public static final String BACNET_FIXSUBHEADER = "Fixture";
+	public static final String BACNET_PLSUBHEADER = "Plugload";
+	public static final String BACNET_FIXEC = "Energy Consumption";
+	public static final String BACNET_FIXDIMLEVEL = "Dim Level";
+	public static final String BACNET_FIXOUTAGESTATUS = "Outage Status";
+	public static final String BACNET_PLONOFF = "On/Off Control";
+	public static final String EMBASEINSTANCE = "EnergyManagerBaseInstance";
+	public static final String AREABASEINSTANCE = "AreaBaseInstance";
+	public static final String BACNET_SWITCHSUBHEADER = "Switch";
+	public static final String BACNET_EMHEADER = "EM";
+	
+	
+	public static final String BACNET = "bacnet";
+	
+	public static final String REST_API_KEY = "RestApiKey";
+	
+	public static final String REST_API_SECRET = "RestApiSecret";
+	
+	public static final String LOGIN = "/login.jsp";
+	public static final String LOGIN_SEC = "/j_spring_security_check";
+	public static final String FORGOT_PASS = "/forgotPassword.jsp";
+	public static final String LOGIN_ATTEMPT = "/loginFailure/loginAttempts.ems";
+	
+	
+	public static final String IDENTIFIER_FORGOT_PASS = "identifier_forgot_password";
+	
+	//Get environment variables from Sytem
+	public static final Map<String, String> SYS_ENV = System.getenv();
+	public static final String OPT_ENLIGHTED = SYS_ENV.get("OPT_ENLIGHTED");
+	public static final String ENL_APP_HOME = SYS_ENV.get("ENL_APP_HOME");
+	public static final String ENLIGHTED_HOME = SYS_ENV.get("ENLIGHTED_HOME");
+	public static final String EM_MGMT_HOME = SYS_ENV.get("EM_MGMT_HOME");
+	private static final String SYS_PATH = SYS_ENV.get("ENL_APP_HOME");
+	public static final String EM_PUB_FILE = SYS_PATH+"/Enlighted/em_public.key";//"/var/lib/tomcat/Enlighted/em_public.key";
+	public static final String EM_PVT_FILE = SYS_PATH+"/Enlighted/em_private.key";//"/var/lib/tomcat/Enlighted/em_private.key";
+	public static final String SUPP_PUB_FILE = SYS_PATH+"/Enlighted/supp_public.key";//"/var/lib/tomcat/Enlighted/supp_public.key";
+	public static final String SUPP_PVT_FILE = SYS_PATH+"/Enlighted/supp_private.key";//"/var/lib/tomcat/Enlighted/supp_private.key";
+	public static final String FORGOT_PW_FILE_EXTENSIONS_ALLOWED = "key,txt,doc,html,pem,der";
+	public static final String XSD_SENSOR = SYS_PATH+"/Enlighted/sensor_profile.xsd";//"/var/lib/tomcat/Enlighted/sensor_profile.xsd";
+	public static final String XSD_PLUGLOAD = SYS_PATH+"/Enlighted/plugload_profile.xsd";//"/var/lib/tomcat/Enlighted/plugload_profile.xsd";
+	public static final String SUCCESS_UPLOAD_PROFILE= "message.uploadprofile";
+	public static final String ERROR_UPLOAD_PROFILE= "error.uploadprofile";
+	public static final String COMMA = ",";
+	public static final String FORGOT_REQ_ATTRIBUTE  = "forgotpasssecurity";
+	public static final String NETWK_INTERFACE_ETH0="eth0";
+	public static final String DEFAULT_DELAY_LOGIN_UNSUCCESS="default.delay.unsuccessful.loginattempt";
+	public static final String ADMIN = "admin";
+	public static final String PASSWORD_CHANGED_IDENTIFIER = "PASSWORD_CHANGED_BY_ADMIN";
+	public static final String ERROR_LOGIN_ATTEMPTS = "error.login.incorrect";
+	public static final String ERROR_LOGIN_ATTEMPTS_GENERAL = "error.login.incorrect.general";
+	public static final String USB_ERROR_FORGOTPASS = "error.forgotpassword.reset";
+	public static final String ADMIN_LOCKED_MESSAGE="error.login.LoginAttemptsException.admin";
+	public static final String DEFAULT_DELAY_ADMIN_ATTRIB = "defaultDelayTimeInMillis";
+	public static final String ADMIN_LOCK_PERIOD_HOURS = "hours.locking.period.admin";
+	public static final String DATE_FORMAT_READABLE = "ddMMMyyyy, hh:mm:ss a";
+	public static final String UTF_8 = "utf-8";
+	public static final String TEXT_HTML = "text/html";
+	public static final String ALGORITHM_LOCAL = "PBEWithMD5AndDES";
+	public static final String INACTIVE_ACCT="error.login.inactive";
+	public static final String FORGOT_PASS_TEMP_SPLITTER="###";
+	public static final String FORGOT_PASS_TIMEZONE_SPLITTER="&&&";
+	public static final String FORGOT_PASS_EXPIRED="error.forgot.pass.expired";
+	public static final String FORGOT_DATE_PATTERN="yyyy-MM-dd:hh:mm:ss";
+	public static final String EXTERNAL_USER_NOT_ALLOWED="error.ldap.notallowed";
+	public static final String SHA1_ALGO = "SHA-1";
+	public static final String ENL_AUTH_KEY = "EnlightedAuthKey";
+	public static final String IPTABLES_STATIC_PORTS_KEY="iptables.rules.static.ports";
+	public static final String DHCP_INTERFACE="DHCP";
+	public static final String DISABLE="DISABLE";
+	public static final String ENABLE="ENABLE";
+	public static final String TRUE="true";
+	public static final String FALSE="false";
+	public static final String ENL_STATIC_GW_NETWORK_IP="169.254.0.1";
+	public static final String APPLY_NETWORK_STATUS_KEY="apply.network.status";
+	public static final String TITLE_24_JSON_KEY= "title24.json.key";
+	public static final String KAFKA_PROP_FILE = SYS_PATH + "/Enlighted/kafka-proxy.properties";
+	
+}

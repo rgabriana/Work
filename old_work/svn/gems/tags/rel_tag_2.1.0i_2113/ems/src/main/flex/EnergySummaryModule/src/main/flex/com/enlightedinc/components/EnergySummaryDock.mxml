@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="100%" height="30" maxHeight="30" paddingRight="5"
+		 verticalAlign="middle" xmlns:components="com.enlightedinc.components.*">
+	
+	<fx:Metadata>
+		[Event(type="com.enlightedinc.events.EnergySummaryFilterEvent", name="filterEnergySummary")]
+		[Event(type="com.enlightedinc.events.EnergySummaryDockEvent", name="dockClick")]
+		[Event(type="com.enlightedinc.events.EnergySummaryDockEvent", name="refreshScreen")]
+	</fx:Metadata>
+	<fx:Declarations>
+		<mx:DateValidator id="todateValidator" property="text" requiredFieldError="Please choose a date" />
+		<mx:DateFormatter id="dateFormatter" formatString="YYYYMMDDJJNNSS"/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.assets.images.Images;
+			import com.enlightedinc.events.EnergySummaryDockEvent;
+			import com.enlightedinc.events.EnergySummaryFilterEvent;
+			import com.enlightedinc.utils.GlobalUtils;
+			
+			import flash.text.engine.FontWeight;
+			
+			import mx.core.FlexGlobals;
+			import mx.core.UIComponent;
+			import mx.events.ValidationResultEvent;
+			import mx.validators.ValidationResult;
+			
+			import org.alivepdf.display.Display;
+			import org.alivepdf.images.ResizeMode;
+			import org.alivepdf.layout.Layout;
+			import org.alivepdf.layout.Orientation;
+			import org.alivepdf.layout.Size;
+			import org.alivepdf.layout.Unit;
+			import org.alivepdf.pdf.PDF;
+			import org.alivepdf.saving.Method;
+			private var results:Array;
+			// Define mismatch error messsage
+			private var dateMismatchError : String = "From date should be smaller than To date?";
+			
+			private var currSelButton:Button;
+			private var filterButton:Button;
+			[Bindable]
+			private var application:Object = FlexGlobals.topLevelApplication;
+			private var _setSelectedButton:String;
+			
+			public function get setSelectedButton():String
+			{
+				return _setSelectedButton;
+			}
+
+			public function set setSelectedButton(value:String):void
+			{
+				if(application.isRefresh)
+				{
+					return;
+				}
+				_setSelectedButton = value;
+				showButtonSelected(_setSelectedButton);
+			}
+
+			private function filterData(event:MouseEvent) : void
+			{
+				filterButton = event.currentTarget as Button;
+				filterButton.emphasized =true;
+				filterButton.setStyle('fontWeight', FontWeight.BOLD);
+				filterButton.setStyle("accentColor",0x000000);
+				
+				//Reset Current Selected Period button
+				if(currSelButton)
+				{
+					currSelButton.clearStyle('fontWeight');
+					currSelButton.emphasized =false;
+				}
+				
+				var nowDate:Date = GlobalUtils.getServerTime();
+				
+				if(validateEmptyDate())
+				{
+					var fDate:Date = DateField.stringToDate(fromDate.text, "MM/DD/YYYY");
+					fDate.setDate(fDate.getDate());
+					fDate.setHours(nowDate.getHours());
+					fDate.setMinutes(nowDate.getMinutes());
+					fDate.setSeconds(nowDate.getSeconds());
+					
+					var tDate:Date = DateField.stringToDate(toDate.text, "MM/DD/YYYY");
+					tDate.setHours(nowDate.getHours());
+					tDate.setMinutes(nowDate.getMinutes());
+					tDate.setSeconds(nowDate.getSeconds());
+					
+					dispatchEvent( new EnergySummaryFilterEvent( EnergySummaryFilterEvent.FILTER_ENERGY_SUMMARY, fDate, tDate) );
+				}
+			}
+			
+			public function refreshFilterSelectedData():void{
+				var nowDate:Date = GlobalUtils.getServerTime();
+				var fDate:Date = DateField.stringToDate(fromDate.text, "MM/DD/YYYY");
+				fDate.setDate(fDate.getDate());
+				fDate.setHours(nowDate.getHours());
+				fDate.setMinutes(nowDate.getMinutes());
+				fDate.setSeconds(nowDate.getSeconds());
+				
+				var tDate:Date = DateField.stringToDate(toDate.text, "MM/DD/YYYY");
+				tDate.setHours(nowDate.getHours());
+				tDate.setMinutes(nowDate.getMinutes());
+				tDate.setSeconds(nowDate.getSeconds());
+				dispatchEvent( new EnergySummaryFilterEvent( EnergySummaryFilterEvent.FILTER_ENERGY_SUMMARY, fDate, tDate) );
+			}
+			private function validateEmptyDate():Boolean
+			{
+				todateValidator.source= toDate;
+				var flag:Boolean = true;
+				var result:ValidationResultEvent = todateValidator.validate();
+				if(result.results!=null && result.results.length>0)
+					flag=false;
+				return 	flag;			
+			}
+			private function onFromDateChange() : void
+			{
+				var secs:Number = 1000 * 60 * 60 * 24;
+				var fdate:Date = DateField.stringToDate(fromDate.text, "MM/DD/YYYY");
+				var tDateStr:String= toDate.text;
+				var tDate:Date = DateField.stringToDate(tDateStr, "MM/DD/YYYY");
+				
+				fromDate.selectableRange = {rangeEnd : tDate};
+				
+				if(tDateStr!=null && tDateStr.length>0)
+				{
+					var result:Array = validateDateRange(fdate,tDate);
+					
+					if(result.length>0)
+					{
+						toDate.selectedDate = null;
+					}else
+					{
+						//Keep the Original selected todate as it is
+						toDate.selectedDate = DateField.stringToDate(tDateStr, "MM/DD/YYYYY");
+
+					}
+				}
+			}
+			private function onToDateOpenHandler():void{
+				var fromDateStr:String= fromDate.text;
+				var fDate:Date = DateField.stringToDate(fromDateStr, "MM/DD/YYYY");
+				var nextDay:Date = GlobalUtils.getServerTime();
+				var secs:Number = 1000 * 60 * 60 * 24;
+				nextDay.setTime(fDate.getTime());
+				toDate.selectableRange= {rangeStart : nextDay, rangeEnd : GlobalUtils.getServerTime()};
+			}
+			private function onFromDateOpenHandler():void
+			{
+				var tDateStr:String= toDate.text;
+				var tDate:Date = DateField.stringToDate(tDateStr, "MM/DD/YYYY");
+				fromDate.selectableRange = {rangeEnd : tDate};
+				
+			}
+			private function validateDateRange(startDate:Date, endDate:Date):Array
+			{
+				results = [];
+				todateValidator.source= toDate;
+				var StartTimestamp : Number = startDate.getTime (); // create milisec vrom start date
+				var EndTimestamp : Number = endDate.getTime ();    // create milisec vrom end date    	
+				
+				if (StartTimestamp == EndTimestamp){// start date same as end date = OKAY
+					return results;
+				} else if (StartTimestamp < EndTimestamp){ //end date bigger then start date = OKAY
+					return results;
+				} else { // error - From date should be smaller than To date?, 
+					todateValidator.validate();
+					todateValidator.requiredFieldError = dateMismatchError;
+					results.push(new ValidationResult(true, null, "Date Error", dateMismatchError));
+					return results;
+				}
+			}
+			private function getData(event:MouseEvent) : void
+			{
+				showButtonSelected((event.currentTarget as Button).name);
+				dispatchEvent( new EnergySummaryDockEvent( EnergySummaryDockEvent.CLICK_EVENT, event.target.name) );
+			}
+			
+			private function refresh() : void
+			{
+				dispatchEvent( new EnergySummaryDockEvent(EnergySummaryDockEvent.REFRESH_SCREEN, ""));
+			}
+			private function showButtonSelected(buttonName:String):void
+			{
+				var selectedButton:Button;
+				switch(buttonName)
+				{
+					case Constants.DAY :
+						selectedButton = this.getChildByName(Constants.DAY) as Button;
+						break;
+					case Constants.WEEK: 
+						selectedButton = this.getChildByName(Constants.WEEK) as Button;
+						break;
+					case Constants.MONTH:
+						selectedButton = this.getChildByName(Constants.MONTH) as Button;
+						break;
+					case Constants.YEAR:
+						selectedButton = this.getChildByName(Constants.YEAR) as Button;
+						break;
+				}
+				//Reset Filter Button
+				if(currSelButton)
+				{
+					currSelButton.clearStyle('fontWeight');
+					currSelButton.emphasized =false;
+				}
+				//Reset Filter Button
+				if(filterButton)
+				{
+					filterButton.clearStyle('fontWeight');
+					filterButton.emphasized =false;
+				}
+				currSelButton= selectedButton;
+				selectedButton.emphasized =true;
+				selectedButton.setStyle('fontWeight', FontWeight.BOLD);
+				selectedButton.setStyle("accentColor",0x000000);
+			}    
+			private function printData(e:MouseEvent):void{
+				var printContainer:UIComponent = FlexGlobals.topLevelApplication.baseGroup;
+				var printPDF:PDF = new PDF( Orientation.LANDSCAPE, Unit.MM, Size.A4 );
+				printPDF.setDisplayMode( Display.FULL_PAGE, Layout.SINGLE_PAGE );
+				printPDF.addPage();
+				printPDF.addImage( printContainer, 0, 0, 0, 0, 'PNG', 100, 1, ResizeMode.FIT_TO_PAGE);
+				var f:FileReference = new FileReference();
+				var bytes:ByteArray = printPDF.save(Method.LOCAL);
+				f.save(bytes, "EnergyGraph.pdf");
+			}
+			/* private function exportASImage(e:MouseEvent):void{
+				var imageSnap:ImageSnapshot = ImageSnapshot.captureImage(FlexGlobals.topLevelApplication.baseGroup);
+				var imageByteArray:ByteArray = imageSnap.data as ByteArray;
+				var f:FileReference = new FileReference();
+				f.save(imageByteArray, "EnergyGraph.jpeg"); 
+			}*/
+		]]>
+	</fx:Script>
+	
+	<components:EnergySummaryUnitBar id="energySummaryUnitBar" />
+	<mx:VRule height="100%"/>
+	<s:Label text="{Constants.PERIOD}" styleName="titleStyle" />
+	<s:Button name="{Constants.DAY}" label="{Constants.DAY}" toolTip="{Constants.ONE_DAY}" buttonMode="true" click="getData(event)" />
+	<s:Button name="{Constants.WEEK}" label="{Constants.WEEK}" toolTip="{Constants.ONE_WEEK}" buttonMode="true" click="getData(event)"/>
+	<s:Button name="{Constants.MONTH}" label="{Constants.MONTH}" toolTip="{Constants.ONE_MONTH}" buttonMode="true" click="getData(event)"/>
+	<s:Button name="{Constants.YEAR}" label="{Constants.YEAR}" toolTip="{Constants.ONE_YEAR}" buttonMode="true" click="getData(event)"/>
+	<mx:VRule height="100%"/>
+	<s:Label text="From:"/>
+	<mx:DateField id="fromDate" yearNavigationEnabled="true"
+				  open="onFromDateOpenHandler()" />
+	<s:Label text="To:"/>
+	<mx:DateField id="toDate" yearNavigationEnabled="true" 
+				   open="onToDateOpenHandler()"/>
+	<s:Button id="filterBtn" label="{Constants.APPLY}" click="filterData(event)"/>
+	
+	<mx:VRule height="100%"/>
+	<mx:Spacer width="100%"/>
+	<s:Button name="{Constants.SAVEPDF}" label="{Constants.SAVEPDF}" toolTip="{Constants.SAVEPDF}" buttonMode="true" click="printData(event)"/>
+	<!--<s:Button name="{Constants.EXPORT_IMAGE}" label="{Constants.EXPORT_IMAGE}" toolTip="{Constants.EXPORT_IMAGE}" buttonMode="true" click="exportASImage(event)"/>-->
+	<mx:Image source="{Images.Refresh}"
+			  buttonMode="true"
+			  toolTip="Refresh"
+			  click="refresh()"/>
+	
+</s:HGroup>

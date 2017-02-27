@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" verticalAlign="middle">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.events.EnergySummaryUnitBarEvent;
+			import com.enlightedinc.events.EnergySummaryViewOptionEvent;
+			import com.enlightedinc.utils.CookieUtil;
+			
+			import flash.text.engine.FontWeight;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			
+			import spark.events.IndexChangeEvent;
+			//private var _currSelButton:Button;
+			
+			[Bindable]
+			public var unitData:ArrayCollection = new ArrayCollection(
+				[   
+					{value:"$", code:"1"},
+					{value:"kWh", code:"2"},
+					{value:"CO2", code:"3"}
+				]                
+			);
+			[Bindable]
+			public var ViewData:ArrayCollection = new ArrayCollection(
+				[   
+					{value:"Lighting", code:"1"},
+					{value:"Managed Plugloads", code:"2"},
+					{value:"All Plugloads", code:"3"}
+				]                
+			);
+			[Bindable]
+			private var application:Object = FlexGlobals.topLevelApplication;
+			/* public function get currSelButton():Button
+			{
+				return _currSelButton;
+			}
+
+			public function set currSelButton(value:Button):void
+			{
+				_currSelButton = value;
+			} */
+
+			private function unitDropDownHandler(event:IndexChangeEvent):void
+			{
+				var selectedButton:String = (event.currentTarget as DropDownList).selectedItem.value;
+				CookieUtil.setCookie("selected_unit",selectedButton,1);
+				application.lastUnitSelection = selectedButton;
+				showButtonSelected(selectedButton);
+				dispatchEvent( new EnergySummaryUnitBarEvent(EnergySummaryUnitBarEvent.UNIT_CHANGE, selectedButton));
+			}
+			private function viewDropDownHandler(event:IndexChangeEvent):void
+			{
+				var selectedView:String = (event.currentTarget as DropDownList).selectedItem.value;
+				CookieUtil.setCookie("selected_view",selectedView,1);
+				application.lastViewSelection = selectedView;
+				showViewSelected(selectedView);
+				dispatchEvent( new EnergySummaryViewOptionEvent(EnergySummaryViewOptionEvent.VIEW_CHANGE, selectedView));
+			}
+			
+			public function showButtonSelected(buttonName:String):void
+			{
+				if(application.isRefresh)
+				{
+					return;
+				}
+				var selectedButton:String;
+				switch(buttonName)
+				{
+					case Constants.CURRENCY_UNIT :
+						unitDropDownlist.selectedIndex = 0;
+						break;
+					case Constants.POWER_UNIT: 
+						unitDropDownlist.selectedIndex = 1;
+						break;
+					case Constants.CARBON_UNIT:
+						unitDropDownlist.selectedIndex = 2;
+						break;
+				}
+			} 
+			public function showViewSelected(buttonName:String):void
+			{
+				unitDropDownlist.enabled =true;
+				if(application.isRefresh)
+				{
+					return;
+				}
+				var selectedButton:String;
+				switch(buttonName)
+				{
+					case Constants.LIGHTING :
+						viewDropDownlist.selectedIndex = 0;
+						break;
+					case Constants.MANAGED_PLUGLOAD: 
+						viewDropDownlist.selectedIndex = 1;
+						break;
+					case Constants.ALL_PLUGLOAD:
+						viewDropDownlist.selectedIndex = 2;
+						unitDropDownlist.enabled =false;
+						if(application.lastUnitSelection!=Constants.POWER_UNIT)
+						{
+							selectedButton = Constants.POWER_UNIT;
+							CookieUtil.setCookie("selected_unit",selectedButton,1);
+							application.lastUnitSelection = selectedButton;
+							showButtonSelected(selectedButton);
+							dispatchEvent( new EnergySummaryUnitBarEvent(EnergySummaryUnitBarEvent.UNIT_CHANGE, Constants.POWER_UNIT));
+						}
+						break;
+				}
+			} 
+		]]>
+	</fx:Script>
+		<s:Label text="View :" styleName="titleStyle" />
+		<!--<s:Label text="Lighting" styleName="titleStyle" />-->
+		
+		<s:DropDownList width="140" id="viewDropDownlist" dataProvider="{ViewData}" 
+						change="viewDropDownHandler(event)"
+						selectedIndex="0" labelField="value"/>
+		<mx:VRule height="100%"/>
+		<s:Label text="{Constants.UNIT}" styleName="titleStyle" />
+		<s:DropDownList width="65"  id="unitDropDownlist" dataProvider="{unitData}" 
+					 change="unitDropDownHandler(event)"
+					 selectedIndex="1" labelField="value"/>     
+		
+</s:HGroup>

@@ -1,0 +1,283 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="profilehandler">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+        <xs:element name="morningProfile"  minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="dayProfile" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="eveningProfile" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="nightProfile" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="morningProfileWeekEnd" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="dayProfileWeekEnd" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="eveningProfileWeekEnd" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="nightProfileWeekEnd" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="morningProfileHoliday" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="dayProfileHoliday" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="eveningProfileHoliday" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="nightProfileHoliday" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="profileConfiguration" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element name="weekDays" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:long" name="id"  minOccurs="0" maxOccurs="1" />
+                    <xs:element type="xs:string" name="day"  minOccurs="0" maxOccurs="1" />
+                    <xs:element type="xs:integer" name="shortOrder"  minOccurs="0" maxOccurs="1" />
+                    <xs:element type="xs:string" name="type"  minOccurs="0" maxOccurs="1" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element type="xs:string" name="morningTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:string" name="dayTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:string" name="eveningTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:string" name="nightTime"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element type="xs:integer" name="darkLux"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="neighborLux"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="envelopeOnLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="dropPercent"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="risePercent"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:short" name="dimBackoffTime"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:short" name="intensityNormTime"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="onAmbLightLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:short" name="minLevelBeforeOff"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="relaysConnected"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:short" name="profileChecksum"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:short" name="globalProfileChecksum"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:short" name="standaloneMotionOverride"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="drReactivity"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="toOffLinger"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="initialOnLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:short" name="profileGroupId"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="profileFlag"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="initialOnTime"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="isHighBay"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="motionThresholdGain"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="drHighLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="drModerateLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="drLowLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="drSpecialLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="daylightHarvesting"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="daylightProfileBelowMin"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="daylightForceProfileMinValue"  minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:byte" name="holidayLevel"  minOccurs="0" maxOccurs="1" />
+        <xs:element name="override5" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="override6" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="override7" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="override8" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:long" name="id"  minOccurs="1" maxOccurs="1" />
+              <xs:element type="xs:long" name="minLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="onLevel"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionDetectDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="manualOverrideDuration"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="motionSensitivity"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:long" name="rampUpTime"  minOccurs="0" maxOccurs="1" />
+              <xs:element type="xs:integer" name="ambientSensitivity"  minOccurs="0" maxOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

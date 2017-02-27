@@ -1,0 +1,16 @@
+# this file is managed by puppet
+/var/log/ufw.log
+{
+	rotate 7
+	minsize 250M
+	daily
+	missingok
+	notifempty
+	compress
+	delaycompress
+	sharedscripts
+	create 644 syslog adm
+	postrotate
+		invoke-rc.d rsyslog reload >/dev/null 2>&1 || true
+	endscript
+}

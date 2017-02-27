@@ -1,0 +1,51 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+ADR_PATH=/opt/enLighted/adr
+DBUSER=postgres
+DBHOST=localhost
+DB=adr
+ps -ef |grep postgresql |grep -v grep > /dev/null
+if [ $? -eq 0 ]
+then
+               if [ `psql -q -U ${DBUSER} -h ${DBHOST}  -t -c "select count(*) from pg_database where datname='${DB}'"` -eq 1 ]
+               then
+			##Currently no upgradeSQL.sql for adr
+			p1=`ps -eaf | grep adr.jar | grep -v grep | wc -l` 
+			if [ ${p1} -eq 0 ]
+			then
+				echo "Starting the adr.jar !!!!"
+                                java -Djava.util.logging.config.file=${ADR_PATH}/logging.properties -jar ${ADR_PATH}/adr.jar &
+			else			
+				echo "Restarting the adr.jar!!!!"
+				ps -eaf | grep adr.jar | grep -v grep | sed 's/ \+ /\ /g' | cut -d " " -f2 | xargs kill
+				java -Djava.util.logging.config.file=${ADR_PATH}/logging.properties -jar ${ADR_PATH}/adr.jar &
+			fi
+                else
+                        echo "ADR DB not exists "
+                        echo "Creating ADR DB"
+                        createdb -U ${DBUSER}  ${DB}
+
+                        if [ `psql -q -U ${DBUSER} -h ${DBHOST}  -t -c "select count(*) from pg_database where datname='${DB}'"` -eq 1 ]
+                        then
+				echo "${DB} DB created successfully!!!!"
+				if [ -f ${ADR_PATH}/ADRInstall.sql ]
+				then
+					echo "Running ADRInstall.sql!!!!"
+					psql -U ${DBUSER} ${DB} < ${ADR_PATH}/ADRInstall.sql
+					echo "Starting the adr.jar !!!!"
+					java -Djava.util.logging.config.file=${ADR_PATH}/logging.properties -jar ${ADR_PATH}/adr.jar &
+				else
+					echo "ADRInstall.sql does not exists!!!!"
+				fi
+			else
+				echo "not able to create ${DB} DB!!!!"
+				exit
+			fi
+                fi
+        else
+                echo "postgres not running"
+fi
+
+sudo chmod 755 ${ADR_PATH}/adrsetcron.sh
+sudo chmod 755 ${ADR_PATH}/adr_tracker.sh
+sudo bash ${ADR_PATH}/adrsetcron.sh

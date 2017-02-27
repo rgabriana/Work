@@ -1,0 +1,7 @@
+ENL_APP_HOME/logs/catalina.out {  
+	 copytruncate 
+	 rotate 7  
+	 compress  
+	 missingok  
+	 size 10M  
+}  

@@ -1,0 +1,59 @@
+<VirtualHost *:443>
+	ServerAdmin webmaster@localhost
+	ServerName {serverName}
+
+	SSLEngine On
+	SSLProxyEngine On
+	SSLCertificateFile    /etc/enlighted/CA/ssl/certs/us-tx-m-p-6854f521b058.enlightedcloud.net.pem
+	SSLCertificateKeyFile /etc/enlighted/CA/ssl/private/us-tx-m-p-6854f521b058.enlightedcloud.net.key
+	SSLCACertificateFile  /etc/enlighted/CA/ssl/certs/enlca.crt
+	SSLCACertificatePath /etc/enlighted/CA/ssl/
+	SSLCARevocationFile /etc/enlighted/CA/ssl/crl/enlca.crl
+	SSLCARevocationPath /etc/enlighted/CA/ssl/crl/
+	SSLOptions +ExportCertData +StdEnvVars
+	SSLVerifyClient none
+	SSLVerifyDepth  2
+	
+        SSLProtocol -ALL +TLSv1
+        SSLCipherSuite HIGH:!EXPORT:!LOW:!MEDIUM:!RC2:!3DES:!MD5:!DSS:!SEED:!RC4:!PSK:!aNULL
+	
+	
+	BrowserMatch "MSIE [2-6]" \
+                nokeepalive ssl-unclean-shutdown \
+                downgrade-1.0 force-response-1.0
+        # MSIE 7 and newer should be able to use keepalive
+    BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+
+        # Drop the Range header when more than 5 ranges.
+        # CVE-2011-3192
+        SetEnvIf Range (?:,.*?){5,5} bad-range=1
+        RequestHeader unset Range env=bad-range
+        # We always drop Request-Range; as this is a legacy
+        # dating back to MSIE3 and Netscape 2 and 3.
+        #
+        RequestHeader unset Request-Range
+
+    Header edit Set-Cookie ^(.*)$ $1;Secure
+
+    Header always append X-Frame-Options SAMEORIGIN
+
+
+	RewriteEngine On
+
+	ErrorLog /var/log/apache2/error.log
+
+	# Possible values include: debug, info, notice, warn, error, crit,
+	# alert, emerg.
+	LogLevel warn
+
+	CustomLog /var/log/apache2/access.log combined
+
+	ProxyRequests Off
+	ProxyPreserveHost On
+
+	ProxyPass / https://localhost:{port}/
+	ProxyPassReverse / https://localhost:{port}/
+	
+</VirtualHost>
+
+

@@ -1,0 +1,24 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+if [ -d /opt/enLighted/communicator ]
+then
+        echo "/opt/enLighted/communicator Directory exists!!!!"
+else
+        echo "Creating /opt/enLighted/communicator directory"
+        mkdir /opt/enLighted/communicator
+fi
+
+a=0
+while [ $a -lt 10 ]
+do
+	communicatorProcess=$(ps -ef | grep -E "em_cloud_communicator\.jar")
+	if [[ $communicatorProcess =~ "em_cloud_communicator.jar" ]]
+	then
+		ps -ef | grep em_cloud_communicator.jar | grep -v grep | head -n 1 | awk -v OFS=" " '$1=$1' | cut -d" " -f2 | xargs sudo kill -9    
+	else
+		break
+	fi
+done
+
+
+

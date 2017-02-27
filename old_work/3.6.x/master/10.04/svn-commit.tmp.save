@@ -1,0 +1,6 @@
+get_tomcat6_source.sh and tomcat6install.sh first pass
+--This line, and those below, will be ignored--
+
+M    LB1/get_tomcat6_source.sh
+M    LB1/tomcat6install.sh
+M    LB1/var/lib/tomcat6/webapps/ROOT/index.html

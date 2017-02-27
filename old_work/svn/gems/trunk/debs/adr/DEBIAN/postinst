@@ -1,0 +1,92 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+source /etc/environment
+
+if [ ! -z "$1" ]
+then
+	echo "***********************setting ENL_APP_HOME from passed argument to shell************"
+	export ENL_APP_HOME="$1"
+fi
+if [ -z "$ENL_APP_HOME"  ]
+then
+	echo "***********************setting ENL_APP_HOME hardcoded to /var/lib/tomcat6 as it is not still set************"
+        export ENL_APP_HOME="/var/lib/tomcat6"
+fi
+
+
+if [ ! -z "$2" ]
+then
+	echo "***********************setting ENLIGHTED_HOME from passed argument to shell************"
+	export ENLIGHTED_HOME="$2"
+fi
+if [ -z "$ENLIGHTED_HOME"  ]
+then
+	echo "***********************setting ENLIGHTED_HOME hardcoded to /home/enlighted as it is not still set************"
+        export ENLIGHTED_HOME="/home/enlighted"
+fi
+
+if [ ! -z "$3" ]
+then
+	echo "***********************setting EM_MGMT_BASE from passed argument to shell************"
+	export EM_MGMT_BASE="$3"
+fi
+if [ -z "$EM_MGMT_BASE"  ]
+then
+	echo "***********************setting EM_MGMT_BASE hardcoded to /var/wwww as it is not still set************"
+        export EM_MGMT_BASE="/var/www"
+fi
+
+
+if [ ! -z "$4" ]
+then
+	echo "***********************setting OPT_ENLIGHTED from passed argument to shell************"
+	export OPT_ENLIGHTED="$4"
+fi
+if [ -z "$OPT_ENLIGHTED"  ]
+then
+	echo "***********************setting OPT_ENLIGHTED hardcoded to /opt/enLighted as it is not still set************"
+        export OPT_ENLIGHTED="/opt/enLighted"
+fi
+
+ADR_PATH=$OPT_ENLIGHTED/adr
+DBUSER=postgres
+DBHOST=localhost
+DB=adr
+ps -ef |grep postgresql |grep -v grep > /dev/null
+if [ $? -eq 0 ]
+then
+   if [ `psql -q -U ${DBUSER} -h ${DBHOST}  -t -c "select count(*) from pg_database where datname='${DB}'"` -eq 1 ]
+   then
+		p1=`ps -eaf | grep adr.jar | grep -v grep | wc -l`
+   else
+        echo "ADR DB not exists "
+        echo "Creating ADR DB"
+        createdb -U ${DBUSER}  ${DB}
+
+        if [ `psql -q -U ${DBUSER} -h ${DBHOST}  -t -c "select count(*) from pg_database where datname='${DB}'"` -eq 1 ]
+        then
+			echo "${DB} DB created successfully!!!!"
+			if [ -f ${ADR_PATH}/ADRInstall.sql ]
+			then
+				echo "Running ADRInstall.sql!!!!"
+				psql -U ${DBUSER} ${DB} < ${ADR_PATH}/ADRInstall.sql
+			else
+				echo "ADRInstall.sql does not exists!!!!"
+			fi
+		else
+		echo "not able to create ${DB} DB!!!!"
+		exit
+		fi
+    fi
+else
+    echo "postgres not running"
+fi
+
+cd $OPT_ENLIGHTED/adr
+sudo tar -xzf jre-7u21-linux-i586.tar.gz
+sudo chown -R enlighted:enlighted jre1.7.0_21/
+
+sudo chmod 755 ${ADR_PATH}/adrsetcron.sh
+sudo chmod 755 ${ADR_PATH}/adr_tracker.sh
+sudo bash ${ADR_PATH}/adrsetcron.sh
+sudo ${ADR_PATH}/adr_tracker.sh

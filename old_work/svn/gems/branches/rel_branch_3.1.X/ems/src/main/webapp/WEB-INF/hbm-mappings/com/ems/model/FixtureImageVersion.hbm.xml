@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.FixtureImageVersion"
+        table="fixture_image_version"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">fixture_image_version_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-FixtureImageVersion.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <many-to-one
+            name="fixtureImages"
+            class="com.ems.model.FixtureImages"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="fixture_image_id"
+        />
+
+        <many-to-one
+            name="fixtureUpgradeTime"
+            class="com.ems.model.FixtureUpgradeTime"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="upgrade_time_id"
+        />
+
+        <property
+            name="upgradeStatus"
+            type="java.lang.Boolean"
+            update="true"
+            insert="true"
+            column="upgrade_status"
+        />
+
+        <property
+            name="upgradeDate"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="upgrade_date"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-FixtureImageVersion.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

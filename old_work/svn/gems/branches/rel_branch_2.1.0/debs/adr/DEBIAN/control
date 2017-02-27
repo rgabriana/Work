@@ -1,0 +1,12 @@
+Package: enlighted-openADR
+Version: 2.1.6
+Section: misc
+Priority: optional
+Architecture: all
+Essential: no
+Depends: 
+Pre-Depends: libxml2
+Suggests: no
+Maintainer:  enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: enLighted openADR

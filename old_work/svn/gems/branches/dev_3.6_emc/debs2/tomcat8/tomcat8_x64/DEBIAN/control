@@ -1,0 +1,13 @@
+Package: tomcat8
+Version: 8.0.26
+Section: misc
+Priority: optional
+Architecture: all
+Essential: no
+Depends: 
+Pre-Depends: 
+Suggests: no
+Maintainer: enLighted Inc [support@enlightedinc.com]
+Provides: tomcat8
+Description: Tomcat8
+

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.EmsAudit"
+        table="ems_audit" mutable="false"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">ems_audit_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-EmsAudit.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="txnId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="txn_id"
+        />
+
+        <property
+            name="deviceId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="device_id"
+        />
+
+        <property
+            name="deviceType"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="device_type"
+        />
+
+        <property
+            name="attempts"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="attempts"
+        />
+
+        <property
+            name="action"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="action"
+        />
+
+        <property
+            name="startTime"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="start_time"
+        />
+
+        <property
+            name="endTime"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="end_time"
+        />
+
+        <property
+            name="status"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="status"
+        />
+
+        <property
+            name="comments"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="comments"
+        />
+
+        <property
+            name="deviceName"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="device_name"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-EmsAudit.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

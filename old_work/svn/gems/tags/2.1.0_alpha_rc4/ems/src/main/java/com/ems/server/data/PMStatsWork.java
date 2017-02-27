@@ -1,0 +1,31 @@
+package com.ems.server.data;
+
+import com.ems.model.Fixture;
+
+public class PMStatsWork {
+
+    private Fixture fixture;
+    private byte[] packet;
+    private int seqNo;
+
+    public PMStatsWork(Fixture fixture, byte[] packet, int seqNo) {
+
+        this.fixture = fixture;
+        this.packet = packet;
+        this.seqNo = seqNo;
+
+    } // end of constructor
+
+    public Fixture getFixture() {
+        return fixture;
+    }
+
+    public byte[] getPacket() {
+        return packet;
+    }
+
+    public int getSeqNo() {
+        return seqNo;
+    }
+
+} // end of class StatsWork

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.ProfileTemplate" table="profile_template">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">profile_template_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-Groups.xml 
+					containing the additional parameters and place it in your merge dir. -->
+			</generator>
+		</id>
+				
+		<property name="name" type="java.lang.String" update="true"
+			insert="true" column="name" />
+			
+		<property name="displayTemplate" type="boolean" update="true"
+			insert="true" column="display_template" />
+			
+		<set
+            name="profiles"
+            lazy="true"
+            inverse="true"
+            cascade="delete"
+            sort="unsorted"
+            outer-join="false">
+
+            <key  column="template_id">
+            </key>
+
+            <one-to-many class="com.ems.model.Groups"/>
+
+        </set>	
+	
+		<!-- To add non XDoclet property mappings, create a file named hibernate-properties-Groups.xml 
+			containing the additional properties and place it in your merge dir. -->
+
+	</class>
+
+</hibernate-mapping>

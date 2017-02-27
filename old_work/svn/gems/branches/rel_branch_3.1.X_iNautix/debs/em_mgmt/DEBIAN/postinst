@@ -1,0 +1,13 @@
+#!/bin/bash -x
+#Check the tomcat status
+t2=$(sudo service tomcat6 status)
+
+if [[ $t2 =~ "not running"  ]]
+then
+        echo "Tomcat6 not running......."
+        sudo service tomcat6 start
+else
+        echo "Tomcat6 already running ..........:"
+fi
+
+

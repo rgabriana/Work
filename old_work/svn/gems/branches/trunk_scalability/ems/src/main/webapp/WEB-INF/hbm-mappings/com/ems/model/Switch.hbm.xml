@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.Switch"
+        table="switch"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">switch_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-Switch.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="floorId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="floor_id"
+        />
+        
+        <property
+            name="areaId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="area_id"
+        />
+
+        <property
+            name="name"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="name"
+        />
+
+        <property
+            name="campusId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="campus_id"
+        />
+
+        <property
+            name="buildingId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="building_id"
+        />
+
+        <property
+            name="xaxis"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="x"
+        />
+
+        <property
+            name="yaxis"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="y"
+        />
+        
+       <many-to-one name="gemsGroup" class="com.ems.model.GemsGroup"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="gems_groups_id" />
+			
+        <property
+            name="modeType"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="mode_type"
+        />
+        
+        <property
+            name="initialSceneActiveTime"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="initial_scene_active_time"
+        />
+        
+        <property
+            name="operationMode"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="operation_mode"
+        />
+
+        <property
+            name="extendSceneActiveTime"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="extend_scene_active_time"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-Switch.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

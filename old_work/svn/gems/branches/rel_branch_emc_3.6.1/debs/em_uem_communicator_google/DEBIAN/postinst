@@ -1,0 +1,29 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+source /etc/environment
+chown -R enlighted:enlighted $OPT_ENLIGHTED/uem/
+
+if [ ! -f /var/spool/cron/crontabs/enlighted ]
+then
+	echo "#" | crontab -u enlighted -
+fi
+
+cronExists=$(grep 'communicator' /var/spool/cron/crontabs/enlighted)
+if [[ "$cronExists" =~ "communicator" ]]
+then
+    echo "EM UEM Communicator monitoring cron is already set."
+else
+    echo "*/5 * * * * $OPT_ENLIGHTED/uem/communicator/start.sh" >> /var/spool/cron/crontabs/enlighted
+    echo "@reboot $OPT_ENLIGHTED/uem/communicator/start.sh" >> /var/spool/cron/crontabs/enlighted
+    echo "EM UEM Communicator monitoring cron is added."
+	service cron restart
+fi
+
+chmod +x $OPT_ENLIGHTED/uem/communicator/start.sh 
+
+EMUEMCOMPID=`ps auxwww | grep -i EMUEMCOM | grep -v grep | awk '{print $2}'`
+if [ ! -z "${EMUEMCOMPID}" ]
+then
+	kill -9 ${EMUEMCOMPID}
+fi
+

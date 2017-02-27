@@ -1,0 +1,18 @@
+#!/bin/bash -x
+sudo tar xvf apache-tomcat-8*tar.gz -C /opt/tomcat --strip-components=1
+cd /opt/tomcat
+sudo chgrp -R tomcat conf
+sudo chmod g+rwx conf
+sudo chmod g+r conf/*
+sudo chown -R tomcat work/ temp/ logs/
+sudo mkdir /var/log/tomcat/
+sudo chown -R tomcat:tomcat /var/log/tomcat/
+sudo rm -rf logs
+sudo ln -s /var/log/tomcat logs
+sudo cp /tomcat.conf /etc/init/tomcat.conf
+sudo cp /tomcat-users.xml /opt/tomcat/conf/tomcat-users.xml
+sudo cp /tomcat /etc/init.d/
+sudo cp /setenv.sh /opt/tomcat/bin/setenv.sh
+sudo chmod 755 /etc/init.d/tomcat
+sudo update-rc.d tomcat defaults
+

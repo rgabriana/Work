@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.Company"
+        table="company"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+        >
+          
+        </id>
+
+        <property
+            name="name"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="name"
+        />
+
+        <property
+            name="address"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="address"
+        />
+
+        <property
+            name="contact"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="contact"
+        />
+
+        <property
+            name="completionStatus"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="completion_status"
+        />
+
+        <property
+            name="selfLogin"
+            type="java.lang.Boolean"
+            update="true"
+            insert="true"
+            column="self_login"
+        />
+
+        <property
+            name="validDomain"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="valid_domain"
+        />
+
+        <property
+            name="email"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="email"
+        />
+
+        <property
+            name="timezone"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="timezone"
+        />
+
+        <property
+            name="timeZone"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="time_zone"
+        />
+
+        <many-to-one
+            name="profileHandler"
+            class="com.ems.model.ProfileHandler"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="profile_handler_id"
+        />
+
+        <property
+            name="notificationEmail"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="notification_email"
+        />
+
+        <property
+            name="severityLevel"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="severity_level"
+        />
+
+        <property
+            name="price"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="price"
+        />
+        
+        <bag name="campuses" cascade="all">
+			<key column="company_id" />
+			<one-to-many class="com.ems.model.Campus" />
+		</bag>
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-Company.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+        <many-to-one
+            name="tenant"
+            class="com.ems.model.Tenant"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="tenant_id"
+        />
+        
+
+		<property name="sweepTimerId" type="java.lang.Long" update="true"
+			insert="true" column="sweep_timer_id" />
+		<property
+            name="ntpEnable"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="ntp_enable"
+        />
+		<property
+            name="ntpServers"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="ntp_server_list"
+        />
+        <property
+            name="latitude"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="latitude"
+        />	
+        <property
+            name="longitude"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="longitude"
+        />	
+        	
+	<property
+            name="uid"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="uid"
+        />
+
+    </class>
+
+</hibernate-mapping>

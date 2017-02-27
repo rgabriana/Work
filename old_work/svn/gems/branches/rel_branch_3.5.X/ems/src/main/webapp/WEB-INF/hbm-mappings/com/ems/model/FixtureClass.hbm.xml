@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.FixtureClass"
+        table="fixture_class"
+    >
+    <cache usage="nonstrict-read-write" />
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+            	<param name="sequence">fixture_class_seq</param>
+            </generator>
+        </id>
+
+        
+        <property
+            name="name"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="name"
+        />
+        
+        <many-to-one name="ballast" class="com.ems.model.Ballast"
+			cascade="none" outer-join="auto" update="true" insert="true" column="ballast_id" />
+
+		<many-to-one name="bulb" class="com.ems.model.Bulb"
+			cascade="none" outer-join="auto" update="true" insert="true" column="bulb_id" />
+
+        <property
+            name="voltage"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="voltage"
+        />
+
+        <property
+            name="noOfBallasts"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="no_of_ballasts"
+        />
+
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-Ballast.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

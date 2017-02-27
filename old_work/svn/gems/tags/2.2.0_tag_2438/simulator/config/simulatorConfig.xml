@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+<gatewayinterface>eth0</gatewayinterface>
+<gemip>169.254.0.1</gemip>
+<delay>300000</delay>
+<sensorList>91:9c:f0,9b:f4:ab</sensorList>
+<wdsList>00:00:01,00:00:02</wdsList>
+<enablembits>0</enablembits>
+<jitter>240000</jitter>
+</config>
+
+

@@ -1,0 +1,884 @@
+package com.ems.service;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import javax.annotation.Resource;
+import javax.net.ssl.SSLException;
+
+import org.apache.log4j.Logger;
+import org.hibernate.HibernateException;
+import org.springframework.orm.ObjectRetrievalFailureException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ems.cache.FixtureCache;
+import com.ems.dao.BuildingDao;
+import com.ems.dao.FixtureDao;
+import com.ems.dao.FloorDao;
+import com.ems.dao.GatewayDao;
+import com.ems.dao.InventoryDeviceDao;
+import com.ems.dao.PlugloadDao;
+import com.ems.dao.WdsDao;
+import com.ems.model.Building;
+import com.ems.model.EventsAndFault;
+import com.ems.model.Floor;
+import com.ems.model.Gateway;
+import com.ems.model.InventoryDevice;
+import com.ems.mvc.util.UserAuditLoggerUtil;
+import com.ems.server.ServerConstants;
+import com.ems.server.ServerMain;
+import com.ems.server.device.GatewayImpl;
+import com.ems.server.ssl.SSLSessionManager;
+import com.ems.server.util.ServerUtil;
+import com.ems.types.UserAuditActionType;
+import com.ems.util.Constants;
+import com.ems.vo.model.GatewayOutageVO;
+import com.ems.vo.model.SensorConfig;
+
+/**
+ *
+ * @author pankaj kumar chauhan
+ *
+ */
+@Service("gatewayManager")
+@Transactional(propagation = Propagation.REQUIRED)
+public class GatewayManager {
+
+  private static final Logger logger = Logger.getLogger(GatewayManager.class.getName());
+
+    @Resource
+    private GatewayDao gatewayDao;
+
+    @Resource
+    private FloorDao floorDao;
+
+    @Resource
+    private BuildingDao buildingDao;
+
+    @Resource
+    private InventoryDeviceDao inventoryDeviceDao;
+
+    @Resource
+    private FixtureDao fixtureDao;
+
+    @Resource
+    private WdsDao wdsDao;
+
+    @Resource
+    private PlugloadDao plugloadDao;
+
+    @Resource
+    NetworkSettingsManager networkSettingsManager;
+
+    @Resource
+    private EventsAndFaultManager eventsAndFaultManager;
+    @Resource
+    private UserAuditLoggerUtil userAuditLoggerUtil;
+
+    /**
+     * save gatway details in database
+     *
+     * @param gateway
+     */
+    public void save(Gateway gateway) {
+        gatewayDao.saveObject(gateway);
+    }
+
+    /**
+     * update gatway details in database
+     *
+     * @param gateway
+     */
+    public void update(Gateway gateway) {
+        gatewayDao.saveObject(gateway);
+        GatewayImpl.getInstance().changeWirelessParams(gateway);
+    }
+
+    /**
+     * update gatway parameters details in database
+     *
+     * @param gateway
+     */
+    public void updateGatewayParameters(Gateway gateway) {
+
+     if(!networkSettingsManager.isDHCPEnabled() && !networkSettingsManager.isDhcpServerRunning() ){
+    	  try {
+    		  // remove it from gwMap cache
+    		  GatewayImpl.getInstance().updateGatewayInfo(gateway);
+    		  SSLSessionManager.getInstance().removeSSLConnection(gateway.getId());
+	          gatewayDao.updateGatewayParameters(gateway);
+	            // return "success";
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+    	  return;
+      }
+
+      LockObj lock = new LockObj();
+      lockHashMap.put(gateway.getId(), lock);
+      GatewayImpl.getInstance().changeWirelessParams(gateway);
+      synchronized (lock) {
+          try {
+              lock.wait(3000); // wait for 3 sec
+          } catch (Exception e) {
+              logger.debug(e.getMessage());
+          }
+      }
+      // commit the changes in the database only if get the ack
+      if (lock.gotAck) {
+          logger.debug("received the wireless change ack");
+          // got the ack for change wireless parameters message
+          try {
+            gatewayDao.updateGatewayParameters(gateway);
+              // return "success";
+          } catch (Exception e) {
+              e.printStackTrace();
+          }
+      }
+    }
+
+    /**
+     * delete gatway details in database only if no of sensors associated with it are 0
+     *
+     * @param gateway
+     */
+    public int deleteGateway(Long id) {
+        int iStatus = 0;
+        Gateway gateway = null;
+        try {
+            gateway = (Gateway) gatewayDao.getObject(Gateway.class, id);
+        } catch (ObjectRetrievalFailureException orfe) {
+            orfe.printStackTrace();
+        }
+        if (gateway != null) {
+            // Remove prior instance of this device from inventory device if any
+            inventoryDeviceDao.deleteInventoryDeviceByMacAddress(gateway.getMacAddress());
+
+            if(gateway.isCommissioned()) {
+            LockObj lock = new LockObj();
+            lockHashMap.put(gateway.getId(), lock);
+            GatewayImpl.getInstance().setWirelessFactoryDefaults(gateway);
+            synchronized (lock) {
+              try {
+        	lock.wait(3000); // wait for 3 sec
+              } catch (Exception e) {
+        	logger.debug(e.getMessage());
+              }
+            }
+          }
+          GatewayImpl.getInstance().rebootGateway(gateway);
+          gatewayDao.removeObject(Gateway.class, id);
+          //remove the gateway from the cache
+          ServerMain.getInstance().deleteGateway(id);
+          iStatus = 1;
+        }
+        return iStatus;
+    }
+
+    /**
+     * Return gatways details if id given
+     *
+     * @param id
+     * @return com.ems.model.Gateway
+     */
+    public Gateway loadGateway(Long id) {
+        Gateway gateway = null;
+        try {
+            gateway = (Gateway) gatewayDao.getObject(Gateway.class, id);
+        } catch (ObjectRetrievalFailureException orfe) {
+            logger.error(id + ": gateway does not exists!", orfe);
+        }
+        return gateway;
+    }
+
+
+    /**
+     * Return gatways details if id given
+     *
+     * @param id
+     * @return com.ems.model.Gateway
+     */
+    public Gateway loadGatewayWithActiveSensors(Long id) {
+        Gateway gateway = null;
+        try {
+            gateway = (Gateway) gatewayDao.getObject(Gateway.class, id);
+            if(gateway != null && gateway.getId() != null) {
+            	List<Gateway> list = new ArrayList<Gateway>();
+            	list.add(gateway);
+            	getActiveGatewaySensors(list);
+            }
+        } catch (ObjectRetrievalFailureException orfe) {
+            orfe.printStackTrace();
+        }
+        return gateway;
+    }
+
+    /**
+     * Return gatways details if sid given
+     *
+     * @param sid
+     * @return com.ems.model.Gateway
+     */
+    public Gateway loadGatewayByUid(String uid) {
+        return gatewayDao.loadGatewayByUid(uid);
+    }
+
+    /**
+     * Return gatways details if Mac address given
+     *
+     * @param macAddress
+     * @return com.ems.model.Gateway
+     */
+    public Gateway loadGatewayByMacAddress(String macAddress) {
+        return gatewayDao.loadGatewayByMacAddress(macAddress);
+    }
+
+    /**
+     * Return gatways details if campusId given
+     *
+     * @param campusId
+     * @return com.ems.model.Gateway
+     */
+    public List<Gateway> loadCampusGateways(Long campusId) {
+        return gatewayDao.loadCampusGateways(campusId);
+    }
+
+    /**
+     * Return gatways details if campusId given
+     *
+     * @param campusId
+     * @return com.ems.model.Gateway
+     */
+    public List<Gateway> loadCampusGatewaysWithActiveSensors(Long campusId) {
+        return gatewayDao.loadCampusGatewaysWithActiveSensors(campusId);
+    }
+
+    /**
+     * Return commissioned gatways details if campusId given
+     *
+     * @param campusId
+     * @return com.ems.model.Gateway
+     */
+    public List<Gateway> loadCommissionedCampusGateways(Long campusId) {
+        return gatewayDao.loadCommisionedCampusGateways(campusId) ;
+    }
+    /**
+     * Return gatways details if campusId given
+     *
+     * @param campusId
+     * @return com.ems.model.Gateway
+     */
+    public List<Gateway> loadBuildingGateways(Long buildingId) {
+        return gatewayDao.loadBuildingGateways(buildingId);
+    }
+
+    /**
+     * Return gatways details if campusId given
+     *
+     * @param campusId
+     * @return com.ems.model.Gateway
+     */
+    public List<Gateway> loadBuildingGatewaysWithActiveSensors(Long buildingId) {
+        return gatewayDao.loadBuildingGatewaysWithActiveSensors(buildingId);
+    }
+    /**
+     * Return  commissioned gatways details if campusId given
+     *
+     * @param campusId
+     * @return com.ems.model.Gateway
+     */
+    public List<Gateway> loadCommissionedBuildingGateways(Long buildingId) {
+        return gatewayDao.loadCommissionedBuildingGateways(buildingId);
+    }
+    /**
+     * Return gatways details if campusId given
+     *
+     * @param campusId
+     * @return com.ems.model.Gateway
+     */
+    public List<Gateway> loadFloorGateways(Long floorId) {
+        return gatewayDao.loadFloorGateways(floorId);
+    }
+
+    /**
+     * Return gatways details if campusId given
+     *
+     * @param campusId
+     * @return com.ems.model.Gateway
+     */
+    public List<Gateway> loadFloorGatewaysWithActiveSensors(Long floorId) {
+        return gatewayDao.loadFloorGatewaysWithActiveSensors(floorId);
+    }
+
+    public List<Gateway> loadFloorGatewaysWithActiveSensors(Long floorId,String fp) {
+    	List<Gateway> list = new ArrayList<Gateway>();
+        try {
+        	 list = gatewayDao.loadFloorGateways(floorId);
+        	 if(list!=null && list.size()>0)
+            	getActiveGatewaySensors(list);
+        } catch (ObjectRetrievalFailureException orfe) {
+            orfe.printStackTrace();
+        }
+		return list;
+    }
+
+    /**
+     * Return  commissioned gatways details if campusId given
+     *
+     * @param campusId
+     * @return com.ems.model.Gateway
+     */
+    public List<Gateway> loadCommissionedFloorGateways(Long floorId) {
+        return gatewayDao.loadCommissionedFloorGateways(floorId);
+    }
+
+    public List<Gateway> loadAllGateways() {
+        return gatewayDao.loadAllGateways();
+    }
+
+    public List<Gateway> loadAllGatewaysWithActiveSensors() {
+        return gatewayDao.loadAllGatewaysWithActiveSensors();
+    }
+    public List<Gateway> loadAllCommissionedGateways() {
+        return gatewayDao.loadAllCommissionedGateways();
+    }
+    public List<Gateway> loadUnCommissionedGateways() {
+        return gatewayDao.loadUnCommissionedGateways();
+    }
+
+    public List<Gateway> loadCommissionedGateways() {
+      return gatewayDao.loadCommissionedGateways();
+    }
+
+
+    public Gateway getGatewayByIp(String ip) {
+        return gatewayDao.getGatewayByIp(ip);
+    }
+
+    public void processDiscoverInfo(SensorConfig info, Floor floor, Long buildingId, Long campusId, String location) {
+
+    	Gateway gw = getGatewayByMacAddr(info.getMac());
+ 			if(gw != null && gw.isCommissioned()) {
+ 				logger.error("Gateway with this macAddress is already commissioned. macAddress" + info.getMac());
+ 				eventsAndFaultManager.addEvent("Placed Gatewau with this macAddress is already commissioned. macAddress: " +
+ 				info.getMac(), EventsAndFault.PLACED_FIXTURE_UPLOAD);
+ 				return;
+ 			}
+ 			if(gw == null) {
+ 				gw = new Gateway();
+ 				gw.setNoOfActiveSensors(0);
+ 				gw.setNoOfActiveErc(0);
+ 				gw.setNoOfPlugloads(0);
+ 				gw.setNoOfSensors(0);
+ 				gw.setNoOfWds(0);
+ 			} else {
+ 				logger.error("Gateway with this macAddress is already present. Updating it's information " + info.getMac());
+ 			}
+
+	    gw.setXaxis(info.getX().intValue());
+	    gw.setYaxis(info.getY().intValue());
+	    gw.setUpgradeStatus("");
+
+	    gw.setLastConnectivityAt(new Date());
+	    gw.setLastStatsRcvdTime(new Date());
+
+	    gw.setMacAddress(info.getMac());
+	    gw.setSnapAddress(info.getMac());
+	    //this is a emc gateway so no ip address. assigning the mac address itself.
+	    gw.setIpAddress(info.getMac());
+
+	    gw.setFloor(floor);
+	    gw.setBuildingId(buildingId);
+	    gw.setCampusId(campusId);
+	    gw.setLocation(location);
+
+	    gw.setVersion(info.getVersion());
+	    gw.setModelNo(info.getModelNo());
+	  	gw.setHlaSerialNo(info.getSerialNo());
+	  	String gwName = "GW" + ServerUtil.generateName(info.getMac());
+	    gw.setName(gwName);
+
+	    gw.setArea(null);
+	    gw.setCommissioned(false);
+
+	    save(gw);
+ 			userAuditLoggerUtil.log(" gw " + info.getMac() + " placement info updated ",
+ 	   				UserAuditActionType.Gateway_Update.getName());
+ 			return;
+
+    }
+
+    /**
+     * get the gateway by macAddr
+     *
+     * @param macAddr
+     * @return the gateway by macAddr
+     */
+    public Gateway getGatewayByMacAddr(String macAddr) {
+
+        return (Gateway) gatewayDao.getGatewayByMacAddr(macAddr);
+
+    } // end of method getGatewayByMacAddr
+
+    public Gateway getUEMGateway() {
+        return gatewayDao.getUEMGateway();
+    }
+
+
+    /**
+     * Called internally, especially when the user hits commission button and would like to commission this
+     * InventoryDevice (GW). Function will add the gateway to gateway table and will delete it from the inventory table.
+     *
+     * @param gateway
+     */
+    private Gateway AddGateway(Gateway gateway) {
+
+        Gateway gw = null;
+        try {
+            gw = loadGatewayByMacAddress(gateway.getMacAddress());
+            String sMacAddrr = gateway.getMacAddress();
+            if (gw == null) {
+                // gateway.setMacAddress(sMacAddrr.replace(":", ""));
+                // Assumption is that the IP address of the gateway never changes...
+                save(gateway);
+            } else {
+                // Its rare but this could happen. Gateway's ip address could be changed
+                gw.setIpAddress(gateway.getIpAddress());
+                save(gw);
+            }
+            // Added this gateway to the GatewayInfo map
+            GatewayImpl.getInstance().addGatewayInfo(gateway.getIpAddress());
+            // Delete this from the inventory list...
+            inventoryDeviceDao.deleteInventoryDeviceByMacAddress(sMacAddrr);
+        } catch (HibernateException he) {
+            he.printStackTrace();
+        }
+        return gw;
+    }
+
+    class LockObj {
+
+      boolean gotAck = false;
+
+    } // end of class LockObj
+
+    static HashMap<Long, LockObj> lockHashMap = new HashMap<Long, LockObj>();
+
+    public static void receivedGwWirelessChangeAck(long gwId) {
+
+      LockObj lock = lockHashMap.get(gwId);
+      if(lock == null) {
+	return;
+      }
+      lock.gotAck = true;
+      try {
+    	synchronized (lock) {
+    	  lock.notify();
+    	}
+      } catch (Exception e) {
+    	logger.debug(e.getMessage());
+      }
+
+    } // end of method receivedGwWirelessChangeAck
+
+    /**
+     * The Gateway should already be present in the gateway table.
+     * Gateway object passed is half baked, we need to fetch the actual gateway object from the database
+     * and set the incoming parameters to it.
+     */
+    public boolean commission(Gateway gateway) {
+
+        Gateway gw = loadGatewayByMacAddress(gateway.getMacAddress());
+        if (gw == null) {
+          // gateway could not be found in the database
+          return false;
+        }
+
+        LockObj lock = new LockObj();
+        lockHashMap.put(gateway.getId(), lock);
+        GatewayImpl.getInstance().changeWirelessParams(gateway);
+        synchronized (lock) {
+            try {
+                lock.wait(3000); // wait for 3 sec
+            } catch (Exception e) {
+                logger.debug(e.getMessage());
+            }
+        }
+        if (!lock.gotAck) {
+        	// we didn't get the ack so don't commit the changes in the database
+          return false;
+        }
+        // got the ack for commissioning message
+        gatewayDao.commission(gateway.getId());
+
+        ServerMain.getInstance().updateGatewayInfo(gateway.getId());
+
+            gw.setGatewayName(gateway.getGatewayName());
+            gw.setMacAddress(gateway.getMacAddress());
+            gw.setIpAddress(gateway.getIpAddress());
+            gw.setWirelessRadiorate(gateway.getWirelessRadiorate());
+            gw.setChannel(gateway.getChannel());
+            gw.setWirelessNetworkId(gateway.getWirelessNetworkId());
+            gw.setWirelessEncryptType(gateway.getWirelessEncryptType());
+            gw.setWirelessEncryptKey(gateway.getWirelessEncryptKey());
+            if (gw.getFloor().getId() != gateway.getFloor().getId()) {
+                // Commissioning gateway on to different floor...
+                Floor floor = floorDao.getFloorById(gateway.getFloor().getId());
+                gw.setFloor(floor);
+                //gateway.setFloor(floor);
+                long buildingId = floor.getBuilding().getId();
+                gw.setBuildingId(buildingId);
+                Building building = buildingDao.getBuildingById(buildingId);
+                gw.setCampusId(building.getCampus().getId());
+                // Update Gateway location.
+                String location = "";
+                try {
+                    location = floor.getName();
+                    location = building.getName() + " -> " + location;
+                    location = building.getCampus().getName() + " -> " + location;
+                    gw.setLocation(location);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                gatewayDao.updateGateway(gw);
+            } else {
+                // Commissioning gateway on to same floor...
+                gatewayDao.updateGatewayParameters(gw);
+            }
+          //start the timers for this gateway
+          ServerMain.getInstance().getGatewayInfo(gateway.getId()).startTimers();
+            return true;
+    }
+
+    public void setCommissionStatus(long gatewayId) {
+        gatewayDao.commission(gatewayId);
+    }
+
+    public boolean isCommissioned(long gatewayId) {
+        return gatewayDao.isCommissioned(gatewayId);
+    }
+
+    public boolean performAfterCommissionSteps(Gateway gateway) {
+        Gateway gw = loadGatewayByMacAddress(gateway.getMacAddress());
+        if (gw == null) {
+          // gateway could not be found in the database
+          return false;
+        }
+        //send the security command
+        GatewayImpl.getInstance().sendGatewaySecurityCommand(gw);
+        /* EM-1122. Looks like there is a timing issue. This is causing the gateway info response to send the
+         * default network parameters as actual commissioned network parameters are not yet stored in the database before
+         * the info response is processed. So, commenting out this info request. Version will be updated
+         * on the next 5th minute info request.
+        //send the gateway info packet so that version is retrieved
+        GatewayImpl.getInstance().sendGatewayInfoReq(gw);
+        */
+        return true;
+    }
+
+    public List<Gateway> getActiveGatewaySensors(List<Gateway> list) {
+    	return gatewayDao.getActiveGatewaySensors(list);
+    }
+
+    public void updateGatewayPosition(Gateway gateway) {
+        gatewayDao.updateGatewayPosition(gateway);
+    }
+    public void updateGatewayFloor(List<Gateway> gateways,Long floorId) {
+    	gatewayDao.updateGatewayFloor(gateways, floorId);
+    }
+
+    public void getRealtimeStats(String gwIp) {
+        Gateway oGW = getGatewayByIp(gwIp);
+        if (oGW != null)
+            GatewayImpl.getInstance().sendGatewayInfoReq(oGW);
+    }
+
+    public void getRealtimeStatsByGWId(Long id) {
+        Gateway oGW = loadGateway(id);
+        if (oGW != null)
+            GatewayImpl.getInstance().sendGatewayInfoReq(oGW);
+    }
+
+
+    public void saveGatewayInfo(Gateway gw) {
+        gatewayDao.saveGatewayInfo(gw);
+    }
+
+    private Gateway getNewGateway(long floorID)
+    {
+        Gateway oGateway = new Gateway();
+        Floor floor = floorDao.getFloorById(floorID);
+        oGateway.setFloor(floor);
+        long buildingId = floor.getBuilding().getId();
+        oGateway.setBuildingId(buildingId);
+        Building building = buildingDao.getBuildingById(buildingId);
+        oGateway.setCampusId(building.getCampus().getId());
+        oGateway.setFloorName(floor.getName());
+        // Set Gateway location.
+        String location = "";
+        try {
+            location = floor.getName();
+            location = building.getName() + " -> " + location;
+            location = building.getCampus().getName() + " -> " + location;
+            oGateway.setLocation(location);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        // sMacAddrr = sMacAddrr.replace(":", "");
+        oGateway.setEthSecType(ServerConstants.ETH_SEC_TYPE);
+        oGateway.setEthSecEncryptType(ServerConstants.ETH_SEC_ENCRYPT_TYPE);
+        oGateway.setEthSecKey(ServerConstants.DEF_WLESS_SECURITY_KEY);
+        oGateway.setChannel(ServerConstants.WIRELESS_DEF_CHANNEL);
+        oGateway.setWirelessEncryptType(ServerConstants.ETH_SEC_TYPE);
+        oGateway.setWirelessEncryptKey(ServerConstants.DEF_WLESS_SECURITY_KEY);
+        oGateway.setWirelessRadiorate(ServerConstants.WIRELESS_DEF_RADIO_RATE);
+        oGateway.setNoOfSensors(0);
+        oGateway.setEthIpaddrType(0);
+        oGateway.setGatewayType((short) ServerConstants.ZIGBEE_GW_SU);
+        oGateway.setPort((short) ServerConstants.GW_UDP_PORT);
+        oGateway.setXaxis(0);
+        oGateway.setYaxis(0);
+        oGateway.setLastConnectivityAt(new Date());
+        oGateway.setLastStatsRcvdTime(new Date());
+        oGateway.setCurrUptime(0l);
+        oGateway.setWirelessNetworkId(ServerConstants.DEFAUL_NETWORK_ID);
+        oGateway.setCurrNoPktsFromGems(0l);
+        oGateway.setCurrNoPktsFromNodes(0l);
+        oGateway.setCurrNoPktsToGems(0l);
+        oGateway.setCurrNoPktsToNodes(0l);
+
+        return oGateway;
+    }
+
+    /**
+     * Fetches the list from the inventory table and adds these to the gateway table with the appropriate floor id.
+     *
+     * @param floorID
+     * @return com.ems.model.Gateway collection
+     */
+    public List<Gateway> discoverGateways(long floorID) {
+        List<InventoryDevice> oGWInInventoryList = inventoryDeviceDao
+                .loadAllInventoryDeviceByType(ServerConstants.DEVICE_GATEWAY);
+        List<Gateway> oGatewayList = new ArrayList<Gateway>();
+        if (oGWInInventoryList != null) {
+            Iterator<InventoryDevice> oGWInventoryItr = oGWInInventoryList.iterator();
+            InventoryDevice oGWIDevice = null;
+            Gateway oGateway = null;
+            while (oGWInventoryItr.hasNext()) {
+                oGWIDevice = oGWInventoryItr.next();
+                oGateway = getNewGateway(floorID);
+
+                String sMacAddrr = oGWIDevice.getMacAddr();
+                // sMacAddrr = sMacAddrr.replace(":", "");
+                oGateway.setGatewayName("GW" + ServerUtil.generateName(oGWIDevice.getSnapAddr()));
+                oGateway.setSnapAddress(oGWIDevice.getSnapAddr());
+                oGateway.setMacAddress(oGWIDevice.getMacAddr());
+                oGateway.setIpAddress(oGWIDevice.getIpAddress());
+                Gateway savedGw = AddGateway(oGateway);
+                if(savedGw!=null && savedGw.isCommissioned()==false)
+                oGatewayList.add(oGateway);
+            }
+        }
+        return oGatewayList;
+    }
+
+    public int getGatewayCountByName(String name)
+    {
+    	int count= gatewayDao.loadCommisionedGateways(name);
+    	return count;
+    }
+
+    public Gateway updateFields(Gateway gw) {
+        return gatewayDao.updateFields(gw);
+    }
+
+    public void exitCommissioning(List<Long> gatewayIdList) {
+    	if(logger.isDebugEnabled()) {
+    		logger.debug("Exiting gateway commissioning process...");
+    	}
+        return;
+    }
+
+    public void setImageUpgradeStatus(long gwId, String status) {
+        gatewayDao.setImageUpgradeStatus(gwId, status);
+    } // end of method setImageUpgradeState
+
+    public void setVersions(Gateway gw) {
+
+        gatewayDao.setVersions(gw);
+
+    } // end of method setVersions
+
+	// Convert the MAC address into lower case and no padding format
+    private String convertMAC(String strMACAddr)
+    {
+    	strMACAddr = strMACAddr.toLowerCase();
+
+        StringTokenizer st = new StringTokenizer(strMACAddr, ":");
+        String strNewAddr = new String();
+        String token = null;
+        while(st.hasMoreTokens()) {
+          token = st.nextToken();
+
+          if(token.charAt(0) == '0')
+        	  strNewAddr += token.charAt(1);
+          else
+        	  strNewAddr += token;
+
+          if(st.hasMoreTokens())
+        	  strNewAddr += ":";
+        }
+
+        return strNewAddr;
+     }
+
+    public int addGateway(String strMACAddr, String strIPAddr, String strFloorId)
+    {
+    	Long floorId = Long.parseLong(strFloorId);
+    	try {
+
+    		// Convert the MAC address into lower case and no padding format
+    		String strNewMACAddr = convertMAC(strMACAddr);
+
+	    	// Check if the gateway with the same mac address already exists
+            Gateway tmpGw = loadGatewayByMacAddress(strNewMACAddr);
+
+            if(tmpGw != null)
+            	return 2;
+
+            tmpGw = getGatewayByIp(strIPAddr);
+
+            if(tmpGw != null)
+            	return 3;
+
+	    	Gateway gateway = getNewGateway(floorId);
+
+	    	String strSnapAddr = ServerUtil.getSNAPFromMac(strMACAddr);
+	        gateway.setGatewayName("GW" + ServerUtil.generateName(strSnapAddr));
+	        gateway.setSnapAddress(strSnapAddr);
+	        gateway.setMacAddress(strNewMACAddr);
+	        gateway.setIpAddress(strIPAddr);
+	        gateway.setVersion("2.0");
+
+	        if(!ServerMain.getInstance().isEmcMode()) {
+	        	//check for ssl in local mode
+	        	if(SSLSessionManager.getInstance().authEnlightedGateway(gateway) == false)
+	        		return 1;
+	        }
+
+	        // Save the gateway to the database so that it gets the id to send the gateway info command
+	        save(gateway);
+
+	        // Added this gateway to the GatewayInfo map
+	        GatewayImpl.getInstance().addGatewayInfo(gateway.getIpAddress());
+
+	        return 0;
+    	}
+    	catch(SSLException sslE)
+    	{
+    		sslE.printStackTrace();
+    		return 1;
+    	}
+    	catch(Exception e)
+    	{
+    		e.printStackTrace();
+
+    		return 1;
+    	}
+    }
+
+	public boolean rmaGateway(Long fromGatewayId, Long toGatewayId) {
+		Gateway oldGateway = loadGateway(fromGatewayId);
+		Gateway newGateway = loadGateway(toGatewayId);
+
+		boolean commissionStatus = false;
+
+		if ((newGateway.getChannel() == 4) && (newGateway.getWirelessNetworkId().equals(ServerConstants.DEFAUL_NETWORK_ID)) && (newGateway.getWirelessEncryptKey().equals(ServerConstants.DEF_WLESS_SECURITY_KEY)))
+		{
+			newGateway.setChannel(oldGateway.getChannel());
+			newGateway.setWirelessNetworkId(oldGateway.getWirelessNetworkId());
+			newGateway.setWirelessEncryptKey(oldGateway.getWirelessEncryptKey());
+			newGateway.setWirelessEncryptType(oldGateway.getWirelessEncryptType());
+			newGateway.setXaxis(oldGateway.getXaxis());
+			newGateway.setYaxis(oldGateway.getYaxis());
+
+			commissionStatus = commission(newGateway);
+
+			if(commissionStatus)
+			{
+				boolean postCommisionStatus = performAfterCommissionSteps(newGateway);
+				if(postCommisionStatus)
+				{
+					//update gateway id and secondary gateway id of fixtures to new one
+					fixtureDao.updateGatewayId(fromGatewayId, toGatewayId);
+					//update gateway id of ERCs to new one
+					wdsDao.updateGatewayId(fromGatewayId, toGatewayId);
+					//update gateway id of plugloads to new one
+					plugloadDao.updateGatewayId(fromGatewayId, toGatewayId);
+				}
+			}
+		}
+		return commissionStatus;
+	}
+
+	public void invalidateFixtureCache(Long gatewayId) {
+		List<Long> fixtureIdList = fixtureDao.loadFixturesIdListByGatewayId(gatewayId);
+
+		//invalidate fixture cache
+		if(fixtureIdList != null){
+			for(Long fixtureId : fixtureIdList)
+				FixtureCache.getInstance().invalidateDeviceCache(fixtureId);
+		}
+	}
+
+	public List<Gateway> loadUnCommissionedGatewaysByFloorId(Long floorId) {
+		return gatewayDao.loadUnCommissionedGatewaysByFloorId(floorId);
+	}
+
+	public void updateUEMGateway() {
+		Gateway gw = gatewayDao.getUEMGateway();
+		if(gw != null && gw.getMacAddress() != null) {
+			try {
+				Process pr = null;
+				String[] cmdArr = { "/bin/bash",
+						Constants.ENL_APP_HOME+"/webapps/ems/adminscripts/getMac.sh" };
+				BufferedReader br = null;
+				pr = Runtime.getRuntime().exec(cmdArr);
+				pr.waitFor();
+				br = new BufferedReader(new InputStreamReader(
+						pr.getInputStream()));
+
+				while (true) {
+					String macId = br.readLine().trim();
+					if(macId != null && !"".equals(macId)) {
+						if (!macId.toUpperCase().equals(gw.getMacAddress()) ) {
+							gw.setMacAddress(macId.toUpperCase());
+							gatewayDao.saveObject(gw);
+						}
+						break;
+					}
+				}
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public List<GatewayOutageVO> getGatewayOutageList(String property, Long pid) {
+		return gatewayDao.getGatewayOutageList(property, pid);
+	}
+}

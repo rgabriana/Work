@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.OverrideSchedulesFacility" table="override_schedules_facility">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">override_schedules_facility_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-User.xml 
+					containing the additional parameters and place it in your merge dir. -->
+			</generator>
+		</id>
+
+		<property name="facilityType" update="true" insert="true"
+			column="facility_type">
+			<type name="org.hibernate.type.EnumType">
+				<param name="enumClass">com.ems.types.FacilityType</param>
+				<param name="type">12</param>
+			</type>
+		</property>
+		<property name="facilityId" type="java.lang.Long" update="true"
+			insert="true" column="facility_id" />
+
+		<many-to-one name="drTarget" class="com.ems.model.DRTarget" 
+			cascade="none" outer-join="auto" update="true" insert="true" column="schedule_id" />
+
+		<!-- To add non XDoclet property mappings, create a file named hibernate-properties-User.xml 
+			containing the additional properties and place it in your merge dir. -->
+
+	</class>
+
+</hibernate-mapping>

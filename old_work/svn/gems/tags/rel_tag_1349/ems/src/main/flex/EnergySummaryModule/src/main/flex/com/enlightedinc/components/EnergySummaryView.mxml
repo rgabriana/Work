@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="100%" height="100%"
+		 xmlns:components="com.enlightedinc.components.*">
+	
+	<fx:Declarations>
+		<s:HTTPService id="energyMeterHttpService"
+					   method="GET"
+					   resultFormat="e4x"
+					   useProxy="false"
+					   showBusyCursor="true" 
+					   result="onGetEnergyMeterData(event)"
+					   fault="energyMeterHttpService_faultHandler(event)"/>
+		
+		<s:HTTPService id="energyMeterCurrentHttpService"
+					   method="GET"
+					   resultFormat="e4x"
+					   useProxy="false"
+					   showBusyCursor="true"   
+					   result="onGetEnergyMeterCurrentData(event)"
+					   fault="energyMeterCurrentHttpService_faultHandler(event)"/>
+		
+		<s:HTTPService id="filterEnergyMeterHttpService" 
+					   method="GET"
+					   resultFormat="e4x"
+					   useProxy="false"
+					   showBusyCursor="true"   
+					   result="onFilterEnergyMeterHttpService(event)"
+					   fault="filterEnergyMeterHttpService_faultHandler(event)"/>
+		
+		<s:HTTPService id="locationHttpService" 
+					   method="GET"
+					   resultFormat="e4x"
+					   useProxy="false"
+					   showBusyCursor="true"   
+					   result="onLocationHttpService(event)"
+					   fault="locationHttpService_faultHandler(event)"/>
+		 
+		<!--  CODE FOR DRILL DOWN CHART -->
+		<!--<s:HTTPService id="childAggregateEMHttpService" 
+					   method="GET"
+					   resultFormat="e4x"
+					   useProxy="false"
+					   showBusyCursor="true"   
+					   result="onChildAggregateEMHttpService(event)"
+					   fault="childAggregateEMHttpService_faultHandler(event)"/>
+		<s:HTTPService id="childAggregateFilterEMHttpService" 
+					   method="GET"
+					   resultFormat="e4x"
+					   useProxy="false"
+					   showBusyCursor="true"   
+					   result="onChildAggregateFilterEMHttpService(event)"
+					   fault="childAggregateFilterEMHttpService_faultHandler(event)"/>-->
+		
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.common.CountsCalculator;
+			import com.enlightedinc.events.CurrentSavingChartUpdate;
+			import com.enlightedinc.events.EnergySummaryUnitBarEvent;
+			import com.enlightedinc.events.LocationServiceEvent;
+			import com.enlightedinc.utils.GlobalUtils;
+			
+			import mx.charts.HitData;
+			import mx.collections.ArrayCollection;
+			import mx.core.FlexGlobals;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.xml.SimpleXMLDecoder;
+			
+			private var fromStr:String = "";
+			private var toStr:String = "";
+			
+			[Bindable]
+			private var energyMeterObj: Object = new Object();
+			
+			[Bindable]
+			public var dataPeriod:String;
+			
+			[Bindable]
+			private var application:Object = FlexGlobals.topLevelApplication;
+			
+			// CODE FOR DRILL DOWN CHART
+			//[Bindable]
+			//private var isDrillDownChart:Boolean = false;			
+			
+			private var countCalculator:CountsCalculator= CountsCalculator.getInstance();
+			private function onGetEnergyMeterData(event:ResultEvent) : void
+			{
+				if(event.statusCode==Constants.SUCCESS)
+				{
+					showHideNoDataLabel(false);
+					countCalculator.flushGlobalCollection();
+					var xml:XMLDocument = new XMLDocument(event.result.toString());
+					if(event.result.toString() == "")
+					{
+						countCalculator.calculatePeak();
+						emptyDataOrFaultHandler();
+						return;
+					}
+					//var energyUsageData:ArrayCollection = new ArrayCollection();
+					var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+					var resultObj:Object = decoder.decodeXML(xml);
+					(resultObj.dashboardRecords.dashboardRecord is ArrayCollection) ? (countCalculator.energyConsumptionRawDataCollection = resultObj.dashboardRecords.dashboardRecord) : (countCalculator.energyConsumptionRawDataCollection.addItem(resultObj.dashboardRecords.dashboardRecord));
+					//countCalculator.calculateKwhCounts(countCalculator.energyConsumptionRawDataCollection);
+					var lastUnitSelection:String= application.lastUnitSelection;
+					if(lastUnitSelection)
+					dispatchEvent( new EnergySummaryUnitBarEvent(EnergySummaryUnitBarEvent.UNIT_CHANGE, lastUnitSelection));
+					
+					//At the time of refresh, Refresh Message will go away once the data is returned from webservice.
+					application.removeMarquee();
+				}else if(event.statusCode==Constants.SESSION_TIME_OUT)
+				{
+					GlobalUtils.LogOut();
+				}
+			}
+			
+			private function onGetEnergyMeterCurrentData(event:ResultEvent):void
+			{
+				if(event.statusCode == Constants.SUCCESS)
+				{
+					var xml:XMLDocument = new XMLDocument(event.result.toString());
+					if(event.result.toString() == "")
+					{
+						//Reset the Current Saving Chart
+						dispatchEvent(new CurrentSavingChartUpdate(CurrentSavingChartUpdate.CHART_RESET));
+						CountsCalculator.getInstance().flushCurrentCount();
+						return;
+					}
+					var energyUsageData:ArrayCollection = new ArrayCollection();
+					var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+					var resultObj:Object = decoder.decodeXML(xml);
+					(resultObj.dashboardRecords.dashboardRecord is ArrayCollection) ? (energyUsageData = resultObj.dashboardRecords.dashboardRecord) : (energyUsageData.addItem(resultObj.dashboardRecords.dashboardRecord));
+					CountsCalculator.getInstance().calculateCurrentCount(energyUsageData);
+				}else if(event.statusCode==Constants.SESSION_TIME_OUT)
+				{
+					GlobalUtils.LogOut();
+				}
+				
+				
+			}
+			
+			private function onFilterEnergyMeterHttpService(event:ResultEvent):void{
+				
+				if(event.statusCode == Constants.SUCCESS)
+				{
+					showHideNoDataLabel(false);
+					countCalculator.flushGlobalCollection();
+					var xml:XMLDocument = new XMLDocument(event.result.toString());
+					if(event.result.toString() == "")
+					{
+						countCalculator.calculatePeak();
+						emptyDataOrFaultHandler();
+						return;
+					}
+					//var energyUsageData:ArrayCollection = new ArrayCollection();
+					var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+					var resultObj:Object = decoder.decodeXML(xml);
+					(resultObj.dashboardRecords.dashboardRecord is ArrayCollection) ? (countCalculator.energyConsumptionRawDataCollection = resultObj.dashboardRecords.dashboardRecord) : (countCalculator.energyConsumptionRawDataCollection.addItem(resultObj.dashboardRecords.dashboardRecord));
+					var lastUnitSelection:String= application.lastUnitSelection;
+					if(lastUnitSelection)
+					dispatchEvent( new EnergySummaryUnitBarEvent(EnergySummaryUnitBarEvent.UNIT_CHANGE, lastUnitSelection));
+					//countCalculator.calculateKwhCounts(countCalculator.energyConsumptionRawDataCollection);
+					
+					//At the time of refresh, Refresh Message will go away once the data is returned from webservice.
+					application.removeMarquee();
+				}else if(event.statusCode==Constants.SESSION_TIME_OUT)
+				{
+					GlobalUtils.LogOut();
+				}
+			}
+			
+			private function onLocationHttpService(event:ResultEvent):void
+			{
+				if(event.statusCode == Constants.SUCCESS)
+				{
+					var xml:XMLDocument = new XMLDocument(event.result.toString());
+					var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+					if(event.result.toString() != "")
+					{
+						var resultObj:Object = decoder.decodeXML(xml);
+						dispatchEvent( new LocationServiceEvent(LocationServiceEvent.LOCATION_CHANGE, resultObj.toString()));	
+					}
+				}else if(event.statusCode==Constants.SESSION_TIME_OUT)
+				{
+					GlobalUtils.LogOut();
+				}
+			}
+			/*
+			// CODE FOR DRILL DOWN CHART
+			private function onChildAggregateEMHttpService(event:ResultEvent):void
+			{
+				var xml:XMLDocument = new XMLDocument(event.result.toString());
+				if(countCalculator.drillDownChartData.length>0)
+					countCalculator.drillDownChartData.removeAll();
+				if(event.result.toString() == "")
+				{
+					isDrillDownChart = false;
+					return;
+				}
+				var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+				var resultObj:Object = decoder.decodeXML(xml);
+				(resultObj.dashboardRecords.dashboardRecord is ArrayCollection) ? (countCalculator.drillDownChartData = resultObj.dashboardRecords.dashboardRecord) : (countCalculator.drillDownChartData.addItem(resultObj.dashboardRecords.dashboardRecord));
+				
+				if(countCalculator.drillDownChartData.length>0)
+				{
+					isDrillDownChart = true;
+				}else
+				{
+					isDrillDownChart = false;
+				}
+			}
+			private function onChildAggregateFilterEMHttpService(event:ResultEvent):void
+			{
+				var xml:XMLDocument = new XMLDocument(event.result.toString());
+				if(countCalculator.drillDownChartData.length>0)
+				countCalculator.drillDownChartData.removeAll();
+				if(event.result.toString() == "")
+				{
+					isDrillDownChart = false;
+					return;
+				}
+				
+				var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+				var resultObj:Object = decoder.decodeXML(xml);
+				(resultObj.dashboardRecords.dashboardRecord is ArrayCollection) ? (countCalculator.drillDownChartData = resultObj.dashboardRecords.dashboardRecord) : (countCalculator.drillDownChartData.addItem(resultObj.dashboardRecords.dashboardRecord));
+				
+				if(countCalculator.drillDownChartData.length>0)
+				{
+					isDrillDownChart = true;
+				}else
+				{
+					isDrillDownChart = false;
+				}
+			}
+			*/ 
+			// DRILL DOWN CHART CODE END
+			
+			private function profileDataTipFunction(item:HitData) : String
+			{
+				return item.item.profileType + " (Power Used: " + item.item.powerUsage + " W)";
+			}
+			
+			private function wattPrecision(value:Number) : String
+			{
+				if(value == 0)
+					return "0.00 W";
+				else if(!value)
+					return "-";
+				else if (value >= 1000000)
+					return (value/1000000).toFixed(2) +" MW";
+				else if (value >= 1000)
+					return (value/1000).toFixed(2) +" kW";
+				else
+					return value.toFixed(2) + " W";
+			}
+			
+			private function whPrecision(value:Number) : String
+			{
+				if(value == 0)
+					return "0.00 Wh";
+				else if(!value)
+					return "-";
+				else if (Number(value) >= 1000000)
+					return (Number(value)/1000000).toFixed(2) +" MWh";
+				else if (Number(value) >= 1000)
+					return (Number(value)/1000).toFixed(2) +" kWh";
+				else
+					return Number(value).toFixed(2) + " Wh";
+			}
+			
+			private function currencyPrecision(value:Number) : String
+			{
+				if(value == 0)
+					return "$ 0.00";
+				else if(!value)
+					return "-";
+				else 
+					return "$ " + Number(value).toFixed(2).toString();
+			}
+			
+			protected function energyMeterHttpService_faultHandler(event:FaultEvent):void
+			{
+				 
+				 emptyDataOrFaultHandler();
+				 
+				 if(event.statusCode==Constants.SESSION_TIME_OUT)
+				 {
+					 GlobalUtils.LogOut();
+				 }
+			}
+
+			protected function energyMeterCurrentHttpService_faultHandler(event:FaultEvent):void
+			{
+				//Reset the Current Saving Chart
+				dispatchEvent(new CurrentSavingChartUpdate(CurrentSavingChartUpdate.CHART_RESET));
+				if(event.statusCode==Constants.SESSION_TIME_OUT)
+				{
+					GlobalUtils.LogOut();
+				}
+			}
+
+			protected function filterEnergyMeterHttpService_faultHandler(event:FaultEvent):void
+			{
+				//Reset the Current Saving Chart
+				emptyDataOrFaultHandler();
+				if(event.statusCode==Constants.SESSION_TIME_OUT)
+				{
+					GlobalUtils.LogOut();
+				}
+			}
+			
+			protected function locationHttpService_faultHandler(event:FaultEvent):void{
+				trace("Location service failed");
+				if(event.statusCode==Constants.SESSION_TIME_OUT)
+				{
+					GlobalUtils.LogOut();
+				}
+			}
+			
+			private function showHideNoDataLabel(value:Boolean):void
+			{
+				if(value)
+				{
+					noDataLabel.visible = true;
+					noDataLabel.includeInLayout =true;
+				}else
+				{
+					noDataLabel.visible = false;
+					noDataLabel.includeInLayout =false;
+				}
+			}
+			/*
+			// CODE FOR DRILL DOWN CHART
+			protected function childAggregateEMHttpService_faultHandler(event:FaultEvent):void
+			{
+				isDrillDownChart = false;
+			}
+			protected function childAggregateFilterEMHttpService_faultHandler(event:FaultEvent):void
+			{
+				isDrillDownChart = false;
+			}
+			*/
+			// DRILL DOWN CHART CODE END
+			
+			private function emptyDataOrFaultHandler():void
+			{
+				countCalculator.flushCounts();
+				countCalculator.flushGlobalCollection();
+				showHideNoDataLabel(true);
+				//At the time of refresh, Refresh Message will go away once the data is returned from webservice.
+				application.removeMarquee();
+				
+				// TO RESET CURRENT ODOMETER TEXT
+				var lastUnitSelection:String= application.lastUnitSelection;
+				if(lastUnitSelection)
+				dispatchEvent( new EnergySummaryUnitBarEvent(EnergySummaryUnitBarEvent.UNIT_CHANGE, lastUnitSelection));
+				
+			}
+		]]>
+	</fx:Script>
+	<!-- Energy Usage Graph-->
+	<mx:Canvas id="esContainer" width="100%" height="100%" minHeight="230">
+		<s:Label id="noDataLabel" fontSize="14"  text="{Constants.NO_DISPLAY_DATA}" visible="false" includeInLayout="false" x="{(esContainer.width/2)}" y="{(esContainer.height/2)}"/>
+		<s:VGroup styleName="vboxStyle" width="100%" height="100%">
+			<s:HGroup width="100%" height="100%">
+				<!--<components:EnergyDrillDownChart id="energyDrillDownChart" width="35%" height="100%" includeInLayout="{isDrillDownChart}" visible="{isDrillDownChart}" />-->
+				<components:EnergyUsageChart id="energyUsageGraph" width="100%" height="100%" />
+			</s:HGroup>
+		</s:VGroup>
+	</mx:Canvas>
+</s:VGroup>

@@ -1,0 +1,5 @@
+# The PAM configuration file for the Shadow 'chpasswd' service
+# This file is being managed by puppet
+
+@include common-password
+

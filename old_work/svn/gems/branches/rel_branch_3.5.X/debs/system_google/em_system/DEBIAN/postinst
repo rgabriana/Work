@@ -1,0 +1,13 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+
+#sudo chown root:root /etc/default/rcS
+#sudo chmod 644 /etc/default/rcS
+
+sed -i 's/\/usr\/local\/google\/home\/enlighted\/scripts\/avahiremoval.sh//' /etc/rc.local
+
+check=$(sudo service avahi-daemon status)
+if [[ "$check" =~ "running" ]]
+then
+    sudo service avahi-daemon stop
+fi

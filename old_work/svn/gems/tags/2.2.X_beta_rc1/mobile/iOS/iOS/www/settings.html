@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+</head>
+
+<body>
+
+	<div id="settingsPage" data-role="page">
+
+		<div class="imageWrapper">
+			<img src="js/images/enlighted-logo.png" id="logo">
+		</div>
+		<div data-role="content" id="settingsDiv">
+			<div class="title">Settings</div>
+
+			<div id="settingsErrorMessage" style="color: red"></div>
+
+			<form name="mySettings" id="settingsForm" data-ajax="false">
+				<p class="form_field">
+					<span>ServerIp</span> <input type="text" name="serverip">
+				</p>
+
+				<p class="form_field">
+					<span>ServerPort</span> <input type="text" name="serverport"
+						value="443">
+				</p>
+
+				<div class="buttonWrapper">
+					<div class="buttonDiv">
+						<input type="submit" value="Apply" data-role="button"
+							id="applyButton">
+					</div>
+					<div class="buttonDiv">
+						<input type="button" value="Cancel" onclick="cancelSettings()">
+					</div>
+				</div>
+
+			</form>
+
+		</div>
+
+
+	</div>
+
+</body>
+
+</html>

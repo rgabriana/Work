@@ -1,0 +1,110 @@
+{% extends "pages/layouts/mainLayout.html" %}
+
+{% load i18n %}
+
+{% load customtemplatetags %}
+
+{% block body %}
+
+<script type="text/javascript">
+$().ready(function(){
+$("#uemForm").validate({
+				rules: {
+					serverIp: {
+						required: true
+					}
+				},
+				messages: {
+					serverIp: {
+						required: 'Field is required',
+					}
+				}
+				
+			});
+$("#serverIp").val('{{uemServerIpValue}}');
+			
+ if('{{isUemEnabled}}'!='0')
+	        {	        	
+	        	$("#ueCC").attr('checked',true);
+	        }else 
+	        {	        	
+	        	$("#ueCC").attr('checked',false);
+	        }
+ 
+{% if savestatus == "S" %}
+	$("#savestatusuem").css("color", "green");
+	if($("#ueCC").is(':checked')){
+		$("#savestatusuem").html("EM Orchestrator Configuration is saved successfully.Please go to Unregistered EMs page in EM Orchestrator to Activate this EM Instance.");
+	}
+	else{
+		$("#savestatusuem").html("EM Orchestrator Configuration is saved successfully.");
+	}
+
+{% endif %}
+ 
+
+  if('{{pktForwardingEnabled}}'!='0')
+	          {	        	
+	          	$("#pktForward").attr('checked',true);
+	          }else 
+	          {	        	
+	          	$("#pktForward").attr('checked',false);
+	          }
+	  $(".outermostdiv").css("minHeight", $(window).height() - 85);
+  });			
+
+function saveUemSettings(){
+	var isValid = $('#uemForm').valid();		
+	if(isValid){
+		$('#uemForm').submit();		
+	}	
+}
+			
+ 
+ 
+</script>
+
+
+<div class="pgset">
+<div class="outermostdiv">
+	<div class="outerContainer">
+		<div class="i1"></div>
+    	<div style="margin-top: 15px; width:100%;">
+			<fieldset style="padding: 10px;font-weight:normal;font-size: 1em;">
+			<legend style="font-weight: bold">{% trans "em.uemsettings.title" %}</legend>
+			<form id="uemForm" action="{{ STATIC_URL }}uemsettings/save/" method="post">	
+			{% csrf_token %}
+			<table cellspacing="10px">
+				<tr>
+					<td class="formPrompt" style="font-weight:normal;font-size: 1em;">EM Orchestrator Server: </td>
+					<td class="formValue"><input id="serverIp" path="serverIp" name="serverIp" class="biginput" /></td>
+				</tr>
+				<tr>
+					<td class="formPrompt" style="font-weight:normal;font-size: 1em;">EM MAC Address:</td>
+					<td class="formValue"><label id="emMac" class="field"></label> <script type="text/javascript">
+ $("#emMac").html('{{uememMacValue}}');
+</script></td>			
+				</tr>
+				<tr>
+					<td class="formPrompt" style="font-weight:normal;font-size: 1em;">Enable/Disable:</td>
+					<td class="formValue"><input  type="checkbox"  id="ueCC" path="ueCC"  name="ueCC" class="eCC" /></td>
+				</tr>
+				<tr>
+					<td class="formPrompt" style="font-weight:normal;font-size: 1em;">Packet Forwarding:</td>
+					<td class="formValue"><input  type="checkbox"  id="pktForward" path="pktForward"  name="pktForward" class="eCC" /></td>
+				</tr>
+				<tr>
+					<td class="formPrompt"><span></span></td>
+					<td class="formValue"><input style="display: inline; margin-right: 10px;" id="saveCloudBtn" type="button"
+						value="Save" onclick="saveUemSettings();" /><span id="savestatusuem" style="font-size: 1.1em; display: inline"></span></td>
+				</tr>
+			</table>
+			
+			</form>
+			
+			</div>
+	</div>
+</div>
+</div>
+
+{% endblock %}

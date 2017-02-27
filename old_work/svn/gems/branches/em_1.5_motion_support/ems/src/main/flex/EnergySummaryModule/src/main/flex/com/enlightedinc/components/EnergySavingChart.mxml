@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="35" height="56" creationComplete="init()" >
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			private var _chartData:ArrayCollection;
+			[Bindable]
+			private var taskTunebarHeight:Number =0;
+			[Bindable]
+			private var ambienceBarHeight:Number =0;
+			[Bindable]
+			private var occupancyBarHeight:Number =0;
+			
+			private var columnItemDictionary:Dictionary = new Dictionary();
+			
+			private function init():void{
+				columnItemDictionary['occsaving'] = "Occpancy";
+				columnItemDictionary['ambientsaving'] = "Daylight Harvesting";
+				columnItemDictionary['tasktuneupsaving'] = "Task Tuning";
+			}
+				
+			public function get chartData():ArrayCollection
+			{
+				return _chartData;
+			}
+			
+			public function set chartData(value:ArrayCollection):void
+			{
+				_chartData = value as ArrayCollection;
+				_chartData.refresh();
+				if(_chartData.length>0)
+					calculateBarHeights();
+				else
+					resetUI();
+			}
+			public function resetUI():void{
+				taskTunebarHeight = 0;
+				ambienceBarHeight = 0;
+				occupancyBarHeight =0;
+				if(_chartData && _chartData.length>0)
+				{
+					_chartData.removeAll();
+					_chartData.refresh();
+				}
+			}
+			private function calculateBarHeights():void{
+				var totalAmbientSaving:Number = chartData[0].ambientsaving;
+				var totalOccSaving:Number = chartData[0].occsaving;
+				//ManualSaving we already have adjusted in tasktuneupsaving
+				var totalTaskTuneupSaving:Number = chartData[0].tasktuneupsaving;
+				var baseValue:Number = totalAmbientSaving + totalOccSaving + totalTaskTuneupSaving;
+				taskTunebarHeight = (totalTaskTuneupSaving * this.height)/baseValue;
+				ambienceBarHeight = (totalAmbientSaving * this.height)/baseValue;
+				occupancyBarHeight = (totalOccSaving * this.height)/baseValue;
+			}
+			public function checkNaN(value:*):Number
+			{
+				if(isNaN(value))
+					return 0;
+				else
+					return value;
+			}
+			
+			protected function barMouseOverHandler(event:MouseEvent):void
+			{
+				var currenSelectedObject:Group = event.currentTarget as Group;
+				if(currenSelectedObject)
+				{
+					currenSelectedObject.toolTip="";
+					var col:String = event.currentTarget.id;
+					var columnName:String = columnItemDictionary[col];
+					var displayNumber:Number =0;
+					if(chartData && chartData.length >0)
+					{
+						if(col=="occsaving")
+						{
+							displayNumber = chartData[0].occsaving;
+						}else if(col=="ambientsaving")
+						{
+							displayNumber = chartData[0].ambientsaving;
+						}else if(col=="tasktuneupsaving")
+						{
+							displayNumber = chartData[0].tasktuneupsaving;
+						}
+					}
+					displayNumber = Math.round(displayNumber);
+					if(displayNumber>0)
+					{
+						trace("displayNumber "+ displayNumber);
+						currenSelectedObject.toolTip = columnName + " : "+ displayNumber + "%";
+					}
+					else
+					{
+						currenSelectedObject.toolTip="";
+					}
+				}
+			}
+			protected function barMouseOutHandler(event:MouseEvent):void
+			{
+				/* var currenSelectedObject:Group = event.currentTarget as Group;
+				currenSelectedObject.toolTip = ""; */
+			}
+		]]>
+	</fx:Script>
+	<s:VGroup gap="0">
+		<s:Group id="tasktuneupsaving" rollOver="barMouseOverHandler(event)" rollOut="barMouseOutHandler(event)">
+			<s:Rect height="{taskTunebarHeight}" width="30">
+				<s:fill>
+					<mx:LinearGradient>
+						<mx:entries>
+							<mx:GradientEntry 
+								color="0x9EE9FE" 
+								ratio="0" 
+								alpha="1"
+								/>
+							<mx:GradientEntry 
+								color="0xE5F8FF" 
+								ratio=".33" 
+								alpha="1"
+								/>
+						</mx:entries>
+					</mx:LinearGradient>
+				</s:fill>
+			</s:Rect>
+		</s:Group>
+		<s:Group id="ambientsaving" rollOver="barMouseOverHandler(event)" rollOut="barMouseOutHandler(event)">
+		<s:Rect height="{ambienceBarHeight}" width="30">
+			<s:fill>
+				<mx:LinearGradient>
+					<mx:entries>
+						<mx:GradientEntry 
+							color="0xF5FE71" 
+							ratio="0" 
+							alpha="1"
+							/>
+						<mx:GradientEntry 
+							color="0xFFFFAF" 
+							ratio=".33" 
+							alpha="1"
+							/>
+					</mx:entries>
+				</mx:LinearGradient>
+			</s:fill>
+		</s:Rect>
+		</s:Group>
+		<s:Group id="occsaving" rollOver="barMouseOverHandler(event)" rollOut="barMouseOutHandler(event)" >
+		<s:Rect height="{occupancyBarHeight}" width="30" >
+			<s:fill>
+				<mx:LinearGradient>
+					<mx:entries>
+						<mx:GradientEntry 
+							color="0xC0FA75" 
+							ratio="0" 
+							alpha="1"
+							/>
+						<mx:GradientEntry 
+							color="0xEDFBD5" 
+							ratio=".33" 
+							alpha="1"
+							/>
+					</mx:entries>
+				</mx:LinearGradient>
+			</s:fill>
+		</s:Rect>
+		</s:Group>
+	</s:VGroup>
+</s:Group>

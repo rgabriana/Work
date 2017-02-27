@@ -1,0 +1,13 @@
+Package: enLighted-uem-communicator
+Version: 3.5.4
+Section: misc
+Priority: optional
+Architecture: i386
+Essential: no
+Depends:
+Replaces:
+Pre-Depends:
+Suggests: no
+Maintainer: enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: enLighted uem communicator upgrade utility

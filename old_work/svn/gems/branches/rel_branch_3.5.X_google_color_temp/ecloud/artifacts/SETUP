@@ -1,0 +1,8 @@
+1. Generate ecloud.war
+2. Remove other apps deployed on your tomcat host
+3. Create 'emscloud' database.
+4. Change communicatorWebservices.java dbport property value based on your cloud server postgres port.
+5. Change /var/lib/tomcat6/conf/context.xml to introduce new resource for 'emscloud' database.
+6. Run ecloud/artifacts/sql/devUpgradeSQL.sql if you are just migrating from build to another. 
+7. deploy ecloud.war to your tomcat and restart the server.
+8. You might have to insert one user record for admin/admin login. Checkout ecloud/artifacts/sql/InstallSQL.sql.

@@ -1,0 +1,4 @@
+nameserver 10.8.3.220 
+nameserver 8.8.4.4 
+nameserver 8.8.8.8
+search enlightedinc.info

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   xmlns:mx="library://ns.adobe.com/flex/mx" 
+		   width="100%" height="100%"
+		   name="{Constants.GATEWAY_RENDERER}"
+		   buttonMode="true"
+		   doubleClickEnabled="true" doubleClick="showGatewayDetails(event)"
+		   creationComplete="onUpdateComplete()">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.assets.images.Images;
+			import com.enlightedinc.components.Constants;
+			
+			import mx.core.FlexGlobals;
+			
+			public function onUpdateComplete() : void
+			{
+				var serverDate:Date = createDate(data.item.lastconnectivityat);
+				var date:Date = new Date();
+				var value:Number = ((date.time - serverDate.time)/1000)/60;
+				
+				if(value <= 15) // less than 15 mins
+				{
+					gatewayImage.source = Images.GatewayConnected ;
+				}
+				else if(value > 15 && value <= 10080) // less than 7 days and greater than 15 mins
+				{
+					gatewayImage.source = Images.GatewayIdle ;
+				}
+				else if(value > 10080) // less than 10 mins
+				{
+					gatewayImage.source = Images.GatewayNotConnected ;
+				}
+			}
+			
+			private function createDate(str:String) : Date
+			{
+				var date:Date = new Date();
+				date.setFullYear(str.slice(0,4));
+				date.setMonth(str.slice(5,7));
+				date.setMonth(date.getMonth() - 1);
+				date.setDate(str.slice(8,10));
+				date.setHours(str.slice(11,13));
+				date.setMinutes(str.slice(14,16));
+				date.setSeconds(str.slice(17,19));
+				return date;
+			}
+			
+			private function showGatewayDetails(event:MouseEvent) : void
+			{
+				if((ExternalInterface.available) && (FlexGlobals.topLevelApplication.m_propertyMode == Constants.FLOORPLAN))
+				{
+					ExternalInterface.call("showGateWayForm", data.item.id);
+					FlexGlobals.topLevelApplication.showAlertMarquee("Please wait. Opening Gateway details", true);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<mx:Image id="gatewayImage" width="16" height="16"/>
+	
+</mx:Canvas>

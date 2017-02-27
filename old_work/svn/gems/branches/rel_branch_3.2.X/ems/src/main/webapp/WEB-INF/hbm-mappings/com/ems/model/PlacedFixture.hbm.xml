@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+
+	<class name="com.ems.model.PlacedFixture" table="placed_fixture">
+	    
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+		    <generator class="native">
+            	<param name="sequence">placed_fixture_seq</param>
+            </generator>
+		</id>
+
+		<property name="name" type="java.lang.String" update="true"
+			insert="true" column="name" />
+
+        <many-to-one name="ballast" class="com.ems.model.Ballast"
+			cascade="none" outer-join="auto" update="true" insert="true" column="ballast_id" />
+
+		<many-to-one name="bulb" class="com.ems.model.Bulb"
+			cascade="none" outer-join="auto" update="true" insert="true" column="bulb_id" />
+
+		<property name="noOfFixtures" type="java.lang.Integer"
+			update="true" insert="true" column="no_of_fixtures" />
+		
+		<property name="location" type="java.lang.String" update="true"
+			insert="true" column="location" />
+
+		<property name="macAddress" type="java.lang.String" update="true"
+			insert="true" column="mac_address" />
+
+		<property name="floorId" type="java.lang.Long" update="true"
+			insert="true" column="floor_id" />
+			
+		<property name="type" type="java.lang.String" update="true"
+			insert="true" column="type" />
+
+		<property name="campusId" type="java.lang.Long" update="true"
+			insert="true" column="campus_id" />
+
+		<property name="buildingId" type="java.lang.Long" update="true"
+			insert="true" column="building_id" />
+
+		<property name="xaxis" type="java.lang.Integer" update="true"
+			insert="true" column="x" />
+
+		<property name="yaxis" type="java.lang.Integer" update="true"
+			insert="true" column="y" />
+
+		<property name="voltage" type="java.lang.Short" update="true"
+			insert="true" column="voltage" />
+				    
+	</class>
+</hibernate-mapping>
+ 	  

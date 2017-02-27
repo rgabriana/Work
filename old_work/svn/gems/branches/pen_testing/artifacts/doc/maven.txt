@@ -1,0 +1,4 @@
+1. For cargo plugin to work make sure that there is an entry in maven/conf/settings.xml
+
+    <pluginGroup>org.codehaus.cargo</pluginGroup>
+    

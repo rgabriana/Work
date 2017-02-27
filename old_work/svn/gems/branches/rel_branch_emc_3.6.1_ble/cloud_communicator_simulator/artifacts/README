@@ -1,0 +1,20 @@
+Setting up new simulator
+======================================
+1. Create simulator/xyz folder
+2. Copy artifacts/config.prop to this folder. Update config.prop.
+3. Make sure database with dbName as in config.prop exists on replica.
+4. Check access to master and replica domains
+5. Check if you can remotely access database on replica server. Eg: psql -U postgres -h replica_ip
+6. Comma separated sensor macs can be obtained by executing "SELECT string_agg(d.mac_address, ',') FROM device d, fixture f where d.id = f.id and f.state like 'COMMISSIONED';" on replica db
+7. On the simulator server, ensure you have /var/lib/tomcat6/Enlighted/certs/CA/enlighted.ts
+8. On the simulator server, ensure you have one valid  /var/lib/tomcat6/Enlighted/certs/*.pfx.
+9. Copy artifacts/connection_config.properties to /var/lib/tomcat6/Enlighted/
+10. Copy artifacts/check_em_access.sh, artifacts/last_communication_time.sh and artifacts/config.properties to /opt/enLighted/communicator/. All files under /opt/enLighted/ should have user ownership. chown -R enlighted:enlighted /opt/enLighted/
+11. Make sure that postgres is running on simulator server with port 5432. If it is some different port, update spring-context.xml dataSource.
+12. Turn off tunnel and ssh tunnels on ecloud master. Run "update em_instance set open_tunnel_to_cloud = false, browse_enabled_from_cloud = false, tunnel_port = 0, open_ssh_tunnel_to_cloud = false, ssh_tunnel_port = 0;"
+13. Restore artifacts/ems.dump on simulator as ems database. 'pg_restore -U postgres -d ems -v < ems.dump"
+14. Make postgres setting changes so that 'psql -U postgres -d ems -h localhost' works.
+15. Create logs folder under simulator/xyz
+16. Copy artifacts/killall.sh to simulator folder. This script can kill all java -jar processes.
+17. Copy artificats/simprocmon.sh to simulator folder. Update this script to run communicator simulations for various EMs.
+18. Copy cloudcommunicatorsimulator.jar to simulator folder.

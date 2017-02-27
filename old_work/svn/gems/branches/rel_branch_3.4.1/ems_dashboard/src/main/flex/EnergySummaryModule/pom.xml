@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>com.enlightedinc.gem</groupId>
+	    <artifactId>flex-comp</artifactId>
+	    <version>3.4.1</version>
+	</parent>
+
+  	<artifactId>EnergySummaryDashBoard</artifactId>
+  	<packaging>swf</packaging>
+
+  	<name>EnergySummaryDashBoard</name>
+  	
+  	<build>
+        <finalName>EnergySummaryDashBoard</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.sonatype.flexmojos</groupId>
+                <artifactId>flexmojos-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <configurationReport>true</configurationReport>
+                    <output>${basedir}/../../modules/${project.build.finalName}.swf</output>
+					<includeGroupIds>com.adobe.flex.framework</includeGroupIds>
+					<debug>true</debug>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+  
+</project>

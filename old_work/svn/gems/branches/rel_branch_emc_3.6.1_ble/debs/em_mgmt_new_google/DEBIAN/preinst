@@ -1,0 +1,15 @@
+#!/bin/bash -x
+source /etc/environment
+APACHE2_PATH=$EM_MGMT_BASE
+ehome="$ENLIGHTED_HOME"
+sudo mkdir -p ${APACHE2_PATH}/tempExtract
+sudo mkdir -p ${APACHE2_PATH}/em_mgmt
+
+echo "*** Taking backup of Existing application ***"
+
+sudo cp -R ${APACHE2_PATH}/em_mgmt/ ${APACHE2_PATH}/tempExtract/
+
+sudo rm -rf ${APACHE2_PATH}/em_mgmt/
+
+sudo rm -rf $ehome/apache2/installation/*
+

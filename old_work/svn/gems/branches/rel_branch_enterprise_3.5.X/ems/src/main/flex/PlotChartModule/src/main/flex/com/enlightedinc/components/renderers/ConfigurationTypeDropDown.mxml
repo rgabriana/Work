@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009"
+		   xmlns:mx="library://ns.adobe.com/flex/mx"
+		   xmlns:s="library://ns.adobe.com/flex/spark" horizontalScrollPolicy="off" focusEnabled="true">
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.components.PlotChartView;
+			import com.enlightedinc.components.ReportTable;
+			import mx.core.FlexGlobals;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.ListEvent;
+			[Bindable]
+			public var application:Object = FlexGlobals.topLevelApplication;
+			[Bindable]
+			public var isEnable:Boolean = false;
+			[Bindable]private var motionGrpFxTypeDp:ArrayCollection = new ArrayCollection([
+				{label:"Both", val:0},
+				{label:"Act Only", val:1},
+				{label:"Report Only", val:2}
+			]);    
+			
+			override public function set data(value:Object):void {
+				if(value != null) {
+					super.data = value;
+					motionFixturesCombo.selectedIndex=data.type;
+					var versionNumber:Number;
+					var versionArr:Array
+					versionArr = data.version.split(".")
+					versionNumber = Number(versionArr[0]+"."+versionArr[1]);
+					if(versionNumber >= 2.5)
+					{
+						isEnable = true;
+					}else
+					{
+						isEnable = false;
+					}
+				}
+			}
+			protected function motionFixturesCombo_changeHandler(event:ListEvent):void
+			{
+				var value:String = (event.currentTarget as ComboBox).selectedItem.val;
+				var fxData:Object= ((event.currentTarget as ComboBox).owner as ConfigurationTypeDropDown).data; 
+				application.plotChartView.updateMotionGrpFixtureDetail(value,fxData);
+			}
+		]]>
+	</fx:Script>
+	<mx:ComboBox id="motionFixturesCombo" dataProvider="{motionGrpFxTypeDp}" width="100%"  change="motionFixturesCombo_changeHandler(event)" enabled="{isEnable}" />
+</mx:Canvas>

@@ -1,0 +1,55 @@
+--- This is a temporary file
+
+create table Fixture_Diagnostic_Reference(
+   id bigint NOT NULL,
+   fixture_id bigint NOT Null,
+   hour_of_day int,
+   power_used_average numeric(19,2),
+   power_used_variance numeric(19,2),
+   CONSTRAINT fixture_diagnostic_reference_pk PRIMARY KEY (id)
+   );
+
+   ALTER TABLE Fixture_Diagnostic_Reference OWNER TO postgres;
+   ALTER TABLE ONLY public.Fixture_Diagnostic_Reference  
+    ADD CONSTRAINT fixture_Diagnostic_reference_fixture_fk FOREIGN KEY(fixture_id) REFERENCES fixture(id);
+    
+CREATE SEQUENCE Fixture_Diagnostic_Reference_seq
+  INCREMENT 1
+  MINVALUE 1
+  NO MAXVALUE
+  START 1
+  CACHE 1;
+  
+ALTER TABLE Fixture_Diagnostic_Reference_seq OWNER TO postgres;
+
+create table Fixture_Diagnostics(
+   id bigint NOT NULL,
+   fixture_id bigint NOT NULL,
+   fixture_diagnostic_reference_id bigint NOT NULL,
+   energy_consumption_hourly_id bigint NOT NULL,
+   state character varying(20),
+   last_connectivity_at timestamp without time zone,
+   power_used_status character varying,
+   CONSTRAINT fixture_diagnostics_pk PRIMARY KEY (id)
+   );
+
+ALTER TABLE Fixture_Diagnostics OWNER TO postgres;
+ALTER TABLE ONLY public.Fixture_Diagnostics  
+    ADD CONSTRAINT fixture_Diagnostics_fixture_fk FOREIGN KEY(fixture_id) REFERENCES fixture(id);
+ALTER TABLE ONLY public.Fixture_Diagnostics  
+    ADD CONSTRAINT fixture_Diagnostics_reference_fk FOREIGN KEY(fixture_diagnostic_reference_id) REFERENCES Fixture_Diagnostic_Reference(id);
+ALTER TABLE ONLY public.Fixture_Diagnostics  
+    ADD CONSTRAINT fixture_Diagnostics_ec_hourly_fk FOREIGN KEY(energy_consumption_hourly_id) REFERENCES energy_consumption_hourly(id);
+    
+CREATE SEQUENCE Fixture_Diagnostics_seq
+  INCREMENT 1
+  MINVALUE 1
+  NO MAXVALUE
+  START 1
+  CACHE 1;
+  
+ALTER TABLE Fixture_Diagnostics_seq OWNER TO postgres;
+
+INSERT INTO cloud_config (id, name, val) values ((select coalesce(max(id),0)+1 from system_configuration), 'diagnostics.last_capture_at', '2013-01-01 00:00:00');
+
+

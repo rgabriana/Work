@@ -1,0 +1,12 @@
+<fixture>
+<id>166</id>
+<noofbulbs>1</noofbulbs>
+<currentprofile>Warehouse</currentprofile>
+<name>Sensor000446</name>
+<description></description>
+<notes></notes>
+<ballast><id>9</id><name></name><lampnum></lampnum></ballast>
+<bulb><id>3</id><name></name></bulb>
+<nooffixtures>1</nooffixtures>
+<voltage>277</voltage>
+</fixture>

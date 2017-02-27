@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="100%" height="100%"
+			   applicationComplete="onApplicationComplete(event)"
+			   xmlns:components="com.enlightedinc.components.*">
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<fx:Style source="com/enlightedinc/assets/css/flexStyle.css"/>
+	
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="YYYYMMDDJJNNSS"/>
+		<mx:DateFormatter id="prevDateFormatter" formatString="YYYYMMDD000000"/>
+	</fx:Declarations>
+	
+	<!-- This line of code is failing in maven build. Known issue.
+	Ref: https://issues.sonatype.org/browse/FLEXMOJOS-425-->
+	<!--<fx:Style source="../../../../../../webapp/themes/default/css/flexStyle.css"/>-->
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.common.CountsCalculator;
+			import com.enlightedinc.components.AlertBox;
+			import com.enlightedinc.components.Constants;
+			import com.enlightedinc.events.EnergySummaryDockEvent;
+			import com.enlightedinc.events.EnergySummaryFilterEvent;
+			import com.enlightedinc.utils.CookieUtil;
+			import com.enlightedinc.utils.GlobalUtils;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.DateField;
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			
+			private var currentProperty:String; 
+			private var currentPId:String;
+			public var currentFixedperiod:String = "day";
+			
+			private var date:Date;
+			private var fromDate:String;
+			private var toDate:String;
+			
+			private var timer:Timer;
+			private var alertBox:AlertBox;
+			private const MS_PER_DAY:uint = 1000 * 60 * 60 * 24;
+			private var contextRoot:String="";
+			
+			public var mode:String = "";
+			private var modeId:String = "";
+			
+			public var lastUnitSelection:String ="";
+			public var isFilterSelected:Boolean = false;
+			public var isRefresh:Boolean = false;
+			public var transactionId:Number=0;
+			
+			public var serverGMTOffset:Number = 0;
+			
+			private function onApplicationComplete(event:Event) : void
+			{
+				ecViewStack.visible=false;
+				contextRoot = FlexGlobals.topLevelApplication.parameters.contextRoot;
+				
+				// Get server time offset from GMT
+				energySummaryView.getServerGMTOffsetHttpService.url = contextRoot+ Constants.serverurl + "getServerTimeOffsetFromGMT/" + "?ts=" + new Date().time;
+				energySummaryView.getServerGMTOffsetHttpService.send();
+			}
+			public function initialiseApp():void{
+				this.systemManager.addEventListener(FlexEvent.IDLE, onUserIdle);
+				var orgId:String = FlexGlobals.topLevelApplication.parameters.orgId;
+				var orgType:String = FlexGlobals.topLevelApplication.parameters.orgType;
+				var mode:String = FlexGlobals.topLevelApplication.parameters.mode;
+				var modeId:String = FlexGlobals.topLevelApplication.parameters.modeid;
+			
+				validateCookie();
+				ecViewStack.visible=true;
+            	if (orgId != null && orgType != null) 
+				{
+					currentProperty = orgType; 
+					currentPId = orgId;
+					// Load Appropriate View depending upon the orgType
+					if(mode!=null && mode == Constants.REPORT)
+					{
+						ecViewStack.selectedIndex =1;
+						if (ExternalInterface.available) 
+						{
+							ExternalInterface.addCallback("updateReport", updateReport);
+						} 
+						else 
+						{
+							showAlertMarquee("ExternalInterface is not available", true);
+						} 
+					}else
+					{
+						ecViewStack.selectedIndex =0;
+						updateEnergyConsumption(currentProperty, currentPId, currentFixedperiod);
+						if (ExternalInterface.available) 
+						{
+							ExternalInterface.addCallback("updateEnergyConsumption", updateEnergyConsumption);
+						} 
+						else 
+						{
+							showAlertMarquee("ExternalInterface is not available", true);
+						} 
+					}
+				}
+			}
+			
+			private function validateCookie():void
+			{
+				if(CookieUtil.getCookie("selected_period"))
+				{
+					currentFixedperiod = String(CookieUtil.getCookie("selected_period"));
+				}
+				else
+				{
+					CookieUtil.setCookie("selected_period","day",1);
+					currentFixedperiod = "day";
+				}
+				if(CookieUtil.getCookie("selected_unit"))
+				{
+					lastUnitSelection = String(CookieUtil.getCookie("selected_unit"));
+				}
+				else
+				{
+					CookieUtil.setCookie("selected_unit",Constants.POWER_UNIT,1);
+					lastUnitSelection = Constants.POWER_UNIT
+				}
+			}
+			private function onUserIdle(e:FlexEvent) : void
+			{
+				var waitTime:Number = 10; //wait time is in minutes
+				var counter:Number = (waitTime * 60 * 1000)/100; // minutes * (60secs) = (600secs) = (600000msecs) = 600000/100 = 6000
+				if(e.currentTarget.mx_internal::idleCounter == counter) 
+				{
+					this.systemManager.removeEventListener(FlexEvent.IDLE, onUserIdle);
+					this.addEventListener(MouseEvent.MOUSE_MOVE, refreshData);
+					this.addEventListener(MouseEvent.MOUSE_DOWN, refreshData);
+					this.addEventListener(KeyboardEvent.KEY_DOWN, refreshData);
+				}
+			}
+			
+			private function refreshData(event:MouseEvent) : void
+			{
+				this.removeEventListener(MouseEvent.MOUSE_MOVE, refreshData);
+				this.removeEventListener(MouseEvent.MOUSE_DOWN, refreshData);
+				this.removeEventListener(KeyboardEvent.KEY_DOWN, refreshData);
+				showAlertMarquee("Refreshing...", true);
+				updateEnergyConsumption(currentProperty, currentPId, currentFixedperiod);
+				this.systemManager.addEventListener(FlexEvent.IDLE, onUserIdle);
+			}
+			
+			private function updateEnergyConsumption(property:String, pId:String, fixedperiod:String) : void
+			{
+				CursorManager.setBusyCursor();
+				validateCookie();
+				fixedperiod = currentFixedperiod; 
+				currentProperty = property; 
+				currentPId = pId;
+				
+				if(isFilterSelected)
+				{
+					energySummaryDock.refreshFilterSelectedData();
+					return;
+				}
+				
+				//currentFixedperiod = fixedperiod;
+				
+				date = GlobalUtils.getServerTime();
+				if(currentFixedperiod != Constants.DAY.toLowerCase())
+				{
+					fromDate = prevDateFormatter.format(date);
+					date.setDate(date.getDate() - 1);
+				}
+				else
+				{
+					fromDate = dateFormatter.format(date);
+				}
+				
+				energySummaryDock.toDate.text = DateField.dateToString(date, "MM/DD/YYYY");// (int(date.getMonth()) + 1).toString() + "/" + date.getDate().toString() + "/" + date.getFullYear().toString();
+				
+				switch(currentFixedperiod)
+				{
+					case Constants.DAY.toLowerCase() : date.setDate(date.getDate() - 1);
+						energySummaryView.dataPeriod = Constants.DAY;
+						//energySummaryView.energyUsageGraph.dataPeriod = Constants.DAY;
+						energySummaryDock.setSelectedButton=Constants.DAY;
+						break;
+					case Constants.WEEK.toLowerCase() : date.setDate(date.getDate() - 6);
+						energySummaryView.dataPeriod = Constants.WEEK;
+						//energySummaryView.energyUsageGraph.dataPeriod = Constants.WEEK;
+						energySummaryDock.setSelectedButton=Constants.WEEK;
+						break;
+					case Constants.MONTH.toLowerCase() : date.setDate(date.getDate() - 30);
+						energySummaryView.dataPeriod = Constants.MONTH;
+						//energySummaryView.energyUsageGraph.dataPeriod = Constants.MONTH;
+						energySummaryDock.setSelectedButton=Constants.MONTH;
+						break;
+					case Constants.YEAR.toLowerCase() : date.setDate(date.getDate() - 364);
+						energySummaryView.dataPeriod = Constants.YEAR;
+						//energySummaryView.energyUsageGraph.dataPeriod = Constants.YEAR;
+						energySummaryDock.setSelectedButton=Constants.YEAR;
+						break;
+					default:
+					break;
+				}
+				energyGraphHeader.setGraphHeader(date,GlobalUtils.getServerTime());
+				if(lastUnitSelection)
+				energySummaryDock.energySummaryUnitBar.showButtonSelected(lastUnitSelection);
+				if(currentFixedperiod != Constants.DAY.toLowerCase())
+				{
+					toDate = prevDateFormatter.format(date);
+				}
+				else
+				{
+					toDate = dateFormatter.format(date);
+				}
+				
+				energySummaryDock.fromDate.text =DateField.dateToString(date, "MM/DD/YYYY"); //(int(date.getMonth()) + 1).toString() + "/" + date.getDate().toString() + "/" + date.getFullYear().toString();
+				
+				getEnergyMeterData();
+			}
+			
+			private function getEnergyMeterData() : void
+			{
+				transactionId++;
+				var object:Object = new Object();
+				object.transactionId = transactionId;
+				object.dataPeriod= currentFixedperiod;
+				energySummaryView.filterEnergyMeterHttpService.url = contextRoot+ Constants.serverurl + 'ec/fp/mds/' + currentProperty + '/' + currentPId + '/' + fromDate + "/" + toDate;
+				//energySummaryView.energyMeterHttpService.url = contextRoot+ Constants.serverurl + 'ec/mds/' + currentProperty + '/' + currentPId + '/' + currentFixedperiod+ '/' + fromDate;
+				energySummaryView.filterEnergyMeterHttpService.send(object);
+				
+				// CODE FOR DRILL DOWN CHART
+				//WEb Service to show Horizontal bar graph of immidiate child of currently selected property
+				//energySummaryView.childAggregateEMHttpService.url = contextRoot + Constants.serverurl + 'ec/mds/child/aggregate/' + currentProperty + '/' + currentPId + '/' + currentFixedperiod+ '/' + fromDate;
+				//energySummaryView.childAggregateEMHttpService.send();
+				// DRILL DOWN CHART CODE END
+				
+				//Get Current Data
+				var currentPeriod:String ="current";
+				var fdate:Date = GlobalUtils.getServerTime();
+				var fDateStr:String = dateFormatter.format(fdate);
+				//var toDate:String= "20120210062100";
+				energySummaryView.energyMeterCurrentHttpService.url = contextRoot + Constants.serverurl + 'ec/mds/' + currentProperty + '/' + currentPId + '/' + currentPeriod+ '/' + fDateStr;
+				energySummaryView.energyMeterCurrentHttpService.send(object);
+				
+				//Location Service- to get the current Path
+				energySummaryView.locationHttpService.url = contextRoot + Constants.serverurl + 'facilities/nodepath/' + currentProperty + '/' + currentPId +"? ts="+ new Date();
+				energySummaryView.locationHttpService.send(object);
+			}
+			
+			private function getFilterEnergySummary(event:EnergySummaryFilterEvent=null) : void
+			{
+				transactionId++;
+				CursorManager.setBusyCursor();
+				isRefresh = false;
+				isFilterSelected = true;
+				//calculateDate(currentFixedperiod);
+				if(dateFormatter.format(event.toDate).substr(0,8) != dateFormatter.format(GlobalUtils.getServerTime()).substr(0,8))
+				{
+					(event.toDate).setDate((event.toDate).getDate() + 1);
+				}
+
+				fromDate = prevDateFormatter.format(event.toDate);//fromDate is the latest date (current date)
+				toDate = prevDateFormatter.format(event.fromDate); //toDate is the older date (current date - delta)
+				energyGraphHeader.setGraphHeader(event.fromDate,event.toDate);
+				var diffDays:Number;
+				diffDays = differenceBetweenDates(event.fromDate,event.toDate);
+				//Alert.show("diffDays "+ diffDays + "currentFixedperiod "+ currentFixedperiod);
+				var currentPeriod:String="";
+				if (diffDays <= 1) {
+					//energySummaryView.energyUsageGraph.dataPeriod=Constants.DAY;
+					currentPeriod = Constants.DAY;
+				} else if (diffDays <= 6) {
+					//energySummaryView.energyUsageGraph.dataPeriod=Constants.WEEK;
+					currentPeriod = Constants.WEEK;
+				} else if (diffDays <= 31) {
+					//energySummaryView.energyUsageGraph.dataPeriod=Constants.MONTH;
+					currentPeriod = Constants.MONTH;
+				}else
+				{
+					//energySummaryView.energyUsageGraph.dataPeriod=Constants.YEAR;
+					currentPeriod = Constants.YEAR;
+				}
+				
+				var object:Object = new Object();
+				object.transactionId = transactionId;
+				object.dataPeriod = currentPeriod;
+				
+				if(currentProperty && currentPId && (fromDate.length > 0) && (toDate.length > 0))
+				{
+					energySummaryView.filterEnergyMeterHttpService.url = contextRoot+ Constants.serverurl + 'ec/fp/mds/' + currentProperty + '/' + currentPId +'/' + fromDate + "/" + toDate;
+					energySummaryView.filterEnergyMeterHttpService.send(object);
+					energySummaryView.dataPeriod = "";
+					
+					// CODE FOR DRILL DOWN CHART
+					// WEb Service to show Horizontal bar graph of immidiate child of currently selected property
+					//energySummaryView.childAggregateFilterEMHttpService.url = contextRoot + Constants.serverurl + 'ec/fp/mds/child/aggregate/' + currentProperty + '/' + currentPId + '/' + fromDate+ '/' + toDate;
+					//energySummaryView.childAggregateFilterEMHttpService.send();
+					// DRILL DOWN CHART CODE END
+				}
+				//Location Service- to get the current Path
+				energySummaryView.locationHttpService.url = contextRoot + Constants.serverurl + 'facilities/nodepath/' + currentProperty + '/' + currentPId +"? ts="+ new Date();
+				energySummaryView.locationHttpService.send(object);
+			}
+			private function differenceBetweenDates(date1:Date, date2:Date):Number{
+				var difference:Number=0;
+				var totalDiffMiliSec:Number = 	date2.time - date1.time;
+				difference = totalDiffMiliSec/MS_PER_DAY;
+				return difference;
+			}
+
+			private function onClick(event:EnergySummaryDockEvent) : void
+			{
+				isRefresh = false;
+				isFilterSelected = false;
+				CountsCalculator.getInstance().flushCounts();
+				currentFixedperiod = event.label.toLowerCase();
+				CookieUtil.setCookie("selected_period",currentFixedperiod,1);
+				updateEnergyConsumption(currentProperty, currentPId, currentFixedperiod);
+			}
+			
+			public function showAlertMarquee(str:String, timerEnable:Boolean) : void
+			{
+				 if(energySummaryView.esContainer.getChildByName("alerBox"))
+					energySummaryView.esContainer.removeChild(energySummaryView.esContainer.getChildByName("alerBox"));
+				/* if(alertBox)
+					energySummaryView.esContainer.removeChildAt(1); */
+				alertBox = new AlertBox();
+				alertBox.name=  "alerBox";
+				alertBox.percentWidth = 100;
+				alertBox.marqueeText = str;
+				energySummaryView.esContainer.addChild(alertBox);
+				
+				
+				if(timerEnable)
+				{
+					timer = new Timer(5000);
+					timer.addEventListener( TimerEvent.TIMER, marqueeTimerHandler);
+					timer.start();
+				}
+			}
+			
+			private function marqueeTimerHandler(event:TimerEvent) : void
+			{
+				removeMarquee();
+				timer.stop();
+			}
+			
+			public function removeMarquee() : void
+			{
+				//if(energySummaryView.esContainer.numChildren > 1)
+					//energySummaryView.esContainer.removeChildAt(1);
+				if(energySummaryView.esContainer.getChildByName("alerBox"))
+				energySummaryView.esContainer.removeChild(energySummaryView.esContainer.getChildByName("alerBox"));
+				alertBox = null;
+			}
+			
+			private function refreshES() : void
+			{
+				isRefresh = true;
+				showAlertMarquee("Refreshing...", false);
+				if(!isFilterSelected)
+				updateEnergyConsumption(currentProperty, currentPId, currentFixedperiod);
+				else
+					energySummaryDock.refreshFilterSelectedData();
+			}
+			private function exportCsv(event:EnergySummaryDockEvent):void{
+				var output:String="";
+				output+="Energy Consumption Data\r\n\n";
+				var location:String = energyGraphHeader.breadcrumLabel.text;
+				output+="Location : "+ location+"\r\n\n";	
+				var rawECData:ArrayCollection = new ArrayCollection(CountsCalculator.getInstance().energyConsumptionRawDataCollection.toArray());
+				var period:String = energySummaryView.dataPeriod;
+				var fromDateStr:String = energySummaryDock.fromDate.text;
+				var toDateStr:String = energySummaryDock.toDate.text;
+				var exportStr:String = "";
+				var delimiter:String = ",";
+				var fileName:String;
+				output+="Period : "+ period +", From : "+ fromDateStr +", To : "+ toDateStr +"\r\n\n";
+				fileName = "Energy_Consumption_Data.csv";
+				
+				output += "\""+"Capture Time"+"\""+delimiter+"\""+"Consumption(Wh)"+"\""+delimiter+"\""+"Task Tuning Savings(Wh)"+"\""+delimiter;
+				output += "\""+"Ambient Savings(Wh)"+"\""+delimiter+"\""+"Occupancy Savings(Wh)"+"\""+delimiter+"\""+"Total Savings(Wh)"+"\""+delimiter;
+				output+="\n";
+				
+				var tpowerused:Number = 0;
+				var ttasktuneupsaving:Number =  0;
+				var tambientsaving:Number  =  0;
+				var toccsaving:Number  =  0;
+				var tsavedpower:Number  =  0;
+				
+				for each(var item:Object in rawECData){
+				var powerused:Number = CountsCalculator.getInstance().checkNaN(item.powerused);
+				var tasktuneupsaving:Number = CountsCalculator.getInstance().checkNaN(item.tasktuneupsaving)+CountsCalculator.getInstance().checkNaN(item.manualsaving);
+				var ambientsaving:Number  = CountsCalculator.getInstance().checkNaN(item.ambientsaving);
+				var occsaving:Number  = CountsCalculator.getInstance().checkNaN(item.occsaving);
+				var savedpower:Number  = CountsCalculator.getInstance().checkNaN(item.savedpower);
+				
+				tpowerused+=powerused;
+				ttasktuneupsaving+=tasktuneupsaving;
+				tambientsaving+=ambientsaving;
+				toccsaving+=occsaving;
+				tsavedpower+=savedpower;
+				
+				output += "\""+item.captureon+"\""+delimiter;
+				output += "\""+powerused+"\""+delimiter;
+				output += "\""+tasktuneupsaving +"\""+delimiter;
+				output += "\""+ambientsaving+"\""+delimiter;
+				output += "\""+occsaving+"\""+delimiter;
+				output += "\""+savedpower+"\""+delimiter;
+				output+="\n";
+				}
+				output+="\n";
+				output += "\""+","+"\""+delimiter+"\""+"Total Consumption(Wh)"+"\""+delimiter+"\""+"Total Task Tuning Savings(Wh)"+"\""+delimiter;
+				output += "\""+"Total Ambient Savings(Wh)"+"\""+delimiter+"\""+"Total Occupancy Savings(Wh)"+"\""+delimiter+"\""+"Total Savings(Wh)"+"\""+delimiter;
+				output+="\n";
+				
+				output += "\""+","+"\""+delimiter;
+				output += "\""+tpowerused+"\""+delimiter;
+				output += "\""+ttasktuneupsaving +"\""+delimiter;
+				output += "\""+tambientsaving+"\""+delimiter;
+				output += "\""+toccsaving+"\""+delimiter;
+				output += "\""+tsavedpower+"\""+delimiter;
+				output+="\n";
+				var fileReference:FileReference = new FileReference();
+				fileReference.addEventListener(IOErrorEvent.IO_ERROR,ioErrorHander,false,0,true);
+				fileReference.save(output, fileName);
+			}
+			private function ioErrorHander(e:IOErrorEvent):void
+			{
+				Alert.show("Error Occured while saving, Please close file if open any");
+			}
+			private function updateReport(property:String, pId:String, fixedperiod:String):void
+			{
+				energySummaryReport.updateUsageByProfile(property,pId,fixedperiod);
+			}
+		]]>
+	</fx:Script>
+	<!--<s:Scroller width="100%" height="100%">-->
+		<!--<s:Group id="baseGroup" width="100%">-->
+			<mx:ViewStack id="ecViewStack" width="100%" height="100%" resizeToContent="true">
+				
+				<!-- ENERGYSUMMARY MODULE -->
+				<s:NavigatorContent id="energySummaryNavContent"  width="100%" height="100%">
+					<s:Scroller width="100%" height="100%">
+						<s:Group id="baseGroup" width="100%">
+							<s:VGroup width="100%" height="100%" paddingTop="5" paddingBottom="5">
+								<components:EnergySummaryDock id="energySummaryDock" width="100%" height="10%"
+															  filterEnergySummary="getFilterEnergySummary(event)"
+															  dockClick="onClick(event)"
+															  refreshScreen="refreshES()"
+															  export="exportCsv(event)"/>
+								<components:EnergyUsageBar id="energyUsageBar"  height="20%"/>
+								<mx:VBox width="100%" height="70%" styleName="vboxStyle">
+									<components:EnergyGraphHeader id="energyGraphHeader" height="5%"/>
+									<components:EnergySummaryView id="energySummaryView" 
+																  width="100%" height="95%"/>
+								</mx:VBox>
+							</s:VGroup>
+						</s:Group>
+					</s:Scroller>
+				</s:NavigatorContent>
+					
+				<!-- REPORTING MODULE -->
+				<s:NavigatorContent id="reportNavContent"  width="100%" height="100%">
+					<s:Scroller width="100%" height="100%">
+						<s:Group width="100%" height="100%" >
+							<s:VGroup width="100%" height="100%" paddingTop="5" paddingBottom="5">
+								<components:UsageByProfileReport id="energySummaryReport" />
+							</s:VGroup>
+						</s:Group>
+					</s:Scroller>
+				</s:NavigatorContent>
+			</mx:ViewStack>
+</s:Application>

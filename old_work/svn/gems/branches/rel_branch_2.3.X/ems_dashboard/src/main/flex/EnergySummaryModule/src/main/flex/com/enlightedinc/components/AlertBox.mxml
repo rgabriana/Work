@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:mx="library://ns.adobe.com/flex/mx" width="80%" height="100%" horizontalAlign="center" verticalAlign="middle"
+		horizontalScrollPolicy="off" creationComplete="init()" xmlns:components="com.enlightedinc.components.*" paddingBottom="0" paddingTop="0" >
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:Fade  id="fade" target="errorContameiner"/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			
+			[Bindable]
+			public var _alertText:String="";
+			
+			private var alertTextArray:Array;
+			
+			private var timer:Timer;
+			private function init():void{
+				timer = new Timer(10000);
+				timer.addEventListener(TimerEvent.TIMER,onTimerComplete);
+				alertTextArray = new Array();
+			}
+			private function onTimerComplete(e:TimerEvent):void{
+				errorContainer.visible=false;
+				timer.stop();
+			}
+			public function set alertText(val:String):void
+			{
+				if(alertTextArray==null)
+				{
+					alertTextArray = new Array();
+				}
+				timer.start();
+				errorContainer.visible = true;
+				// Check for duplicates items
+				if(_alertText.length>0)
+				{
+					for(var i:int=0;i<alertTextArray.length;i++)
+					{
+						if(val==alertTextArray[i])
+						{
+							return;
+						}else
+						{
+							var tempStr:String = val+"\n";
+							_alertText+=tempStr
+							alertTextArray.push(tempStr);
+							break;
+						}
+					}
+				}else
+				{
+					_alertText=val+"\n";
+					alertTextArray.push(val);
+				}
+			}
+			/* private function removeDuplicate(orgArr:Array):Array
+			{
+				var arr:Array = orgArr;
+				arr= (arr.filter(function(e:*, i:int, a:Array):Boolean {return a.indexOf(e) == i;}));
+				return arr;
+			} */
+			public function reset():void{
+				timer.stop();
+				_alertText="";
+				errorContainer.visible=false;
+				alertTextArray =null;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<mx:Box id="errorContainer" height="100%"  styleName="alertBox" visible="false" verticalAlign="middle"  paddingBottom="0" paddingTop="0" >
+		<!--<components:MultiLineLabel text="{_alertText}"  />-->
+		<s:Label text="{_alertText}"/>
+	</mx:Box>
+</mx:Box>

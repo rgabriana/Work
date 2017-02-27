@@ -1,0 +1,137 @@
+.ui-icon-scene-off {
+	background-image: url("../js/images/grey16x16.png");	
+}
+
+.ui-icon-scene-on {
+	background-image: url("../js/images/green16x16.png");
+}
+
+/* Login page style sheet */
+  	div#loginPage div.imageWrapper {
+	    text-align:center;
+		padding-top:10px;
+	}
+	
+	div#loginDiv {
+	    border: thin solid #BBBBBB;
+	    margin: 10px 5% 5%;
+	    padding: 5%;
+	}
+  
+  	div#loginDiv div.title {
+	    padding-bottom: 10px;
+	}
+	
+	div#loginDiv p.form_field {
+		margin: 3px 0 0;
+	}
+	
+	div#loginDiv p.form_field span {
+		font-weight: bold;
+	    font-size: small;
+	}
+	
+	div#loginDiv p.button_field {
+		padding-right: 50%;
+	}
+/* Login page style sheet [END]*/
+
+
+/* Setting page style sheet */
+  	div#settingsPage div.imageWrapper {
+	    text-align:center;
+		padding-top:10px;
+	}
+		
+	div#settingsDiv {
+	    border: thin solid #BBBBBB;
+	    margin: 10px 5% 5%;
+	    padding: 5%;
+	}
+  
+  	div#settingsDiv div.title {
+	    padding-bottom: 10px;
+	}
+	
+	div#settingsDiv p.form_field {
+		margin: 3px 0 0;
+	}
+	
+	div#settingsDiv p.form_field span {
+		font-weight: bold;
+	    font-size: small;
+	}
+	
+	div.buttonWrapper span {
+		font-weight: bold;
+	    font-size: small;
+	}
+	
+	div#settingsDiv div.buttonWrapper div.buttonDiv {
+		width: 50%;
+		float: left;
+	}
+/* Setting page style sheet [END]*/
+
+#attachedSceneList span.ui-icon {
+	background: none repeat scroll 0 0 transparent !important;
+	box-shadow: none !important;
+}
+
+#scenesList {
+	color: #333333;
+    text-shadow: 0 1px 0 #FFFFFF;
+    text-align: center;
+    margin-top: 15px;
+}
+#scenesList a{
+	padding: 5px 30px 5px 30px;
+	font-weight: bold;
+    white-space: nowrap;
+    border: thin solid #AAA;
+    background-color:#EEEEEE;
+}
+
+
+/*For Slider */
+
+	#slider {
+        display: none;    
+    }
+   
+    label.ui-block-right{
+        text-align: right;
+        float: right;
+    }
+    .min-width-480px div.ui-slider {
+        width: 90%;
+    }
+    .min-width-480px label.ui-slider {
+        width: 50%;
+    }
+    
+ 	div.ui-slider{
+		width: 100%;
+		border:none !important;		
+		height: 40px !important;
+		background: url("../js/images/sliderbig.png") no-repeat transparent;
+		margin:0px !important;
+	}
+	
+	a.ui-slider-handle {
+		height:40px !important; 
+		margin-left: -14px !important;
+		margin-top: -20px !important;
+		background: url("../js/images/sliderhandle.png") no-repeat transparent;
+	}
+	
+	label.ui-block-left
+	{	
+		float: left;
+		text-align: left;
+		/* padding-left:50px; */
+	}	
+	
+	div.setwidth{
+		width:1125px;
+	}

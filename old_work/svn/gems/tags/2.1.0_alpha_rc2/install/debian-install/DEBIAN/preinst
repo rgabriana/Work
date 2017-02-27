@@ -1,0 +1,37 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+
+ps -ef |grep postgresql |grep -v grep > /dev/null
+if [ $? -eq 0 ]
+        then
+                if [ `psql -q -U postgres -h localhost  -t -c "select count(*) from pg_database where datname='ems'"` -eq 1 ]
+                        then
+
+                                TOMCAT_PATH=/var/lib/tomcat6
+                                mkdir -p ${TOMCAT_PATH}/Enlighted/tempExtract
+                                dumpfileprefix=ems_dump_preupgradebkp
+
+
+                                DBUSER=postgres
+                                DBHOST=localhost
+                                DB=ems
+
+                                #-- Take backup of existing war and database
+
+                                echo "Taking backup of Existing application.."
+
+                                sudo cp ${TOMCAT_PATH}/webapps/ems.war ${TOMCAT_PATH}/Enlighted/tempExtract/ems_bkp.war
+
+                                echo "Taking backup of database.."
+                                /usr/bin/pg_dump -U $DBUSER -h $DBHOST -b -f "${TOMCAT_PATH}/Enlighted/tempExtract/${dumpfileprefix}.sql" $DB
+
+                                echo "Undeploying application.."
+                                sudo rm -f ${TOMCAT_PATH}/webapps/ems.war
+                                sudo rm -fr ${TOMCAT_PATH}/webapps/ems/
+                        else
+                                echo "First time install"
+                fi
+        else
+                echo "Postgres not running. Maybe first time install"                                   
+fi
+

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.Bulb" table="bulbs">		
+        
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+			<param name="sequence">bulb_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-Bulb.xml 
+					containing the additional parameters and place it in your merge dir. -->
+					
+			</generator>
+		</id>
+
+		<property name="manufacturer" type="java.lang.String" update="true"
+			insert="true" column="manufacturer" />
+
+		<property name="bulbName" type="java.lang.String" update="true"
+			insert="true" column="bulb_name" />
+
+		<property name="type" type="java.lang.String" update="true"
+			insert="true" column="type" />
+
+		<property name="initialLumens" type="java.lang.Long" update="true"
+			insert="true" column="initial_lumens" />
+
+		<property name="designLumens" type="java.lang.Long" update="true"
+			insert="true" column="design_lumens" />
+
+		<property name="energy" type="java.lang.Integer" update="true"
+			insert="true" column="energy" />
+
+		<property name="lifeInsStart" type="java.lang.Long" update="true"
+			insert="true" column="life_ins_start" />
+
+		<property name="lifeProgStart" type="java.lang.Long" update="true"
+			insert="true" column="life_prog_start" />
+
+		<property name="diameter" type="java.lang.Integer" update="true"
+			insert="true" column="diameter" />
+
+		<property name="length" type="java.lang.Double" update="true"
+			insert="true" column="length" />
+
+		<property name="cri" type="java.lang.Integer" update="true"
+			insert="true" column="cri" />
+
+		<property name="colorTemp" type="java.lang.Integer" update="true"
+			insert="true" column="color_temp" />
+
+		<!-- To add non XDoclet property mappings, create a file named hibernate-properties-Bulb.xml 
+			containing the additional properties and place it in your merge dir. -->
+
+	</class>
+
+</hibernate-mapping>

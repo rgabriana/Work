@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.enlightedinc.hvac.model.Sensor" table="sensor">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">sensor_seq</param>
+			</generator>
+		</id>
+		
+		<property name="name" type="java.lang.String" update="true"
+			insert="true" column="name" />
+
+
+		<property name="macAddress" type="java.lang.String" update="true"
+			insert="true" column="mac_address" />
+
+
+		<property name="lastOccupancySeen" type="java.lang.Integer" update="true"
+			insert="true" column="last_occupancy_seen" />
+			
+		<property name="currentDimLevel" type="java.lang.Integer" update="true"
+			insert="true" column="current_dim_level" />
+			
+		<property name="outageFlag" type="java.lang.Boolean" update="true"
+			insert="true" column="outage_flag" />
+			
+		<property name="lastStatusTime" type="java.util.Date" update="true"
+			insert="true" column="last_status_time" />
+			
+		<property name="avgTemperature" type="java.lang.Short" update="true"
+			insert="true" column="avg_temperature" />
+
+		<property name="avgAmbientLight" type="java.lang.Short" update="true"
+			insert="true" column="avg_ambient_light" />
+	</class>
+
+</hibernate-mapping>

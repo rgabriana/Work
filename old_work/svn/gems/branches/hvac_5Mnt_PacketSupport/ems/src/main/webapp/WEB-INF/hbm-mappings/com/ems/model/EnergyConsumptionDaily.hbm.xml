@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.EnergyConsumptionDaily"
+        table="energy_consumption_daily"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">energy_consumption_daily_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-EnergyConsumptionDaily.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="minTemperature"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="min_temperature"
+        />
+
+        <property
+            name="maxTemperature"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="max_temperature"
+        />
+
+        <property
+            name="avgTemperature"
+            type="java.lang.Double"
+            update="true"
+            insert="true"
+            column="avg_temperature"
+        />
+
+        <property
+            name="lightOnSeconds"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="light_on_seconds"
+        />
+
+        <property
+            name="lightMinLevel"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="light_min_level"
+        />
+
+        <property
+            name="lightMaxLevel"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="light_max_level"
+        />
+
+        <property
+            name="lightAvgLevel"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="light_avg_level"
+        />
+
+        <property
+            name="lightOn"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="light_on"
+        />
+
+        <property
+            name="lightOff"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="light_off"
+        />
+
+        <property
+            name="powerUsed"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="power_used"
+        />
+
+        <property
+            name="occIn"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="occ_in"
+        />
+
+        <property
+            name="occOut"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="occ_out"
+        />
+
+        <property
+            name="occCount"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="occ_count"
+        />
+
+        <property
+            name="dimPercentage"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="dim_percentage"
+        />
+
+        <property
+            name="dimOffset"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="dim_offset"
+        />
+
+        <property
+            name="brightPercentage"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="bright_percentage"
+        />
+
+        <property
+            name="brightOffset"
+            type="java.lang.Short"
+            update="true"
+            insert="true"
+            column="bright_offset"
+        />
+
+        <property
+            name="captureAt"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="capture_at"
+        />
+
+        <many-to-one
+            name="fixture"
+            class="com.ems.model.Fixture"
+            cascade="none"
+            outer-join="auto"
+            update="true"
+            insert="true"
+            column="fixture_id"
+        />
+
+        <property
+            name="cost"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="cost"
+        />
+
+        <property
+            name="price"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="price"
+        />
+
+        <property
+            name="basePowerUsed"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="base_power_used"
+        />
+
+        <property
+            name="baseCost"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="base_cost"
+        />
+
+        <property
+            name="savedPowerUsed"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="saved_power_used"
+        />
+
+        <property
+            name="savedCost"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="saved_cost"
+        />
+
+        <property
+            name="peakLoad"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="peak_load"
+        />
+
+        <property
+            name="minLoad"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="min_load"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-EnergyConsumptionDaily.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

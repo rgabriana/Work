@@ -1,0 +1,12 @@
+Package: enLighted-uem-communicator
+Version: 3.3.1
+Section: misc
+Priority: optional
+Architecture: all
+Essential: no
+Depends:
+Replaces: 
+Suggests: no
+Maintainer: enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: enLighted uem communicator upgrade utility

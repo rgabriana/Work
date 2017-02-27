@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" verticalAlign="middle"  creationComplete="initComponent()">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.events.EnergySummaryUnitBarEvent;
+			
+			import flash.text.engine.FontWeight;
+			
+			private var _currSelButton:Button;
+			
+			public function get currSelButton():Button
+			{
+				return _currSelButton;
+			}
+
+			public function set currSelButton(value:Button):void
+			{
+				_currSelButton = value;
+			}
+
+			private function initComponent():void{
+				showButtonSelected(Constants.POWER_UNIT);
+			}
+			private function unitChangeHandler(event:MouseEvent):void
+			{
+				var selectedButton:Button = (event.currentTarget as Button);
+				showButtonSelected(selectedButton.label);
+			}
+			public function showButtonSelected(buttonName:String):void
+			{
+				var selectedButton:Button;
+				if(currSelButton)
+				{
+					currSelButton.clearStyle('fontWeight');
+					currSelButton.emphasized =false;
+				}
+				switch(buttonName)
+				{
+					case Constants.CURRENCY_UNIT :
+						selectedButton = dollarUnitButton;
+						break;
+					case Constants.POWER_UNIT: 
+						selectedButton = powerUnitButton;
+						break;
+					case Constants.CARBON_UNIT:
+						selectedButton = carbonUnitButton;
+						break;
+				}
+				if(selectedButton)
+				{
+					currSelButton= selectedButton;
+					selectedButton.emphasized =true;
+					selectedButton.setStyle('fontWeight', FontWeight.BOLD);
+					selectedButton.setStyle("accentColor",0x000000);
+				}
+				dispatchEvent( new EnergySummaryUnitBarEvent(EnergySummaryUnitBarEvent.UNIT_CHANGE, selectedButton.label));
+			}  
+		]]>
+	</fx:Script>
+		<s:Label text="{Constants.UNIT}" styleName="titleStyle" />
+		<s:Button id="dollarUnitButton" styleName="unitButton" name="dollarUnitButton" label="{Constants.CURRENCY_UNIT}" toolTip="{Constants.CURRENCY_UNIT}" buttonMode="true"  width="45" click="unitChangeHandler(event)"/>
+		<s:Button id="powerUnitButton" styleName="unitButton" name="powerUnitButton" label="{Constants.POWER_UNIT}" toolTip="{Constants.POWER_UNIT}" buttonMode="true" width="48" click="unitChangeHandler(event)"/>
+		<s:Button id="carbonUnitButton" styleName="unitButton" name="carbonUnitButton" label="{Constants.CARBON_UNIT}" toolTip="{Constants.CARBON_UNIT}" buttonMode="true" width="45" click="unitChangeHandler(event)"/>
+</s:HGroup>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.Groups" table="groups">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">groups_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-Groups.xml 
+					containing the additional parameters and place it in your merge dir. -->
+			</generator>
+		</id>
+
+		<property name="name" type="java.lang.String" update="true"
+			insert="true" column="name" />
+
+		<many-to-one name="company" class="com.ems.model.Company"
+			cascade="none" outer-join="auto" update="true" insert="true" column="company_id" />
+
+		<many-to-one name="profileHandler" class="com.ems.model.ProfileHandler"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="profile_handler_id" />
+			
+		<property name="profileNo" type="java.lang.Short" update="true"
+			insert="true" column="profile_no" />
+
+		<many-to-one name="derivedFromGroup" class="com.ems.model.Groups"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="derived_from_group" />
+
+		<many-to-one name="tenant" class="com.ems.model.Tenant"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="tenant_id" />
+			
+		<many-to-one name="profileTemplate" class="com.ems.model.ProfileTemplate"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="template_id" />
+			
+		<property name="displayProfile" type="boolean" update="true"
+			insert="true" column="display_profile" />
+			
+		<property name="defaultProfile" type="boolean" update="true"
+			insert="true" column="default_profile" />
+
+		<!-- To add non XDoclet property mappings, create a file named hibernate-properties-Groups.xml 
+			containing the additional properties and place it in your merge dir. -->
+
+	</class>
+
+</hibernate-mapping>

@@ -1,0 +1,552 @@
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+
+<spring:url value="/services/org/gemsgroups/op/creategroup" var="saveGemsGroupUrl" scope="request" />
+<spring:url value="/services/org/gemsgroups/op/editgroup" var="editGemsGroupUrl" scope="request" />
+<spring:url value="/services/org/gemsgroupfixture/op/applygroup/" var="applyGroupToFixtureUrl" scope="request" />
+<spring:url value="/services/org/gemsgroupfixture/op/asssignFixturesToGroup/" var="assignFixturesToGroupURL" scope="request" />
+<spring:url value="/services/org/gemsgroups/loadbyname/" var="loadGroupByNameUrl" scope="request" />
+<spring:url value="/services/org/fixture/list/" var="getAvailableFixtureUrl" scope="request" />
+<spring:url value="/services/org/gemsgroupfixture/list/" var="getGroupFixtureListURL" scope="request" />
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+
+<spring:url value="/themes/standard/css/jquery/jqgrid/ui.jqgrid.css" var="gridcss" />
+<link rel="stylesheet" type="text/css" href="${gridcss}" />
+
+<style>
+	#aggf-new-fixture-grid-container tr.jqgroup {background-color: #F1F1F1 !important;}
+	#aggf-new-fixture-grid-container {border-bottom: 1px solid #AAAAAA;}
+	#aggf-new-fixture-grid-container th {text-align: left !important; padding-left: 5px !important;}
+	div.aggf-message-text {font-weight:bold; float: left; padding-top: 5px;}
+	
+	#aggf-group-name {height: 24px; width:99.5%;}
+	#aggf-group-type {height: 26px; width:100%;}
+	#aggf-group-combo {height: 26px; width:100%;}
+	div.field-label{float:left; width:39%; font-weight:bold;}
+	div.field-input{float:left; width:60%;}
+</style>
+
+<style>
+	/*Override JQuery Dialog modal background css */
+	.ui-widget-overlay { background: none repeat scroll 50% 50% #000000; opacity: 0.9;}
+</style>
+
+
+<script type="text/javascript">
+$("#aggf-group-type").empty();
+$("#aggf-group-type").append(new Option("${grouptypes}", "2"));
+
+
+$("#aggf-group-combo-create").empty();
+<c:forEach items="${groups}" var="group">
+	$("#aggf-group-combo-create").append(new Option("${group.groupName}", "${group.id}"));
+</c:forEach>
+
+<c:if test="${empty groups}">
+	$("#aggf-join-btn").hide();
+</c:if>
+
+var GROUP_GRID = $("#aggf-new-fixture-table");
+
+var MAX_ROW_NUM = 99999;
+
+var group_selIds=null;
+
+$(document).ready(function() {
+	
+	group_selIds=null;
+	
+	createNewFixturesGrid();
+});
+
+
+//FOR GROUP
+function fillingGridWithUserSelection(gridName) {
+    if(group_selIds != null && group_selIds != undefined){
+        for(var i=0;i<group_selIds.length;i++){
+        	jQuery(gridName).jqGrid('setSelection', group_selIds[i]);
+	   	}
+    }
+}
+
+function saveGridParameters(grid) {
+	group_selIds = jQuery(grid).getGridParam('selarrrow');
+}
+
+var groupAssignedFixtureList = undefined;
+
+function createNewFixturesGrid(){
+	jQuery("#aggf-new-fixture-table").jqGrid({
+		datatype: "local",
+		autowidth: true,
+		scrollOffset: 0,
+		forceFit: true,
+		sortname: 'name',
+	   	rowNum: MAX_ROW_NUM,
+	   	colNames:['id', 'Selected Fixtures'],
+	   	colModel:[
+  	   		{name:'id', index:'id', hidden: true},
+	   		{name:'name', index:'name' , sorttype : 'string'}
+	   	],
+	    viewrecords: true,
+	    multiselect: true,
+	    onSortCol: function (index, columnIndex, sortOrder) {
+	   		saveGridParameters(GROUP_GRID);
+	    },
+	    gridComplete: function(){
+	    	fillingGridWithUserSelection(GROUP_GRID);
+	    }
+	});
+	
+	if(SELECTED_FIXTURES_TO_ASSIGN_GROUPS != undefined && SELECTED_FIXTURES_TO_ASSIGN_GROUPS.length > 0) {
+		$.each(SELECTED_FIXTURES_TO_ASSIGN_GROUPS, function(){
+			 if(this.version.match("^2.")) {
+				 jQuery("#aggf-new-fixture-table").jqGrid('addRowData', this.id, this);
+				 jQuery("#aggf-new-fixture-table").jqGrid('setSelection', this.id);
+			 }
+		 });
+	}
+	else {
+		$.ajax({
+			type: 'GET',
+			url: "${getAvailableFixtureUrl}"+treenodetype+"/"+treenodeid+"/1000"+"?ts="+new Date().getTime(),
+			data: "",
+			beforeSend: function() {
+			     setAssignGemsGroupMessage("Loading,Please Wait...", "green");
+			  },
+			  complete: function(){
+			     setAssignGemsGroupMessage("", "black");
+			  },
+			success: function(data){
+					if('${mode}' == "edit"){
+						$('#groupId').val(selectedGroupId);
+						$('#groupName').val(selectedGroupName);
+						getAssignedGroupFixtures();
+					}
+					if(data != null) {
+						fixturesData = data.fixture;
+						var selectedFixtures = undefined;
+						if(fixturesData.length != undefined && fixturesData.length > 0){
+							
+							for(var i=0; i<fixturesData.length ; i++){
+								if(fixturesData[i].state == "COMMISSIONED" && fixturesData[i].version.match("^2.")){
+									if('${mode}' == "edit"){
+										if(groupAssignedFixtureList != null && groupAssignedFixtureList.length != undefined) {
+											for(var j=0; j<groupAssignedFixtureList.length ; j++){
+												if(groupAssignedFixtureList[j].fixture.id == fixturesData[i].id) {
+													 jQuery("#aggf-new-fixture-table").jqGrid('addRowData', fixturesData[i].id , fixturesData[i]);
+													 jQuery("#aggf-new-fixture-table").jqGrid('setSelection', fixturesData[i].id);
+													 fixturesData[i].version = '0';
+												}
+											}
+										}
+										else if(groupAssignedFixtureList != null && groupAssignedFixtureList != undefined && groupAssignedFixtureList.fixture != undefined) {
+											if(groupAssignedFixtureList.fixture.id == fixturesData[i].id) {
+												 jQuery("#aggf-new-fixture-table").jqGrid('addRowData', fixturesData[i].id , fixturesData[i]);
+												 jQuery("#aggf-new-fixture-table").jqGrid('setSelection', fixturesData[i].id);
+												 fixturesData[i].version = '0';
+											}
+										}
+									}
+								}							
+							}
+							
+							for(var i=0; i<fixturesData.length ; i++){
+								if(fixturesData[i].state == "COMMISSIONED" && fixturesData[i].version.match("^2.")){
+									jQuery("#aggf-new-fixture-table").jqGrid('addRowData', fixturesData[i].id , fixturesData[i]);
+								}							
+							}
+	
+						}
+						else {
+							if(fixturesData.state == "COMMISSIONED" && fixturesData.version.match("^2.")){
+								jQuery("#aggf-new-fixture-table").jqGrid('addRowData', fixturesData.id , fixturesData);
+								if(groupAssignedFixtureList != null) {
+									if(groupAssignedFixtureList.length != undefined) {
+										for(var j=0; j<groupAssignedFixtureList.length ; j++){
+											if(groupAssignedFixtureList[j].fixture.id == fixturesData.id) {
+												 jQuery("#aggf-new-fixture-table").jqGrid('setSelection', fixturesData.id);
+											}
+										}
+									}
+									else if(groupAssignedFixtureList != undefined && groupAssignedFixtureList.fixture != undefined) {
+										if(groupAssignedFixtureList.fixture.id == fixturesData.id) {
+											 jQuery("#aggf-new-fixture-table").jqGrid('setSelection', fixturesData.id);
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+			dataType:"json",
+			contentType: "application/json; charset=utf-8",
+		});
+	}
+	 resizeNewFixturesGrid();
+}
+
+function getAssignedGroupFixtures() {
+	
+	$.ajax({
+		type: 'GET',
+		url: "${getGroupFixtureListURL}"+ selectedGroupId +"?ts="+new Date().getTime(),
+		data: "",
+		async: false,
+		success: function(data){
+			if(data != null) {
+				groupAssignedFixtureList = data.gemsGroupFixture;
+			}
+			else {
+				groupAssignedFixtureList = null;
+			}
+			
+		},
+		dataType:"json",
+		contentType: "application/json; charset=utf-8",
+	});
+}
+
+function resizeNewFixturesGrid(){
+	//resize new fixture grid
+	var gridContainerEL = document.getElementById("aggf-new-fixture-grid-container");
+	forceFitJQgridHeight(jQuery("#aggf-new-fixture-table"), gridContainerEL.offsetHeight);
+	jQuery("#aggf-new-fixture-table").jqGrid("setGridWidth", 345 );
+}
+
+
+function forceFitJQgridHeight(jgrid, containerHeight){
+	var gridHeight = jgrid.parents("div.ui-jqgrid:first").height();
+	var gridBodyHeight = jgrid.parents("div.ui-jqgrid-bdiv:first").height();
+	var gridHeaderFooterHeight = gridHeight - gridBodyHeight;
+	jgrid.jqGrid("setGridHeight", Math.floor((containerHeight - gridHeaderFooterHeight) * .99)); 
+}
+
+function saveGemsGroup(){
+	setAssignGemsGroupMessage("", "black");
+	
+	if($("#aggf-group-name").val().trim()==""){
+		setAssignGemsGroupMessage("Please enter group name", "red");
+		return false;
+	}
+	
+	var selIds = jQuery("#aggf-new-fixture-table").getGridParam('selarrrow');
+	if(selIds.length == 0){
+		setAssignGemsGroupMessage("Please select a fixture", "red");
+		return false;
+	}
+	
+//Check for duplicate name
+	setAssignGemsGroupMessage("Processing...", "black");
+	$.ajax({
+ 		url: "${loadGroupByNameUrl}"+$("#aggf-group-name").val().trim()+"?ts="+new Date().getTime(),
+ 		success: function(data){
+			if(data == null){
+				createNewGemsGroup();
+			} else {
+				setAssignGemsGroupMessage("A group with this name already exists", "red");
+				return false;
+			}
+		},
+		error: function(){
+			setAssignGemsGroupMessage("Failed to load group", "red");
+		},
+ 		dataType:"json",
+ 		contentType: "application/json; charset=utf-8",
+ 	});
+}
+
+function editGroup() {
+	setAssignGemsGroupMessage("", "black");
+	
+	if($("#groupName").val().trim()==""){
+		setAssignGemsGroupMessage("Please enter group name", "red");
+		return false;
+	}
+	
+	
+	//Check for duplicate name
+	setAssignGemsGroupMessage("Processing...", "black");
+	$.ajax({
+ 		url: "${loadGroupByNameUrl}"+$("#groupName").val().trim()+"?ts="+new Date().getTime(),
+ 		success: function(data){
+			if(data == null){
+				editGemsGroup();
+				$("#aggf-assign-btn").removeAttr("disabled");
+				$("#editGroupBtn").removeAttr("disabled");
+			} else {
+				setAssignGemsGroupMessage("A group with this name already exists", "red");
+				return false;
+			}
+		},
+		error: function(){
+			setAssignGemsGroupMessage("Failed to load group", "red");
+		},
+ 		dataType:"json",
+ 		contentType: "application/json; charset=utf-8",
+ 	});
+}
+
+function editGemsGroup(){
+	$("#aggf-assign-btn").attr("disabled", true);
+	$("#editGroupBtn").attr("disabled", true);
+	setAssignGemsGroupMessage("Processing...", "black");
+	
+	var dataXML = "<gemsGroup>"+
+						"<id>" + selectedGroupId + "</id>"+
+						"<name>"+ $("#groupName").val().trim() +"</name>"+
+						"<description></description>"+
+						"<type>"+
+							"<id>"+ $("#aggf-group-type").val() +"</id>"+
+						"</type>"+
+					"</gemsGroup>";
+					
+ 	$.ajax({
+ 		type: 'POST',
+ 		url: "${editGemsGroupUrl}"+"?ts="+new Date().getTime(),
+ 		data: dataXML,
+ 		success: function(data){
+ 			var xml=data.getElementsByTagName("response");
+			if(xml[0].getElementsByTagName("msg")[0].childNodes[0].nodeValue == "S"){
+				setAssignGemsGroupMessage("Saved Group Successfully", "green");
+				reloadGroupsFrame();
+			}
+			else {
+				setAssignGemsGroupMessage("Failed to edit group", "red");	
+			}
+		},
+		error: function(){
+			setAssignGemsGroupMessage("Failed to edit group", "red");
+		},
+ 		dataType:"xml",
+ 		contentType: "application/xml; charset=utf-8",
+ 	});
+}
+
+function reloadGroupsFrame(){
+	var ifr = document.getElementById("installFrame").contentWindow.document.getElementById("groupsFrame");
+	ifr.contentWindow.document.body.innerHTML = "&nbsp;<spring:message code='action.loading'/>";
+	ifr.src = ifr.src;
+}
+
+function joinGemsGroup(){
+	setAssignGemsGroupMessage("", "black");
+	
+	var groupId = $("#aggf-group-combo-create").val();
+	if(groupId==null || groupId==""){
+		setAssignGemsGroupMessage("Please select group name", "red");
+		return false;
+	}
+	
+	var selIds = jQuery("#aggf-new-fixture-table").getGridParam('selarrrow');
+	if(selIds.length == 0){
+		setAssignGemsGroupMessage("Please select atleast one fixture", "red");
+		return false;
+	}
+	
+	setAssignGemsGroupMessage("Processing...", "black");
+	applyGroupToFixtures(groupId);
+}
+
+function assignToGroup(){
+	setAssignGemsGroupMessage("", "black");
+	var proceed = confirm("This will remove any unselected fixture from the Group and assign only current selected fixtures. Do you wish to continue?");
+	if(proceed==true) {
+		$("#aggf-assign-btn").attr("disabled", true);
+		$("#editGroupBtn").attr("disabled", true);
+		
+		var selIds = jQuery("#aggf-new-fixture-table").getGridParam('selarrrow');
+		/* if(selIds.length == 0){
+			setAssignGemsGroupMessage("Please select atleast one fixture", "red");
+			return false;
+		} */
+		
+		setAssignGemsGroupMessage("Processing...", "black");
+		
+		var dataXML = "";
+		for(var i=0; i<selIds.length; i++){
+			var fixtureJson = jQuery("#aggf-new-fixture-table").jqGrid('getRowData', selIds[i]);
+			dataXML += "<fixture><id>"+ fixtureJson.id +"</id></fixture>";
+		}
+		dataXML = "<fixtures>"+dataXML+"</fixtures>";
+		
+	 	$.ajax({
+	 		type: 'POST',
+	 		url: "${assignFixturesToGroupURL}"+selectedGroupId+"?ts="+new Date().getTime(),
+	 		data: dataXML,
+	 		success: function(data){
+				if(data != null){
+					var xml=data.getElementsByTagName("response");
+					for (var j=0; j<xml.length; j++) {
+						setAssignGemsGroupMessage("Assignment successful", "green");
+					}
+				}
+			},
+			error: function(){
+				setAssignGemsGroupMessage("Failed to assign fixtures", "red");
+			},
+			complete: function() {
+				$("#aggf-assign-btn").removeAttr("disabled");
+				$("#editGroupBtn").removeAttr("disabled");
+			},
+	 		dataType:"xml",
+	 		contentType: "application/xml; charset=utf-8",
+	 	});
+	}
+}
+
+function createNewGemsGroup(){
+	$("#aggf-save-btn").attr("disabled", true);
+	$("#aggf-join-btn").attr("disabled", true);
+	setAssignGemsGroupMessage("Processing...", "black");
+	
+	var dataXML = "<gemsGroup>"+
+						"<id></id>"+
+						"<name>"+ $("#aggf-group-name").val().trim() +"</name>"+
+						"<description></description>"+
+						"<type>"+
+							"<id>"+ $("#aggf-group-type").val() +"</id>"+
+						"</type>"+
+					"</gemsGroup>";
+					
+ 	$.ajax({
+ 		type: 'POST',
+ 		url: "${saveGemsGroupUrl}"+"?ts="+new Date().getTime(),
+ 		data: dataXML,
+ 		success: function(data){
+			if(data != null){
+				var xml=data.getElementsByTagName("response");
+				for (var j=0; j<xml.length; j++) {
+					var status = xml[j].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+					var gemsGroupId = xml[j].getElementsByTagName("msg")[0].childNodes[0].nodeValue;
+					reloadGroupsFrame();
+					applyGroupToFixtures(gemsGroupId);
+				}
+			}
+		},
+		error: function(){
+			setAssignGemsGroupMessage("Failed to create group", "red");
+		},
+		complete: function() {
+			$("#aggf-save-btn").removeAttr("disabled");
+			$("#aggf-join-btn").removeAttr("disabled");
+		},
+ 		dataType:"xml",
+ 		contentType: "application/xml; charset=utf-8",
+ 	});
+}
+
+function applyGroupToFixtures(gemsGroupId){
+	var selIds = jQuery("#aggf-new-fixture-table").getGridParam('selarrrow');
+	var dataXML = "";
+	if(selIds.length > 0){
+		for(var i=0; i<selIds.length; i++){
+			var fixtureJson = jQuery("#aggf-new-fixture-table").jqGrid('getRowData', selIds[i]);
+			dataXML += "<fixture><id>"+ fixtureJson.id +"</id></fixture>";
+		}
+		dataXML = "<fixtures>"+dataXML+"</fixtures>";
+	}
+	
+ 	$.ajax({
+ 		type: 'POST',
+ 		url: "${applyGroupToFixtureUrl}"+gemsGroupId+"?ts="+new Date().getTime(),
+ 		data: dataXML,
+ 		success: function(data){
+			if(data != null){
+				var xml=data.getElementsByTagName("response");
+				for (var j=0; j<xml.length; j++) {
+					setAssignGemsGroupMessage("Assignment successful", "green");
+				}
+			}
+		},
+		error: function(){
+			setAssignGemsGroupMessage("Failed to assign fixtures", "red");
+		},
+ 		dataType:"xml",
+ 		contentType: "application/xml; charset=utf-8",
+ 	});
+}
+
+function setAssignGemsGroupMessage(msg, color){
+	$("#aggf-message-div").css("color", color);
+	$("#aggf-message-div").html(msg);
+}
+
+</script>
+</head>
+<body id="aggf-main-box">
+<div id="aggf-tabs-body">
+	
+	<div id="tab-create-group">
+		<table width=100% height=100% style="padding:0 10px;">	
+			<tr height=24px>
+				<td valign="top" height=24px>
+					<div id="aggf-message-div" class="aggf-message-text"></div>
+				</td>
+			</tr>
+			<c:if test="${mode != 'edit'}">
+			<tr height=30px>
+				<td colspan="2">
+					<div class="field-label">New Group Name:</div> 
+					<div class="field-input"><input id="aggf-group-name" type="text"/></div>
+				</td>
+			</tr>
+			<tr height=30px>
+				<td colspan="2">
+					<div class="field-label">Select Existing Group:</div> 
+					<div class="field-input"><select id="aggf-group-combo-create"></select></div>
+				</td>
+			</tr>
+			</c:if>
+			<c:if test="${mode == 'edit'}">
+			<tr height=30px>
+				<td colspan="2">
+						<div class="field-label">Edit Group:</div> 
+						<div class="field-input">
+							<input name="groupName" id="groupName" type="text"/>
+							<button id="editGroupBtn" style="height: 24px" onclick="editGroup();">Save</button>
+						</div>
+				</td>
+			</tr>
+			</c:if>
+			<tr height=30px>
+				<td colspan="2">
+					<div class="field-label">Select Group Type:</div> 
+					<div class="field-input"><select id="aggf-group-type"></select></div>
+				</td>
+			</tr>
+			<tr height=220px>
+				<td id="aggf-new-fixture-grid-container" colspan="2" valign="top">
+					<span style="font-weight: bold; font-size: 0.85em">*Only 2.0+ sensors can participate in groups.</span>
+					<table id="aggf-new-fixture-table"></table>
+				</td>
+			</tr>
+			<c:if test="${mode != 'edit'}">
+			<tr>
+				<td valign="top">
+					<button id="aggf-save-btn" onclick="saveGemsGroup();">Create & Join Group</button>
+				</td>
+				<td valign="top">
+					<button id="aggf-join-btn" onclick="joinGemsGroup();">Join Existing Group</button>
+				</td>
+			</tr>
+			</c:if>
+			<c:if test="${mode == 'edit'}">
+			<tr>
+				<td valign="top" colspan="2" >
+					<button id="aggf-assign-btn" onclick="assignToGroup();">Assign selected fixtures to group</button>
+				</td>
+			</tr>
+			</c:if>
+		</table>
+	</div>
+	
+</div>
+	
+</body>
+</html>

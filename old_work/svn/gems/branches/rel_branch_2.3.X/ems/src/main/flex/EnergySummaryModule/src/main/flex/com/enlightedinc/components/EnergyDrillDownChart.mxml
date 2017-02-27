@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:BarChart xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			 xmlns:s="library://ns.adobe.com/flex/spark" 
+			 xmlns:mx="library://ns.adobe.com/flex/mx"
+			 showDataTips="true"
+			 barWidthRatio="0.65"
+			 maxBarWidth="25"
+			 styleName="energyGraph"
+			 dataProvider="{CountsCalculator.getInstance().drillDownChartData}"
+			 dataTipFunction="chartDataTipFunction">
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="MMM DD"/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.common.CountsCalculator;
+			
+			import mx.charts.HitData;
+			import mx.charts.series.items.BarSeriesItem;
+			import mx.charts.series.items.ColumnSeriesItem;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Label;
+			import mx.events.FlexEvent;
+			private function barSeriesLabelFunction(barSeriesItem:BarSeriesItem, series:BarSeries):Number 
+			{
+				var barItemNumber:Number = (barSeriesItem.xNumber - Number(barSeriesItem.minValue)); 
+				return barItemNumber;
+			} 
+			
+			private function chartDataTipFunction(item:HitData):String 
+			{
+				var type:String = (item.element as BarSeries).displayName;
+				var currentPropertyType:String =item.item.orgname;
+				var value:Number = (item.chartItem as BarSeriesItem).xNumber - Number((item.chartItem as BarSeriesItem).minValue);
+				return "<b>"+currentPropertyType+ "</b>" + "\n"+ type + ' : ' + getCustomEnergyLabel(value)  as String;
+			}
+			private function getCustomEnergyLabel(labelValue:Object):String
+			{
+				if (Number(labelValue) >= 1000000)
+					return (Number(labelValue)/1000000).toFixed(2) +" MWh";				
+				if (Number(labelValue) >= 1000)
+					return (Number(labelValue)/1000).toFixed(2) +" kWh";
+				else
+					return Number(labelValue).toFixed(2) +" Wh";
+			}
+
+		]]>
+	</fx:Script>
+	
+	<mx:horizontalAxis>
+		<mx:LinearAxis id="energyAxis" />
+	</mx:horizontalAxis>
+	<mx:horizontalAxisRenderers>
+		<mx:AxisRenderer axis="{energyAxis}" showLabels="false"  showLine="false"/>
+	</mx:horizontalAxisRenderers>
+	
+	<mx:verticalAxis>
+		<mx:CategoryAxis id="category" categoryField="orgname" />
+	</mx:verticalAxis>
+	<mx:verticalAxisRenderers>
+		<mx:AxisRenderer axis="{category}" showLine="false" showLabels="false" canDropLabels="false" fontSize="10" tickLength="0">
+			<mx:axisStroke>
+				<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+			</mx:axisStroke>
+			<mx:tickStroke>
+				<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+			</mx:tickStroke>
+			<mx:minorTickStroke>
+				<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+			</mx:minorTickStroke>
+		</mx:AxisRenderer>
+	</mx:verticalAxisRenderers>
+
+	<mx:series>
+		<mx:BarSet type="stacked">
+		<mx:BarSeries id="powerSeries"
+					  xField="powerused"
+					  yField="orgname"
+					  displayName="Power"
+					  labelFunction="barSeriesLabelFunction" >
+			<mx:fill>
+				<mx:LinearGradient rotation="90">
+					<mx:entries>
+						<mx:GradientEntry 
+							color="0xff9900" 
+							ratio="0" 
+							alpha="1"
+							/>
+						<mx:GradientEntry 
+							color="0xffb23e" 
+							ratio=".33" 
+							alpha="1"
+							/>
+					</mx:entries>
+				</mx:LinearGradient>
+			</mx:fill>
+		</mx:BarSeries>
+		
+		<mx:BarSeries id="occupanySavingsSeries"
+					  xField="occsaving"
+					  yField="orgname"
+					  displayName="Occupancy Savings"
+					  labelFunction="barSeriesLabelFunction">
+			<mx:fill>
+				<mx:LinearGradient rotation="90">
+					<mx:entries>
+						<mx:GradientEntry 
+							color="0x569814" 
+							ratio="0" 
+							alpha="1"
+							/>
+						<mx:GradientEntry 
+							color="0x91bc67" 
+							ratio=".33" 
+							alpha="1"
+							/>
+					</mx:entries>
+				</mx:LinearGradient>
+			</mx:fill>
+		</mx:BarSeries>
+		
+		<mx:BarSeries id="ambientSavingsSeries"
+					  xField="ambientsaving"
+					  yField="orgname"
+					  displayName="Ambient Savings"
+					  labelFunction="barSeriesLabelFunction">
+			<mx:fill>
+				<mx:LinearGradient rotation="90">
+					<mx:entries>
+						<mx:GradientEntry 
+							color="0xffff33" 
+							ratio="0" 
+							alpha="1"
+							/>
+						<mx:GradientEntry 
+							color="0xffff66" 
+							ratio=".33" 
+							alpha="1"
+							/>
+					</mx:entries>
+				</mx:LinearGradient>
+			</mx:fill>
+		</mx:BarSeries>
+		
+		<mx:BarSeries id="taskTuningSavingsSeries"
+					  xField="tasktuneupsaving"
+					  yField="orgname"
+					  displayName="Task Tuning Savings"
+					  labelFunction="barSeriesLabelFunction">
+			<mx:fill>
+				<mx:LinearGradient rotation="90">
+					<mx:entries>
+						<mx:GradientEntry 
+							color="0x3299cc" 
+							ratio="0" 
+							alpha="1"
+							/>
+						<mx:GradientEntry 
+							color="0x80c0e0" 
+							ratio=".33" 
+							alpha="1"
+							/>
+					</mx:entries>
+				</mx:LinearGradient>
+			</mx:fill>
+		</mx:BarSeries>
+		</mx:BarSet>
+	</mx:series>
+
+</mx:BarChart>

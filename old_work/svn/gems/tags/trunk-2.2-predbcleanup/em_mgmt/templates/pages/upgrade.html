@@ -1,0 +1,462 @@
+{% extends "pages/layouts/mainLayout.html" %}
+
+{% load i18n %}
+
+{% load customtemplatetags %}
+
+{% block body %}
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.blockUI.2.39.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.tablesorter.min.js"> </script>
+
+<script type="text/javascript">	
+	$().ready(function() {
+		
+		jQuery.validator.addMethod("debNameCheck", function(value, element) {
+			var fullPath = value;
+            var fileArray = fullPath.split(/^.*[\\\/]/);
+            var fileName = fileArray[fileArray.length-1];
+		    return this.optional(element) || /^[0-9]+_em_all.deb$/.test(fileName);  
+		    }, "{% trans 'error.deb.name.format' %}");
+		
+		$("#uploadForm").validate({
+			rules: {
+				file: {
+					required: true,
+					accept: "deb",
+					debNameCheck: ""
+				}
+			},
+			messages: {
+				file: {
+					required: "{% trans 'error.above.field.required' %}",
+					accept: "{% trans 'error.deb.extension.required' %}"
+				}
+			}			
+		});
+		
+		$(".outermostdiv").css("minHeight", $(window).height() - 85);
+
+    {% if existingProcess %}
+
+		showlogsWindow();
+
+    {% endif %}		
+	});
+
+	function upload() {		
+		var isValid = $('#uploadForm').valid();		
+		if(isValid) {	                
+	        $('#uploadsubmit').attr('disabled', 'disabled');
+			$("#uploadProgressDiv").show();
+      $("#listProgressIndicator").html("");
+			var loadingImageString="<img alt='loading' src='{{ STATIC_URL }}static/themes/default/images/ajax-loader_small.gif'>";
+	        $("#uploadProgressIndicator").html("<span>" + "{% trans 'restore.upload.wait' %}" +loadingImageString + "</span><span id='uploadSizeIndicator'></span>");
+	        var uploadPollServer = setInterval( function() {
+			 	  $.ajax({
+					   type: "POST",
+					   cache: false,
+					   dataType: "json",
+					   url: '{{ STATIC_URL }}services/upload/size/',
+					   beforeSend: function() {
+					   },
+					   success: function(data){
+              $.each(data, function(key, val) {
+                  msg = val;
+              });
+					   	if(msg != "-1") {
+					   		$("#uploadSizeIndicator").text(msg);
+					   	}
+					   } 
+					   });
+					   }, 5000);
+ 	       	$("#uploadForm").submit();
+		}
+	}	
+</script>
+
+<div class="pgset">
+<div class="outermostdiv">
+	<div class="outerContainer">
+		<span id="userlist_header_text">{% trans "upgrade.title" %}</span>
+    	<div class="i1"></div>
+		<div style="width:100%;">
+		<fieldset style="padding: 10px;">
+			<legend style="font-weight: bold">{% trans "upgrade.upload.legend" %}</legend>
+			
+			<form id="uploadForm" action="{{ STATIC_URL }}upload/upgrade/file/" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+				<div class="field">
+					<div class="formPrompt"><span>{% trans "upgrade.label.image.upload" %}</span></div>
+					<div class="formValue">
+						<input type="file" name="file" id="file" />
+					</div>
+				</div>
+				<div id="uploadProgressDiv" class="field">
+					<div class="formPrompt"><span></span></div>
+					<div class="formValue" id="uploadProgressIndicator"></div>
+				</div>
+				<script type="text/javascript">
+          {% if uploadStatus == 'F' %}
+     	      $("#uploadProgressIndicator").html("<span style='color:red'>"+ "{% trans 'error.restore.upload.internal' %}" +"</span>");
+          {% else %} {% if uploadStatus == 'S' and fileuploadconfirmation %}
+            $("#uploadProgressIndicator").html("<span style='color:green'>" + '{{ fileuploadconfirmation }}' + "</span>");
+          {% else %}
+            $("#uploadProgressDiv").hide();
+          {% endif %} {% endif %}
+				</script>
+				<div class="field">
+					<div class="formPrompt"><span></span></div>
+					<div class="formValue">
+						<input class="navigation" id="uploadsubmit" type="button" onclick="upload();" value="{% trans 'action.upload' %}"/>
+					</div>
+				</div>
+			</form>
+		</fieldset>
+		</div>
+      {% if filelist %}
+			<script type="text/javascript">
+				
+				function deleteUpgradeFile(elementObj) {
+			        var id = $(elementObj).attr('id').split('T')[0];
+			        var filename = $("#" + id + "Tname").html();
+			        
+			       	jConfirm({% translate "file.delete.conform" "filename" filename %},"{% trans 'deletion.confirmation.title' %}",function(result){
+			             if(result) {
+		                		$("input.action").attr('disabled', "disabled");
+		                		$("#listProgressDiv").show();
+                        $("#uploadProgressIndicator").html("");
+		                		$("#listProgressIndicator").css('color', "#333333");
+		                		var loadingImageString="<img alt='loading' src='{{ STATIC_URL }}static/themes/default/images/ajax-loader_small.gif'>";
+		                        $("#listProgressIndicator").html("{% trans 'delete.image.wait' %}"+loadingImageString);
+		            			$.ajax({
+		         				   type: "POST",
+		         				   cache: false,
+		         				   dataType: "json",
+                       data: {file: $("#" + id + "Tpath").val()},
+		         				   url: '{{ STATIC_URL }}services/delete/upgrade/file/',
+		         				   async: true,
+		         				   beforeSend: function(){
+		         				   },
+		         				   success: function(data){
+		         						var errorMsg = null;
+                        $.each(data, function(key, val) {
+                            msg = val;
+                         });
+		         						if(msg != "S") {
+                          if(msg == "I") {
+		         								errorMsg = "{% trans 'error.backup.delete' %}";
+		         							}
+		         							$("#listProgressIndicator").css('color', "red");
+		         							$("#listProgressIndicator").html(errorMsg);
+		         							return false;
+		         						}
+		         						else {
+		         							$("#" + id + "Trow").remove();
+			         				    	$("#listProgressIndicator").css('color', "green");
+			         					    $("#listProgressIndicator").html({% translate "file.delete.successful" "filename" filename %});
+		         						}
+		         					},
+		         				    error: function() {
+		         				    	$("#listProgressIndicator").css('color', "red");
+		         					    $("#listProgressIndicator").html("{% trans 'error.connection.server' %}");
+		         				    },
+		         				    complete: function() {
+		         				    	$("input.action").removeAttr('disabled');
+		         				    }
+		         			});	
+			              }
+			              else {
+			            	  return false;
+			              }
+			        });
+				}
+
+
+        function beforeUpgrade(filename) {
+
+          var loadingImageString = "<img alt='loading' src='{{ STATIC_URL }}static/themes/default/images/ajax-loader_small.gif'>";
+
+				  $.blockUI({
+					  message : "{% trans 'check.progress' %}",
+					  css : {
+						  border : 'none',
+						  padding : '15px',
+						  backgroundColor : '#000000',
+						  '-webkit-border-radius' : '10px',
+						  '-moz-border-radius' : '10px',
+						  opacity : .8,
+						  color : '#FFFFFF',
+						  top : '50px',
+						  left: '200px',
+						  width : '800px',
+						  height : '450px'
+					  }
+				  });
+
+				  $('.blockMsg')
+						  .html(
+								  '<div id="updateProgress" style="font-weight: bold; color: yellow; float:left;">'+ {% translate "upgrade.wait.message" "filename" filename %} + ' ... ' + loadingImageString+'</div>' 
+								  +'<br/ ><br/ ><div style="float: left;"><span style="font-weight: bold;">'+ '{% trans "upgrade.progress.title" %}' +'</span></div><br/ ><br/ >'
+										  + '<div>'
+										  + '<ol style="padding-left: 15px">'
+										  + '<li style="color: blue; font-weight: bold; float: left;" id="step1"><p>'+ '{% trans "upgrade.progress.validatedebian" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step2"><p>'+ '{% trans "upgrade.progress.embackup" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step3"><p>'+ '{% trans "upgrade.progress.emapplication" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step4"><p>'+ '{% trans "upgrade.progress.emserver" %}' +'</p></li><br/ >'
+
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step5"><p>'+ '{% trans "upgrade.progress.emcommunicator" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step6"><p>'+ '{% trans "upgrade.progress.emmanagement" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step7"><p>'+ '{% trans "upgrade.progress.dbupgrade" %}' +'</p></li><br/ >'
+										  + '<li style="color: red; font-weight: bold; float: left;" id="step8"><p>'+ '{% trans "upgrade.progress.restartservices" %}' +'</p></li><br/ >'
+										  + '</ol>'
+										  + '</div> <br/ >'
+										  + '<div style="padding: 5px; max-height: 200px; overflow: auto; clear: both; text-align:left;" id="blockProgress">'
+										  + '</div>'
+										  + '<br/ > <div id="closeprogress" style="font-weight: bold;"></div>');
+
+        }
+
+				var upgradePollServer = null;
+
+        function showlogsWindow() {
+          beforeUpgrade('{{ filename }}');
+          upgradePollServer = null;
+          pollUpgrade();
+        }
+				
+				
+				function upgrade(elementObj) {
+					var id = $(elementObj).attr('id').split('T')[0];
+					var filename = $("#" + id + "Tname").html();
+
+					jConfirm(
+							{% translate "file.upgrade.conform" "filename" filename %},
+									"{% trans 'upgrade.confirmation.title' %}",
+							function(result) {
+								if (result) {
+									upgradePollServer = null;
+									$.when(upgradesubmit(filename),
+											pollUpgrade());
+								}
+
+							});
+				}
+
+        var serviceRestart = 'F';
+				
+				function upgradesubmit(filename) {
+              $("#listProgressIndicator").html("");
+							$.ajax({
+								type : "POST",
+								cache : false,
+								dataType : "json",
+                data: {file: filename},
+								url : '{{ STATIC_URL}}services/upgrade/',
+								async : true,
+								beforeSend : function() {
+                  $("#uploadProgressIndicator").html("");
+                  $("#listProgressIndicator").html("");
+                  beforeUpgrade(filename);
+                  serviceRestart = 'F';
+								},
+								success : function(msg) {
+                  $.each(msg, function(key, val) {
+                      data = val;
+                   });
+
+									if (data == "FAILURE") {
+										clearInterval(upgradePollServer);
+										$.unblockUI();
+                    $("#listProgressDiv").show();
+										$("#listProgressIndicator").css(
+												'color', "red");
+										$("#listProgressIndicator")
+												.html(
+														"{% trans 'error.upgrade.internal' %}");
+									}
+								},
+								error : function() {
+									if(serviceRestart != "T") {
+										clearInterval(upgradePollServer);
+										$.unblockUI();
+                    $("#listProgressDiv").show();
+										$("#listProgressIndicator").css('color',
+												"red");
+										$("#listProgressIndicator")
+												.html(
+														"{% trans 'error.upgrade.connection.server' %}");
+									}
+								},
+								complete : function() {
+								}
+							});
+				}
+
+				function pollUpgrade() {
+					
+					$("<span id='showlogs'></span>").appendTo("#blockProgress");
+					$("<br/ >").appendTo("#blockProgress");
+					var step_no = 1;
+					var errorCount = 1;
+
+					upgradePollServer = setInterval(
+							function() {
+										
+										$.ajax({
+											type : "POST",
+											cache : false,
+											dataType : "json",
+											url : '{{ STATIC_URL }}services/upgrade/logs/',
+											beforeSend : function() {
+											},
+											success : function(data) {
+                        $.each(data, function(key, val) {
+                            msg = val;
+                         });
+												errorCount = 1;
+												var parts = msg
+														.split('EMS_UPGRADE_STARTED');
+												$('#showlogs').html(parts[0]);
+												if (parts[1] != null
+														&& parts[1] != "") {
+													while (parts[1]
+															.search("step"
+																	+ step_no) >= 0) {
+														$('#step' + step_no)
+																.css('color',
+																		'green');
+														step_no = step_no + 1;
+														$('#step' + step_no)
+																.css('color',
+																		'blue');
+													}
+													if (parts[1]
+															.search("ERROR:") >= 0) {
+														var errorMsg = parts[1]
+																.split('ERROR:');
+														$('#showlogs')
+																.html(
+																		parts[0]
+																				+ "<br / > "+"{% trans 'logs.error.heading' %}"
+																				+ errorMsg[1]);
+														$('#closeprogress')
+																.html(
+																		"<span>"+"{% trans 'click.close.window' %}"+"</span>");
+                            							clearInterval(upgradePollServer);
+														$("div").css('cursor',
+																'default');
+														$('#step' + step_no)
+																.css('color',
+																		'red');
+														$(
+																"#updateProgress")
+																.css('color',
+																		"red");
+														$(
+																"#updateProgress")
+																.html(
+																		"{% trans 'error.upgrade.internal' %}");
+													}
+                          if( step_no == 6) {
+                               serviceRestart = 'T';
+                          }
+													if (step_no == 9) {
+                            serviceRestart = 'F';
+														$('#closeprogress')
+																.html(
+																		"<span>"+"{% trans 'click.refresh.page' %}"+"</span>");
+                            							clearInterval(upgradePollServer);
+														$("div").css('cursor',
+																'default');
+														$(
+																"#updateProgress")
+																.css('color',
+																		"green");
+																$(
+																"#updateProgress")
+																.html(
+																		"{% trans 'upgrade.successful' %}");
+													}
+												}
+											},
+	                    complete: function(transport){
+	                    },
+	                    error: function() {
+	                    	errorCount++;
+	                    }
+										});
+										
+										if(errorCount > 50) {
+											$('#closeprogress')
+											.html("<span>"+"{% trans 'click.close.window' %}"+"</span>");
+                        					clearInterval(upgradePollServer);
+											$("div").css('cursor', 'default');
+											$("#listProgressIndicator").css('color',"red");
+											$("#listProgressIndicator").html("{% trans 'error.no.server.access' %}");
+											$("<span> WARNING: " + "{% trans 'error.no.server.access' %}" + "</span>").appendTo("#blockProgress");	
+                      $("#updateProgress").css('color',"red");
+											$("#updateProgress").html("{% trans 'error.no.server.access' %}");
+										}
+							}, 5000);
+				}
+				
+
+			</script>
+
+		<div style="margin-top:20px;">
+			<fieldset style="padding: 10px;">
+				<legend style="font-weight: bold">{% trans "upgrade.list.legend" %}</legend>
+				<div>				
+	 				<div id="listProgressDiv" style="padding-bottom: 5px; text-align: center;">
+	 					<span style="font-weight: normal; font-size: 1em; " id="listProgressIndicator"></span>
+	 				</div>
+	 				<script type="text/javascript">
+	 					$("#listProgressDiv").hide();
+	 				</script>
+					<div id="tableContainer">
+						<table id="imagelisttable" class="tablesorter entable" width="100%">
+						<thead>
+							<tr>
+								<th>{% trans "upgrade.label.list.creation.time" %}</th>
+								<th>{% trans "restore.label.list.file" %}</th>
+								<th>{% trans "restore.label.list.file.size" %}</th>
+								<th>{% trans "upgrade.label.list.version" %}</th>
+								<th>{% trans "restore.label.list.action" %}</th>
+							</tr>
+						</thead>
+						<tbody>
+                {% for file in filelist %}
+								<tr id="{{ forloop.counter }}Trow" >
+									<td id="{{ forloop.counter }}Tdate" >{{ file.creationDate }}</td>
+									<td id="{{ forloop.counter }}Tname" >{{ file.filename }}</td>
+									<td class="alignright" id="{{ forloop.counter }}Tsize" >{{ file.filesize }}</td>
+									<td class="alignright" id="{{ forloop.counter }}Tver" >{{ file.version }}</td>
+									<td class="alignright">
+										<input class="action" id="{{ forloop.counter }}Trestore" type="button" onclick="upgrade(this);" value="{% trans 'action.upgrade' %}" />
+										<input class="action" id="{{ forloop.counter }}Tdelete"  type="button" onclick="deleteUpgradeFile(this);" value="{% trans 'action.delete' %}" />
+                    <input id="{{ forloop.counter }}Tpath" type="hidden" value="{{ file.filepath }}" />
+									</td>
+								</tr>
+                {% endfor %}
+						</tbody>
+						</table>
+					</div>
+				</div>
+			</fieldset>
+			</div>
+			<script type="text/javascript">
+			
+			$("#imagelisttable").tablesorter({
+							sortList: [[0,1]],
+							headers: { 0: {sorter:'text'}, 1: {sorter: 'text'}, 2: {sorter: 'numeric'}, 3: {sorter: 'numeric'}, 4: {sorter: false} }
+				});
+			</script>
+      {% endif %}
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+

@@ -1,0 +1,995 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:components="com.enlightedinc.components.*"
+		 xmlns:renderers="com.enlightedinc.components.renderers.*"
+		 xmlns:controllers="com.enlightedinc.controllers.*"
+		 xmlns:models="com.enlightedinc.models.*"
+		 width="100%" height="100%" creationComplete="onCreationComplete()" verticalGap="0">
+	
+	<fx:Declarations>
+		<mx:SolidColor id="sc1" alpha=".3" color="0xFBB917"/>
+		<mx:SolidColor id="sc2" alpha=".6" color="0xFBB917"/>
+		<mx:SolidColor id="sc3" alpha="1" color="0xFBB917"/>	
+		<s:SolidColorStroke id="s2" color="0xFBB917" weight="1"/>
+		
+		<mx:Fade id="fadeIn" alphaFrom="0.0" alphaTo="0.6" duration="1000"/>
+		<mx:Fade id="fadeOut" alphaFrom="0.6" alphaTo="0.0" duration="1000"/>
+		
+		<mx:WipeLeft id="wipeleft" duration="200"/>
+		<mx:WipeRight id="wiperight" duration="200"/>
+		
+		<mx:DateFormatter id="dateFormatter" formatString="YYYY-MM-DD JJ:NN:SS"/>
+		
+		<controllers:RealTimeStatsController id="realTimeStatsController" panCanvas="{this.panCanvas}" fpModel="{this.fpModel}"/>
+		<controllers:FixtureController id="fixtureController" fpModel="{this.fpModel}"/>
+		<controllers:GatewayController id="gatewayController" fpModel="{this.fpModel}"/>
+		<controllers:DimfixtureController id="dimFixtureController" fpModel="{this.fpModel}"/>
+		<controllers:PdfController id="pdfController" panCanvas="{this.panCanvas}" fpModel="{this.fpModel}" img="{this.img}"/>
+		<controllers:ServerGMTOffsetController id="serverGMTOffsetController" fpModel="{this.fpModel}"/>
+		<controllers:FloorPlanContextMenuController id="floorPlanContextMenuController" fpModel="{this.fpModel}" floorPlanChart="{this.floorPlanChart}"/>
+		<models:FPModel id="fpModel" />
+		
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.assets.images.Images;
+			import com.enlightedinc.components.renderers.FixtureIconRenderer;
+			import com.enlightedinc.components.skin.VariableRowDropDownList;
+			import com.enlightedinc.models.FPModel;
+			import com.enlightedinc.utils.GlobalUtils;
+			
+			import mx.charts.events.ChartItemEvent;
+			import mx.charts.series.items.PlotSeriesItem;
+			import mx.collections.ArrayCollection;
+			import mx.collections.Sort;
+			import mx.collections.SortField;
+			import mx.containers.TitleWindow;
+			import mx.controls.Alert;
+			import mx.controls.TextInput;
+			import mx.core.DragSource;
+			import mx.core.FlexGlobals;
+			import mx.core.UIComponent;
+			import mx.events.CloseEvent;
+			import mx.events.CollectionEvent;
+			import mx.events.DragEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.DragManager;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.http.HTTPService;
+			import mx.rpc.xml.SimpleXMLDecoder;
+			
+			import spark.components.Label;
+			import spark.events.IndexChangeEvent;
+			import spark.filters.GlowFilter;
+			
+			
+			[Bindable]
+			private var minSliderValue:Number = 100;
+			[Bindable]
+			private var maxXaxis:int = 0;
+			[Bindable]
+			private var maxYaxis:int = 0;
+			
+			private var labelOffsetY:int = 18;
+			
+			private var color:Number = 0x1F29AD;
+			private var glowFilter:GlowFilter = new GlowFilter(color, .8, 6, 6, 5, 1,false, false);
+			
+			/** 
+			 * "gridSize" is a integer value that tells the grid box size and what value x & y axis should be rounded to 
+			 **/
+			[Bindable]
+			private var gridPixels:int = 16;
+			[Bindable]
+			private var gridDirection:String = "none";
+			
+
+			/**
+			 * GOLBAL VISIBILITY FLAGS FOR COMPONENT
+			 */
+			[Bindable]
+			private var pinToolsWindow:Boolean = true;
+			
+			[Bindable]
+			private var panEnabled:Boolean = false;
+			
+			[Bindable]
+			private var floorplanMode:Boolean = true;
+			
+			[Bindable]
+			private var showGridOptions:Boolean = true;
+			
+			[Bindable]
+			private var showSearch:Boolean = true;
+			
+			[Bindable]
+			public var showFilter:Boolean = false;
+
+			[Bindable]
+			public var showViewFilterBox:Boolean=true;
+			
+			[Bindable]
+			public var showFloorPlanOuterContainer:Boolean=true;
+			
+			[Bindable]
+			public var showLayersDropDown:Boolean=true;
+			
+			[Bindable]
+			public var showViewLabel:Boolean=true;
+			
+			[Bindable]
+			public var showMainContainer:Boolean=true;
+			
+			[Bindable]
+			public var showToolbarViewStack:Boolean=true;
+
+			[Bindable]
+			public var showLockDragDrop:Boolean=false;
+			
+			[Bindable]
+			public var fixtureDataReceivedAt:Date = null;
+			
+			private var xaxis:int = 0;
+			private var yaxis:int = 0;
+			private var fid:int = 1;
+
+			public var m_propertyId:String;
+			public var m_propertyType:String;
+			public var m_propertyMode:String;
+			public var m_propertyModeId:String;
+			
+			// Function needs to be public as it is called from fixture and gateway renderer
+			public function getServerTime() : Date
+			{
+				return GlobalUtils.getServerTime(fpModel.serverGMTOffset);
+			}
+			
+			private function onCreationComplete() : void
+			{
+				trace("onCreationComplete", "FP {" + m_propertyId + ", " + m_propertyType + ", " + m_propertyMode + "}");
+			}
+			
+			private function loadComplete(event:Event) : void
+			{
+				trace("loadComplete", "FP {" + m_propertyId + ", " + m_propertyType + ", " + m_propertyMode + "}");
+				img.addEventListener(FlexEvent.UPDATE_COMPLETE, fitImageToScreen);
+			}
+			
+			private function fitImageToScreen(event:FlexEvent) : void
+			{
+				minSliderValue = 100;
+				img.scaleX = img.scaleY = floorPlanChart.scaleX = floorPlanChart.scaleY = 1;
+				img.removeEventListener(FlexEvent.UPDATE_COMPLETE, fitImageToScreen);
+				floorPlanChart.width = img.width;
+				floorPlanChart.height = img.height;
+				panCanvas.validateNow();
+				for(var i:int=0; i<20; i++)
+				{
+					if(panCanvas.maxHorizontalScrollPosition > 0 || panCanvas.maxVerticalScrollPosition > 0)
+					{
+						minSliderValue = minSliderValue-5;
+						zoomHandler();
+					}
+				}
+				maxXaxis = img.width;
+				maxYaxis = img.height;
+				// TODO - handle radius
+				//yaxis = img.height - fixturePlotSeries.radius;
+				yaxis = img.height - 30;
+			}
+			
+			private function addListeners() : void
+			{
+				floorPlanChart.addEventListener(MouseEvent.MOUSE_MOVE , onMouseMove);
+				floorPlanChart.addEventListener(DragEvent.DRAG_ENTER, onDragEnter);
+				floorPlanChart.addEventListener(DragEvent.DRAG_OVER , onDragOver);
+				floorPlanChart.addEventListener(DragEvent.DRAG_DROP , onDragDrop);
+				floorPlanChart.addEventListener(DragEvent.DRAG_EXIT , onDragExit);
+			}
+			
+			private function removeListeners() : void
+			{
+				floorPlanChart.removeEventListener(MouseEvent.MOUSE_MOVE , onMouseMove);
+				floorPlanChart.removeEventListener(DragEvent.DRAG_ENTER, onDragEnter);
+				floorPlanChart.removeEventListener(DragEvent.DRAG_OVER , onDragOver);
+				floorPlanChart.removeEventListener(DragEvent.DRAG_DROP , onDragDrop);
+				floorPlanChart.removeEventListener(DragEvent.DRAG_EXIT , onDragExit);
+			}
+			
+			public function resetDataOnFloorChange() : void
+			{
+				
+				fpModel.commissionedFixtureData.filterFunction = null;
+				fpModel.commissionedFixtureData.refresh();
+				
+				
+				removeSelection();
+				autoComplete.textInput.text = "";
+				minSliderValue = 100;
+				
+				fpModel.commissionedFixtureData.removeAll();
+				
+				fpModel.commissionedGatewayData.removeAll();
+				
+				loadFloorPlan();
+			}
+			
+			public function loadFloorPlan() : void
+			{
+				trace("loadFloorplan", "FP {" + m_propertyId + ", " + m_propertyType + ", " + m_propertyMode + "}");
+				// NOTE: The floor plan will only be for floor, hence even for area we need to load its floor's floorplan
+				// TODO: The property id should be area's floor id
+				if(m_propertyType!=Constants.FLOOR)
+				{
+					return;
+				}
+				var imageURL:String = Constants.serverurl +  "org/facility/getFloorPlan"  + "/" + m_propertyId +"?ts="+new Date().time;
+				trace("loadFloorplan", imageURL);
+				img.load(imageURL);
+			}
+			
+			public function getFloorPlanData() : void
+			{
+				handleChange(null);
+				fpModel.searchData.removeAll();
+				fpModel.fixtureDataReceived = false;
+				fpModel.gatewayDataReceived = false;
+				
+				
+				if(!floorPlanChart.contextMenu)
+					floorPlanChart.contextMenu = fpModel.floorPlanContextMenu;
+				
+				// Get server time offset from GMT
+				serverGMTOffsetController.getServerGMTOffset();
+				fixtureController.getFloorPlanFixtureData(m_propertyMode,m_propertyType,m_propertyId);
+				gatewayController.getFloorPlanGatewayData(m_propertyMode,m_propertyType,m_propertyId);
+				
+				//floorPlanContextMenuController.manageFloorPlanContextMenu();
+				fpModel.showSaveAsPdfButton=true;
+				
+			}
+			
+			public function setMode() : void
+			{
+				fixturePlotSeries.addEventListener(FlexEvent.UPDATE_COMPLETE, refreshFixturePlotSeries);
+				gatewayPlotSeries.addEventListener(FlexEvent.UPDATE_COMPLETE, refreshGatewayPlotSeries);
+				FixtureIconRenderer.rendererType = Constants.LIGHT_LEVEL;
+				FixtureIconRenderer.imageStatus = Constants.LIGHT_LEVEL;
+				
+				if(m_propertyMode == Constants.FLOORPLAN)
+				{
+					floorplanMode = true;
+					layersDropDown.dataProvider = fpModel.layersDataGroup;
+					layersDropDown.selectedIndex = 0;
+					floorPlanContextMenuController.createFloorPlanContextMenu();
+					floorPlanChart.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+				}
+			}
+			
+			private function refreshFixturePlotSeries(event:FlexEvent) : void
+			{
+				if(fixturePlotSeries.items.length == 0)
+				{
+					// If there were some items displayed earlier and now they are getting filtered out then remove the earlier item labels if any
+					removeItemLabels();
+					return;
+				}
+			}
+			
+			private function refreshGatewayPlotSeries(event:FlexEvent) : void
+			{
+				if(gatewayPlotSeries.items && gatewayPlotSeries.items.length == 0)
+					return;
+			}
+			
+			private function removeItemLabels() : void
+			{
+				// Remove all the labels from the background canvas
+				for (var i:int = bgCanvas.numChildren - 1; i >= 0; i--) {
+					if(bgCanvas.getChildAt(i) is Label)
+						bgCanvas.removeChildAt(i);
+				}
+			}
+			
+			private function zoomHandler():void 
+			{
+				FlexGlobals.topLevelApplication.removeMarquee()
+				floorPlanChart.scaleX = slider.value/100;
+				floorPlanChart.scaleY = slider.value/100;
+				
+				img.scaleX = slider.value/100;
+				img.scaleY = slider.value/100;
+				
+				validateNow();
+			}
+			
+			private function zoom( event:MouseEvent, str:String ) : void
+			{
+				FlexGlobals.topLevelApplication.removeMarquee();
+				switch(str)
+				{
+					case "doubleClick" : 
+						if(event.target is Image)
+							return;
+						slider.value = slider.value + 25;
+						break;
+					
+					case "mouseWheel" : 
+						event.stopImmediatePropagation();
+						slider.value = (event.delta > 0) ? (slider.value + 25) : (slider.value - 25);
+						break;
+					
+					case "originalSize" : 
+						slider.value = slider.minimum;
+						break;
+				}
+				
+				if(slider.value > slider.maximum)
+				{
+					slider.value = slider.maximum;
+					return;
+				}
+				
+				if(slider.value < slider.minimum)
+				{
+					slider.value = slider.minimum;
+					return;
+				}
+				
+				zoomHandler();
+				
+				var initHorizontalScrollPosition:int = panCanvas.horizontalScrollPosition;
+				var initVerticalScrollPosition:int = panCanvas.verticalScrollPosition;
+				
+				var stagePoint:Point = new Point();
+				stagePoint.x = event.stageX;
+				stagePoint.y = event.stageY;
+				
+				var localPoint:Point = panCanvas.globalToLocal(stagePoint);
+				panCanvas.horizontalScrollPosition = initHorizontalScrollPosition + localPoint.x - (panCanvas.width/2);
+				panCanvas.verticalScrollPosition = initVerticalScrollPosition + localPoint.y - (panCanvas.height/2);
+			}
+			
+			private function onMouseDown(event:MouseEvent) : void
+			{
+				if(panEnabled)
+					floorPlanChart.selectionMode = event.ctrlKey ? "multiple" : "single";
+				
+				panCanvas.addEventListener(MouseEvent.MOUSE_UP, handleChange);
+			}
+			
+			private function onMouseMove( event:MouseEvent ):void
+			{
+				if(event.target is Image)
+				{
+					/** 
+					 * Item renderer of the plot series is the drag initiator
+					 **/ 
+					var dragInitiator:UIComponent = event.target.parent as UIComponent;
+					
+					/**
+					 * Adding the item renderer of the plot series as the dragSource. 
+					 * DragSource will contain the data of fixture/switch/gateway
+					 **/
+					var dragSource:DragSource = new DragSource();
+					var format:String = event.target.parent.name;
+					dragSource.addData(event.target.parent.data.item, format);
+					var dragProxy:Image = new Image();
+					dragProxy.source = event.target.source;
+					dragProxy.width = 16;
+					dragProxy.height = 16;
+					
+					DragManager.doDrag(dragInitiator, dragSource, event, dragProxy, 
+						dragInitiator.width/2 - dragInitiator.contentMouseX, dragInitiator.height/2 - dragInitiator.contentMouseY);
+					
+					// This check is required because if the item which is not selected is being dragged then the selected items also get 
+					// dragged. So clear the selected item first. But we need to do this only when dragging ( that is primary key down) and
+					// not for the general mouse move.
+					if(event.buttonDown == true)						
+						handleChange(event);
+				} 
+			}
+			
+			private function onDragEnter(event:DragEvent) : void
+			{
+				event.preventDefault();
+				DragManager.acceptDragDrop(event.target as UIComponent);
+				DragManager.showFeedback(DragManager.MOVE);
+			}
+			
+			private function onDragOver(event:DragEvent) : void
+			{
+				event.preventDefault();				
+				event.currentTarget.showDropFeedback(event);
+			}
+			
+			private function onDragDrop(event:DragEvent) : void
+			{
+				// Remove the blue border that is shown aroud the drop target
+				event.currentTarget.hideDropFeedback(event);
+			}
+			
+			private function onDragExit(event:DragEvent) : void
+			{
+				event.preventDefault();
+				event.currentTarget.hideDropFeedback(event);
+			}
+			public function handleChange(event:*):void 
+			{
+				panCanvas.removeEventListener(MouseEvent.MOUSE_UP, handleChange);
+				
+				if(fpModel.selectedItems.length > 0)
+					removeSelection();
+				
+				if(!event)
+					return;
+				
+				if((event.currentTarget is PlotChart && event.currentTarget.selectedChartItem) || event.currentTarget is PanComponent)
+				{
+					var series:Array = floorPlanChart.series;
+					for (var i:int=0; i<series.length; i++) 
+					{
+						var seriesItems:Array = series[i].selectedItems;
+						for(var j:int=0; j<seriesItems.length; j++)
+						{
+							seriesItems[j].itemRenderer.filters = [glowFilter];
+							fpModel.selectedItems.push(seriesItems[j]);
+							
+							if(seriesItems[j].itemRenderer.name == Constants.FIXTURE_RENDERER)
+							{
+								fpModel.selectedFixtures.addItem(seriesItems[j]);
+							}
+							else if(seriesItems[j].itemRenderer.name == Constants.GATEWAY_RENDERER)
+							{
+								fpModel.selectedGateways.addItem(seriesItems[j]);
+							}
+						}
+					}
+				}
+				//floorPlanContextMenuController.manageFloorPlanContextMenu();
+			}
+			
+			private function panTo(xValue:int, yValue:int) : void
+			{
+				panCanvas.horizontalScrollPosition = (xValue - 8) * (floorPlanChart.scaleX);
+				panCanvas.verticalScrollPosition = (floorPlanChart.height - yValue - 12) * (floorPlanChart.scaleY);
+			}
+			
+			private function onPanImageClick(event:MouseEvent) : void
+			{
+				floorPlanChart.selectionMode = "single";
+				panCanvas.panningEnabled = true;
+				panEnabled = true;
+				panSelectionImage.source = Images.PanSelectionEnabled;
+				multipleSelectionImage.source = Images.MultipleSelection;
+			}
+			private function imgHttpStatus(evt:HTTPStatusEvent):void
+			{
+				switch (evt.status) 
+				{
+					case 200: // Valid image, do nothing.
+						break;
+					default:
+						img.source = Images.DefaultFloorPlan;
+						fitImageToScreen(null);
+						break;
+				}
+			}
+			private function setCursor(event:MouseEvent) : void
+			{
+				if((event.target is PlotChart) && (panCanvas.panningEnabled))
+				{
+					panCanvas.cursorManager.setCursor(Images.PanningCursor)
+				}
+			}
+			
+			public function onAutoSelect() : void
+			{
+				if(fpModel.selectedFixtures.length < 1)
+				{
+					FlexGlobals.topLevelApplication.showAlertMarquee(Constants.NO_FIXTURE_SELECTED_ERROR, true);
+					return;
+				}
+				
+				dimFixtureController.onAutoSelect(m_propertyId);
+			}
+			
+			private function onKeyUp(event:KeyboardEvent) : void
+			{
+			}
+			private function pinOrUnpin(event:MouseEvent) : void
+			{
+			}
+			
+			private function onDimmerMouseUp(event:FlexEvent) : void
+			{
+				manageDimmerControl(event.currentTarget.value.toString(), 'rel');
+			}
+			
+			
+			private function manageDimmerControl(dimmerValue:String, dimmingType:String) : void
+			{
+				if(fpModel.selectedFixtures.length < 1)
+				{
+					FlexGlobals.topLevelApplication.showAlertMarquee(Constants.NO_FIXTURE_SELECTED_ERROR, true); 
+					brightnessSlider.value = 0;
+					return;
+				}
+				dimFixtureController.manageDimmerControl(m_propertyId,dimmerValue, dimmingType);
+				brightnessSlider.value = 0;
+			}
+			
+			private function onMultipleSelectionImageClick(event:MouseEvent) : void
+			{
+			}
+			private function refreshFloorPlan() : void
+			{
+				getFloorPlanData();
+				FlexGlobals.topLevelApplication.showAlertMarquee("Refreshing...", true);
+				//gatewayPlotSeries.addEventListener(FlexEvent.UPDATE_COMPLETE, refreshGatewayPlotSeries);
+			}
+			private function onLockDragDropChange( event:Event ) : void
+			{
+				event.currentTarget.selected ? removeListeners() : addListeners();
+			}
+			private function selectUnselectSnapToGrid( event:Event ) : void
+			{
+				event.currentTarget.selected ? showGridLines() : hideGridLines();
+			}
+			private function showGridLines() : void
+			{
+				gridDirection="both";
+				if(!lockDragDrop.selected)
+					snapToGrid.enabled = true;
+				gridPixelsSlider.enabled = true;
+			}
+			private function hideGridLines() : void
+			{
+				gridDirection="none";
+				snapToGrid.enabled = false;
+				gridPixelsSlider.enabled = false;
+			}
+			private function snapToGridDevices() : void
+			{
+			}
+			private function setGridPixels() : void
+			{
+				gridPixels = gridPixelsSlider.value;
+				gridLines.invalidateDisplayList()
+			}
+			private function selectAll() : void
+			{
+				removeSelection();
+				
+				var series:Array = floorPlanChart.series;
+				for (var i:int=0; i<series.length; i++) 
+				{
+					var seriesItems:Array = series[i].items;
+					for(var j:int=0; j<seriesItems.length; j++)
+					{
+						seriesItems[j].itemRenderer.filters = [glowFilter];
+						fpModel.selectedItems.push(seriesItems[j]);
+						
+						if(seriesItems[j].itemRenderer.name == Constants.FIXTURE_RENDERER)
+						{
+							fpModel.selectedFixtures.addItem(seriesItems[j]);
+						}
+						else if(seriesItems[j].itemRenderer.name == Constants.GATEWAY_RENDERER)
+						{
+							fpModel.selectedGateways.addItem(seriesItems[j]);
+						}
+					}
+				}
+				floorPlanContextMenuController.manageFloorPlanContextMenu();
+			}
+			
+			protected function autoCompleteLabelToItemFunction(value:String):Object{ 
+				return null;// this will prevent typed in value from being added to the collection
+			}
+			
+			private function changeLayer(event:IndexChangeEvent) : void
+			{
+				if(m_propertyMode == Constants.FLOORPLAN)
+				{
+					fixturePlotSeries.dataProvider = fpModel.commissionedFixtureData;
+					FixtureIconRenderer.rendererType = event.currentTarget.selectedItem.label;
+					
+					// Check when the data was last read from the server; if it's been more than 9 minutes then let's read it again
+					var date:Date = new Date();
+					
+					if( fixtureDataReceivedAt != null){
+						var value:Number = ((date.time - fixtureDataReceivedAt.time)/1000)/60;
+					}
+					
+					//If Previous Selection was Fixture Lamp Status then Remove All Selection. This is done due to the fact that whenever subfilter having selection and 
+					// user returns to other Other Fixture view, wrong Fixture was getting selected due to change the Dataprovider to the FixturePlotseries
+					
+					if(event.oldIndex == 11)
+					{
+						removeSelection();
+					}
+					
+					// The number 9 is based on the following logic. The status icon turns grey when the 
+					// last_connectivity is more than 15 minutes old. The fixture stats is received by
+					// the server every 5 minutes. So if the floor plan receives the data say 4 minutes after
+					// the stats were received for a fixture then there is a 4 minute window before the floor plan
+					// refreshes the data (if the refresh happens after 15 minutes) when the fixture status will be grey.
+					// To avoid this window, the refresh is done at 9 minutes instead of 15
+					if(value > 9)
+						refreshFloorPlan();
+					
+					fpModel.commissionedFixtureData.filterFunction = null;
+					fpModel.commissionedFixtureData.refresh();
+					
+					//bulbStatusMode=false;
+					if((event.currentTarget.selectedItem.label == Constants.FIXTURE_STATUS) ||
+						(event.currentTarget.selectedItem.label == Constants.LIGHT_LEVEL) ||
+						(event.currentTarget.selectedItem.label == Constants.AMBIENT_STATUS) ||
+						(event.currentTarget.selectedItem.label == Constants.OCCUPANCY_STATUS) ||
+						(event.currentTarget.selectedItem.label == Constants.TEMPERATURE_STATUS) || (event.currentTarget.selectedItem.label == Constants.BULB_STATUS))
+					{
+						FixtureIconRenderer.imageStatus = event.currentTarget.selectedItem.label;
+						showFilter = false;
+						
+					}
+					/*else if(event.currentTarget.selectedItem.label == Constants.FIXTURE_LAMP_STATUS )
+					{
+						bulbStatusMode=true;
+						createFilterBulbStatus(); 
+					}*/
+					else if((event.currentTarget.selectedItem.label == Constants.FIXTURE_NAME) ||
+						(event.currentTarget.selectedItem.label == Constants.FIXTURE_MAC))
+					{
+						showFilter = false;
+					}
+					/*else if(event.currentTarget.selectedItem.label == Constants.FIXTURE_AREA)
+					{
+						if(m_propertyType == Constants.AREA)
+						{
+							showFilter = false;
+						}
+						else
+						{
+							createAreaFilterData();
+						}					 
+					}
+					else if(event.currentTarget.selectedItem.label == Constants.FIXTURE_PROFILE)
+					{
+						createProfileFilterData();
+					}
+					else if(event.currentTarget.selectedItem.label == Constants.MOTION_GROUP ||  event.currentTarget.selectedItem.label == Constants.SWITCH_GROUP )
+					{
+						createGroupsFilterData(event.currentTarget.selectedItem.label);
+					}*/
+					fixturePlotSeries.invalidateDisplayList();
+				}
+				
+			}
+			
+			public function applyFilters( obj:Object, glowType:String) : void
+			{
+				if(obj.type == Constants.FIXTURE)
+				{
+					for(var i:int = 0; i<fixturePlotSeries.items.length; i++)
+					{
+						if(obj.id == fixturePlotSeries.items[i].item.id)
+						{
+							if(glowType == "glowFilter")
+								fixturePlotSeries.getChildAt(i).filters = [glowFilter];
+							else if(glowType == "")
+								fixturePlotSeries.getChildAt(i).filters = [];
+							break;
+						}
+					}
+				}
+				else if(obj.type == Constants.GATEWAY)
+				{
+					for(var j:int = 0; j<gatewayPlotSeries.items.length; j++)
+					{
+						if(obj.id == gatewayPlotSeries.items[j].item.id)
+						{
+							if(glowType == "glowFilter")
+								gatewayPlotSeries.getChildAt(j).filters = [glowFilter];
+							else if(glowType == "")
+								gatewayPlotSeries.getChildAt(j).filters = [];
+							break;
+						}
+					}
+				}
+			}
+			
+			private function resetData() : void
+			{
+				fpModel.selectedFixtures.removeAll();
+				fpModel.selectedGateways.removeAll();
+			}
+			
+			private function onDropDownOpen(event:Event) : void
+			{
+				(event.currentTarget.dropDown as UIComponent).maxHeight = UIComponent.DEFAULT_MAX_HEIGHT;
+			}
+			
+			/**
+			 * Used to set the width and position of the search combobox 
+			 **/
+			private function comboOpenHandler(e:Event) : void
+			{
+				var comboBox:ComboBox = e.currentTarget as ComboBox;
+				comboBox.dropDown.width = 120;
+				comboBox.dropDown.x = comboBox.dropDown.x - comboBox.dropDown.width + comboBox.width;
+			}
+			
+			public function removeSelection() : void
+			{
+				var arrayLength:int = fpModel.selectedItems.length;
+				
+				for (var j:int=0; j<arrayLength; j++)
+				{
+					if(fpModel.selectedItems[0] is PlotSeriesItem)
+					{
+						var seriesItem:PlotSeriesItem = fpModel.selectedItems[0];
+						seriesItem.itemRenderer.filters = [];
+						fpModel.selectedItems.splice(0,1);
+					}
+					else
+					{
+						applyFilters(fpModel.selectedItems[0], ""); // Only one item in selectedItems at this time. So removing the selection for the item at index 0.
+						fpModel.selectedItems.splice(0,1);
+					}
+				}
+				resetData();
+			}
+			
+			/** 
+			 * Function called when a new device is searched from the search combobox 
+			 **/
+			private function onSelectedItemChanged(event:IndexChangeEvent) : void
+			{
+				if(fpModel.selectedItems.length > 0)
+					removeSelection();
+				
+				if(!autoComplete.selectedItem)
+					return;
+				
+				if(autoComplete.selectedItem.type == Constants.FIXTURE)
+				{
+					for(var l:int=0; l<fpModel.commissionedFixtureData.length; l++)
+					{
+						if(fpModel.commissionedFixtureData[l].id == autoComplete.selectedItem.id)
+						{
+							fpModel.selectedItems.push(fpModel.commissionedFixtureData[l]);
+							fpModel.selectedFixtures.addItem(fpModel.commissionedFixtureData[l]);
+							break;
+						}
+					}
+				}
+				else if(autoComplete.selectedItem.type == Constants.GATEWAY)
+				{
+					for(var m:int=0; m<fpModel.commissionedGatewayData.length; m++)
+					{
+						if(fpModel.commissionedGatewayData[m].id == autoComplete.selectedItem.id)
+						{
+							fpModel.selectedItems.push(fpModel.commissionedGatewayData[m]);
+							fpModel.selectedGateways.addItem(fpModel.commissionedGatewayData[m]);
+							break;
+						}
+					}
+				}
+								
+				applyFilters(fpModel.selectedItems[0], "glowFilter"); // Only one item in selectedItems at this time. So removing the selection for the item at index 0.
+				
+				//panTo(autoComplete.selectedItem.xaxis, autoComplete.selectedItem.yaxis);
+				//manageFloorPlanContextMenu();
+			}
+			
+			
+		]]>
+	</fx:Script>
+	
+	<!-- Top bar with filters, brightness bar, etc-->
+	<mx:ViewStack id="toolbarViewStack" visible="{showToolbarViewStack}" width="100%"
+				  includeInLayout="{showToolbarViewStack}" verticalGap="0">
+		<mx:HBox width="100%" horizontalAlign="center" verticalAlign="middle">
+			<mx:HBox id="viewFilterBox" visible="{showViewFilterBox}" width="100%"
+					 includeInLayout="{showViewFilterBox}" paddingLeft="10" paddingRight="10"
+					 verticalAlign="middle">
+				<mx:Text id="viewLabel" text="{Constants.VIEW}" includeInLayout="{showViewLabel}" visible="{showViewLabel}" 
+						 color="0xd42720" fontWeight="bold"/>
+				<s:DropDownList id="layersDropDown" width="150" includeInLayout="{showLayersDropDown}" visible="{showLayersDropDown}"
+								color="0xd42720"
+								change="changeLayer(event)"
+								open="onDropDownOpen(event)" skinClass="com.enlightedinc.components.skin.VariableRowDropDownList">
+				</s:DropDownList>
+				<!--<s:DropDownList id="filterDropDown" width="150"
+								color="0xd42720"
+								change="filterChange(event)"
+								visible="{showFilter}" includeInLayout="{showFilter}" skinClass="com.enlightedinc.components.skin.VariableRowDropDownList"/>-->
+				<mx:Text text="{Constants.FIND}"
+						 color="0xd42720" fontWeight="bold"
+						 visible="{showSearch}" includeInLayout="{showSearch}"/>
+				<s:ComboBox id="autoComplete" 
+							width="120" height="25"
+							dataProvider="{fpModel.searchData}"
+							open="comboOpenHandler(event)"
+							labelField="name"
+							labelToItemFunction="autoCompleteLabelToItemFunction"
+							change="onSelectedItemChanged(event)"
+							visible="{showSearch}" includeInLayout="{showSearch}"/>
+				
+				<mx:HBox visible="{floorplanMode}" horizontalAlign="center"
+						 includeInLayout="{floorplanMode}" verticalAlign="middle">
+					<mx:Text color="0xd42720" fontWeight="bold"
+							 text="{Constants.OVERRIDE_LIGHT_LEVEL}"/>
+					<s:Button width="45" label="{Constants.OFF}"
+							  click="manageDimmerControl('0', 'abs')" color="0xd42720"
+							  toolTip="{Constants.OFF}"/>			
+					<components:CustomHSlider id="brightnessSlider"
+											  changeEnd="onDimmerMouseUp(event)" maximum="99"
+											  minimum="-99" skinClass="{CustomHSliderSkin}"
+											  snapInterval="5"/>
+					<s:Button width="40" label="{Constants.ON}"
+							  click="manageDimmerControl('100', 'abs')" color="0xd42720"
+							  toolTip="{Constants.FULL_ON}"/>
+					<s:Button label="{Constants.AUTO_LIGHT_LEVEL}" click="onAutoSelect()"
+							  color="0xd42720"/>
+				</mx:HBox>
+			</mx:HBox>
+			
+			<mx:Spacer width="100%"/>
+			
+			<mx:HBox paddingRight="10" horizontalAlign="center" verticalAlign="middle">
+				<s:Button id="saveAsPdfButton" name="{Constants.SAVE_AS_PDF}"
+						  label="{Constants.SAVE_AS_PDF}" 
+						  toolTip="{Constants.SAVE_AS_PDF}"
+						  click="pdfController.saveAsPdf(event)"
+						  color="0xd42720"
+						  visible="{fpModel.showSaveAsPdfButton}" includeInLayout="{fpModel.showSaveAsPdfButton}"/>
+			</mx:HBox>
+			
+		</mx:HBox>
+	</mx:ViewStack>
+	<!-- Pin panel -->
+	<mx:HBox width="100%" horizontalAlign="right">
+		<mx:Box visible="{!slidingToolsWindow.visible}" styleName="pinBox">
+			<mx:Image id="pinImage" buttonMode="true" click="pinOrUnpin(event)"
+					  source="{Images.LeftArrow}" toolTip="{Constants.PIN_TOOLS_WINDOW}"/>
+		</mx:Box>
+	</mx:HBox>
+	<mx:HBox id="mainContainer" visible="{showMainContainer}" width="100%" height="100%"
+			 horizontalGap="0" includeInLayout="{showMainContainer}" keyUp="onKeyUp(event)">
+		<mx:HDividedBox id="hdivbox" width="100%" height="100%">
+			<mx:HBox id="floorPlanOuterContainer" visible="{showFloorPlanOuterContainer}"
+					 width="100%" height="100%" horizontalGap="0"
+					 includeInLayout="{showFloorPlanOuterContainer}">
+				<components:PanComponent id="panCanvas" width="100%" height="100%"
+										 doubleClick="zoom(event, 'doubleClick')"
+										 doubleClickEnabled="true"
+										 mouseOut="panCanvas.cursorManager.removeAllCursors()"
+										 mouseOver="setCursor(event)"
+										 mouseWheel="zoom(event, 'mouseWheel')">
+					<mx:Image id="img" complete="loadComplete(event)"
+							  httpStatus="imgHttpStatus(event)"/>
+					<mx:PlotChart id="floorPlanChart" itemRollOut="realTimeStatsController.onItemRollOut(event)"
+								  itemRollOver="realTimeStatsController.onItemRollOver(event)" selectionMode="multiple"
+								  showDataTips="false">
+						<mx:backgroundElements>
+							<mx:GridLines id="gridLines" gridDirection="{gridDirection}">
+								<mx:horizontalStroke>
+									<mx:SolidColorStroke color="0xCCCCCC" weight="1"/>
+								</mx:horizontalStroke>
+								<mx:verticalStroke>
+									<mx:SolidColorStroke color="0xCCCCCC" weight="1"/>
+								</mx:verticalStroke>
+							</mx:GridLines>
+							<mx:CartesianDataCanvas id="bgCanvas" includeInRanges="true"/>
+						</mx:backgroundElements>
+						<mx:horizontalAxisRenderers>
+							<mx:AxisRenderer axis="{haxis}" showLabels="false" showLine="false"
+											 tickLength="0"/>
+						</mx:horizontalAxisRenderers>
+						<mx:verticalAxisRenderers>
+							<mx:AxisRenderer axis="{vaxis}" showLabels="false" showLine="false"
+											 tickLength="0"/>
+						</mx:verticalAxisRenderers>
+						<mx:horizontalAxis>
+							<mx:LinearAxis id="haxis" interval="{gridPixels}" maximum="{maxXaxis}"
+										   minimum="0"/>
+						</mx:horizontalAxis>
+						<mx:verticalAxis>
+							<mx:LinearAxis id="vaxis" interval="{gridPixels}" maximum="{maxYaxis}"
+										   minimum="0"/>
+						</mx:verticalAxis>
+						<mx:series>
+							<mx:PlotSeries id="fixturePlotSeries"
+										   displayName="Floor Map"
+										   dataProvider="{fpModel.commissionedFixtureData}"
+										   xField="xaxis" yField="yaxis"
+										   selectable="true">
+								<mx:itemRenderer>
+									<fx:Component>
+										<renderers:FixtureIconRenderer/>
+									</fx:Component>
+								</mx:itemRenderer>
+							</mx:PlotSeries>
+							
+							<mx:PlotSeries id="gatewayPlotSeries"
+										   dataProvider="{fpModel.commissionedGatewayData}"
+										   xField="xaxis" yField="yaxis"
+										   selectable="true">
+								<mx:itemRenderer>
+									<fx:Component>
+										<renderers:GatewayIconRenderer/>
+									</fx:Component>
+								</mx:itemRenderer>
+							</mx:PlotSeries>
+						</mx:series>
+					</mx:PlotChart>
+				</components:PanComponent>
+				
+				<!-- Tools Window holiding pin, unpin, panning mode, multiple selection mode, heat map, slider, etc-->
+				<mx:VBox id="slidingToolsWindow" visible="{pinToolsWindow}" height="100%"
+						 hideEffect="{wiperight}" includeInLayout="{pinToolsWindow}"
+						 showEffect="{wipeleft}" styleName="slidingToolsWindow">
+					<mx:Box width="100%" styleName="pinBox">
+						<mx:Image id="pinOrUnpinImage" buttonMode="true" click="pinOrUnpin(event)"
+								  source="{Images.RightArrow}"
+								  toolTip="{Constants.UNPIN_TOOLS_WINDOW}"/>
+					</mx:Box>
+					
+					<mx:HBox width="100%" horizontalAlign="center">
+						<mx:Image id="multipleSelectionImage" buttonMode="true"
+								  click="onMultipleSelectionImageClick(event)" mouseChildren="false"
+								  source="{Images.MultipleSelectionEnabled}"/>
+						<mx:Image id="panSelectionImage" buttonMode="true"
+								  click="onPanImageClick(event)" mouseChildren="false"
+								  source="{Images.PanSelection}"/>
+						<mx:Image id="fitToScreenImage" buttonMode="true"
+								  click="zoom(event, 'originalSize')" mouseChildren="false"
+								  source="{Images.FitToScreen}"/>
+						<mx:Image id="refreshImage" buttonMode="true" click="refreshFloorPlan()"
+								  mouseChildren="false" source="{Images.Refresh}"/>
+					</mx:HBox>
+					
+					<mx:Text text="{Constants.ZOOM}"/>
+					
+					<components:CustomHSlider id="slider" change="zoomHandler()" liveDragging="true"
+											  maximum="300" minimum="{minSliderValue}"
+											  snapInterval="5" value="{minSliderValue}"/>
+					
+					<mx:HRule visible="{floorplanMode}" width="100%"
+							  includeInLayout="{floorplanMode}"/>
+					
+					<mx:Box paddingLeft="3">
+						<s:CheckBox id="lockDragDrop" visible="{showLockDragDrop}" width="115"
+									label="Lock Drag Drop" change="onLockDragDropChange(event)"
+									includeInLayout="{showLockDragDrop}" selected="true"/>
+						
+						<s:CheckBox id="showGridCB" visible="{showGridOptions}" width="115"
+									label="Show Grid" change="selectUnselectSnapToGrid(event)"
+									includeInLayout="{showGridOptions}" selected="false"/>
+					</mx:Box>
+					
+					<components:CustomHSlider id="gridPixelsSlider" visible="{showGridOptions}"
+											  change="setGridPixels()" enabled="false"
+											  includeInLayout="{showGridOptions}"
+											  liveDragging="true" maximum="100" minimum="2"
+											  snapInterval="1" value="16"/>
+					
+					<s:Button id="snapToGrid" visible="false" width="110"
+							  label="Snap To Grid" click="snapToGridDevices()" enabled="false"
+							  includeInLayout="false"/>
+					
+					<mx:HRule visible="{showGridOptions}" width="100%"
+							  includeInLayout="{showGridOptions}"/>
+					
+					<s:Button visible="{floorplanMode}" width="110" label="Select All"
+							  click="selectAll()" includeInLayout="{floorplanMode}"/>
+				</mx:VBox>
+			</mx:HBox>
+		</mx:HDividedBox>
+	</mx:HBox>
+</mx:VBox>

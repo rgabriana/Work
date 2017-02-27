@@ -1,0 +1,3 @@
+KERNEL=="sd[b-z]1",SUBSYSTEMS=="usb",ACTION=="add",PROGRAM="/etc/udev/addUSB.sh",NAME="%c"
+
+SUBSYSTEMS=="usb",ACTION=="remove",PROGRAM="/etc/udev/removeUSB.sh"

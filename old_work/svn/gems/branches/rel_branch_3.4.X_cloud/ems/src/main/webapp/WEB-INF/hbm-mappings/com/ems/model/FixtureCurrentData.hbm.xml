@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+
+	<class name="com.ems.model.FixtureCurrentData" table="fixture_current_data">
+	    
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null" />
+				    
+	    <property name="wattage" type="java.lang.Integer" update="true"
+			insert="true" column="wattage" />
+			
+		<property name="dimmerControl" type="java.lang.Integer"
+			update="true" insert="true" column="dimmer_control" />
+
+		<property name="currentState" type="java.lang.String" update="true"
+			insert="true" column="current_state" />
+
+		<property name="lastOccupancySeen" type="java.lang.Integer"
+			update="true" insert="true" column="last_occupancy_seen" />
+
+		<property name="lightLevel" type="java.lang.Integer" update="true"
+			insert="true" column="light_level" />
+			
+		<property name="bulbLife" type="java.lang.Double" update="true"
+			insert="true" column="bulb_life" />
+			
+		<property name="lastConnectivityAt" type="java.util.Date"
+			update="true" insert="true" column="last_connectivity_at" />
+			
+		<property name="lastStatsRcvdTime" type="java.util.Date"
+			update="true" insert="true" column="last_stats_rcvd_time" />
+
+		<property name="profileChecksum" type="java.lang.Short"
+			update="true" insert="true" column="profile_checksum" />
+
+		<property name="globalProfileChecksum" type="java.lang.Short"
+			update="true" insert="true" column="global_profile_checksum" />
+
+		<property name="currApp" type="java.lang.Short" update="true"
+			insert="true" column="curr_app" />
+					
+		<property name="avgTemperature" type="java.lang.Short"
+			update="true" insert="true" column="avg_temperature" />
+
+		<property name="baselinePower" type="java.math.BigDecimal"
+			update="true" insert="true" column="baseline_power" />
+				
+	</class>
+</hibernate-mapping>
+ 	  

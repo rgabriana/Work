@@ -1,0 +1,18 @@
+#!/bin/bash -x
+
+source /etc/environment
+
+sudo mkdir -p ${ENL_APACHE_HOME}/tempExtract
+sudo mkdir -p ${ENL_APACHE_HOME}/em_mgmt
+
+echo "*** Taking backup of Existing application ***"
+
+sudo cp -R ${ENL_APACHE_HOME}/em_mgmt/ ${APACHE2_PATH}/tempExtract/
+
+sudo rm -rf ${ENL_APACHE_HOME}/em_mgmt/
+
+if [ -d /tmp/em_mgmt_new ]
+then
+        rm -rf /tmp/em_mgmt_new/
+fi
+

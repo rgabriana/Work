@@ -1,0 +1,30 @@
+# !/bin/bash
+
+cp /opt/enlighted/interfaces /etc/network/interfaces
+
+# set the PGPORT and PGPASSWORD environment variables in bashrc
+echo "export PGPORT=5433" >> /etc/bash.bashrc
+echo "export PGPORT=5433" >> /etc/profile
+echo "export PGPASSWORD=postgres" >> /etc/bash.bashrc
+echo "export PGPASSWORD=postgres" >> /etc/profile
+echo "JAVA_HOME=/usr/lib/jvm/java-8-oracle" >> /etc/profile
+echo "JAVA_HOME=/usr/lib/jvm/java-8-oracle" >> /etc/default/tomcat6
+echo "export PGPORT=5433" >> /etc/apache2/envvars
+# set the postgres user password
+sudo -u postgres psql postgres < /opt/enlighted/psqlpassword.sql
+
+# copy the pg_hba.conf file to postgres config folder
+cp /opt/enlighted/pg_hba.conf /etc/postgresql/9.3/main/pg_hba.conf
+
+# create the ssl folder in apache and copy the key and pem files
+mkdir -p /etc/apache2/ssl
+cp /opt/enlighted/apache* /etc/apache2/ssl/.
+cp /opt/enlighted/rewrite_prg.pl /etc/apache2/.
+cp /opt/enlighted/000-default.conf /etc/apache2/sites-available/.
+sudo bash /success.sh
+sudo cp /home/enlighted/.pgpass /var/www/.
+sudo chown www-data:www-data /var/www/.pgpass
+sudo rm /bin/sh
+sudo ln -s /bin/bash /bin/sh
+rm $0
+shutdown -r now

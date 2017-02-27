@@ -1,0 +1,272 @@
+package com.ems.security;
+
+import java.io.File;
+import java.io.IOException;
+import java.security.Security;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import javax.annotation.Resource;
+
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ems.model.LdapSettings;
+import com.ems.model.SystemConfiguration;
+import com.ems.model.Tenant;
+import com.ems.model.User;
+import com.ems.mvc.util.UserAuditLoggerUtil;
+import com.ems.security.exception.FacilityNotAssignedException;
+import com.ems.security.exception.SSLCertificateNotFoundException;
+import com.ems.server.ServerMain;
+import com.ems.service.FacilityTreeManager;
+import com.ems.service.LdapAuthenticationManager;
+import com.ems.service.LdapSettingsManager;
+import com.ems.service.SystemConfigurationManager;
+import com.ems.service.UserManager;
+import com.ems.types.AuthenticationType;
+import com.ems.types.RoleType;
+import com.ems.types.TenantStatus;
+import com.ems.types.UserAuditActionType;
+import com.ems.types.UserStatus;
+import com.novell.ldap.LDAPConnection;
+import com.novell.ldap.LDAPJSSESecureSocketFactory;
+
+@Transactional(propagation = Propagation.REQUIRED)
+public class EmsauthenticationProvider implements AuthenticationProvider {
+
+	@Resource
+	UserAuditLoggerUtil userAuditLoggerUtil;
+
+	@Resource
+	UserManager userManager;
+
+	@Resource
+	PasswordEncoder passwordEncoder;
+
+	@Resource
+	SystemConfigurationManager systemConfigurationManager;
+
+	@Resource
+	FacilityTreeManager facilityTreeManager;
+	@Resource
+	LdapSettingsManager ldapSettingsManager;
+	@Resource
+	LdapAuthenticationManager ldapAuthenticationManager;
+	String ldapEmail;
+
+	@Override
+	public Authentication authenticate(Authentication authentication)
+			throws AuthenticationException {
+		AuthenticationType authenticationType = AuthenticationType.DATABASE;
+		ArrayList<LdapSettings> ldapSettings = new ArrayList<LdapSettings>();
+
+		SystemConfiguration authTypeConfig = systemConfigurationManager
+				.loadConfigByName("auth.auth_type");
+		if (authTypeConfig != null) {
+			authenticationType = AuthenticationType.valueOf(authTypeConfig
+					.getValue());
+		}
+
+		User user = null;
+
+		if (authenticationType == AuthenticationType.LDAP
+				&& (!"admin".equals(authentication.getName()))) {
+			// Authenticate against Ldap
+			ldapSettings.add(ldapSettingsManager.loadById(1l));
+			if (!authenticateAgainstLdap(authentication, ldapSettings)) {
+
+				throw new BadCredentialsException("Credential is not correct");
+			}
+			// add the retrieved email id from ldap server to database. As roles
+			// are assigned to email ids in EM. we need to do this
+			if (ldapEmail != null) {
+				user = userManager.loadUserByUserName(ldapEmail);
+				// userManager.save(user);
+			} else {
+				throw new BadCredentialsException(
+						" Mail id not found on Ldap server.");
+			}
+		} else {
+			// Authenticate against Database
+			user = userManager.loadUserByUserName(authentication.getName());
+			if (user != null) {
+				String encodedPassword = passwordEncoder.encodePassword(
+						authentication.getCredentials().toString(), null);
+				if (!encodedPassword.equals(user.getPassword())) {
+					throw new BadCredentialsException("Password is not correct");
+				}
+			} else {
+				throw new BadCredentialsException("Credential is not correct");
+			}
+		}
+
+		// Let's check if the user belongs to a tenant and tenant is not active
+		// or
+		// do not have any facility assigned.
+		if (user != null) {
+
+			if (user.getStatus() == UserStatus.INACTIVE) {
+				throw new DisabledException("Account is inactive");
+			}
+
+			if (user.getTenant() != null) {
+				Tenant tenant = user.getTenant();
+
+				if (tenant.getStatus() == TenantStatus.INACTIVE) {
+					throw new DisabledException(
+							"Tenant is inactive. Please contact Administrator");
+				}
+			}
+
+			if (user.getRole().getRoleType() != RoleType.Admin) {
+				if (facilityTreeManager
+						.loadFacilityHierarchyForUser(user.getId())
+						.getTreeNodeList().isEmpty()) {
+					throw new FacilityNotAssignedException(
+							"No facility assigned to User. Please contact Administrator");
+				}
+			}
+			
+		} else {
+			throw new AuthenticationCredentialsNotFoundException(
+					"User not Found");
+		}
+
+		Authentication authenticated = null;
+
+		EmsAuthenticatedUser authenticatedUser = new EmsAuthenticatedUser(user);
+		authenticated = new UsernamePasswordAuthenticationToken(
+				authenticatedUser, null, authenticatedUser.getAuthorities());
+		SecurityContextHolder.getContext().setAuthentication(authenticated);
+
+		userAuditLoggerUtil.log("User " + user.getEmail() + " logged in",
+				UserAuditActionType.Login.getName());
+		return authenticated;
+	}
+
+	@Override
+	public boolean supports(Class<? extends Object> arg0) {
+		return true;
+	}
+
+	private boolean authenticateAgainstLdap(Authentication authentication,
+			ArrayList<LdapSettings> ldapSettings) {
+		Iterator<LdapSettings> serverListIterator = ldapSettings.iterator();
+		String host;
+		int port;
+		String username = authentication.getName();
+		String password = authentication.getCredentials().toString();
+		String passwordEncryptionType;
+		int version = LDAPConnection.LDAP_V3;
+		String baseDn = null;
+		// Full qualified dn name pass with the bind fuction to get
+		// authenticated. This is generated from other parameter
+		// we acquire from LdapSetting.
+		ArrayList<String> baseDnWithUserName = new ArrayList<String>();
+		// Used when anonymous access is not granted by ldap server. This is
+		// mostly needed with AD server
+		// to get "cn" value which need to be binded with the authentication
+		// call in AD server.
+		String anonymousBaseDn;
+		String anonymousPassword;
+		LDAPConnection cnConn = null;
+
+		while (serverListIterator.hasNext()) {
+			LdapSettings ldapObject = serverListIterator.next();
+			host = ldapObject.getServer();
+			port = ldapObject.getPort();
+			passwordEncryptionType = ldapObject.getPasswordEncrypType();
+			anonymousBaseDn = ldapObject.getNonAnonymousDn();
+			anonymousPassword = ldapObject.getNonAnonymousPassword();
+			baseDn = ldapObject.getBaseDns();
+
+			// Prepare dn for authentication depending on the server we are
+			// communicating with (AD/Apache)
+			if (ldapObject.getUserAttribute().equals("sAMAccountName")) {
+				// If SSL enabled we need the Ldap connection object to be able
+				// to handle SSL connection with AD server
+				if (ldapObject.isTls()) {
+					/* A JSSE Security provider must be configured */
+					Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
+					// check for certificate being present.
+					File certifcateFile = new File(ServerMain.getInstance()
+							.getTomcatLocation() + "../../Enlighted/cacerts");
+					if (!certifcateFile.exists()) {
+						throw new SSLCertificateNotFoundException(
+								"LDAP SSL Certiicate not found. Please contact Administrator.");
+					}
+					// set the certificate to truststore.
+					System.setProperty("javax.net.ssl.trustStore", ServerMain
+							.getInstance().getTomcatLocation()
+							+ "../../Enlighted/cacerts");
+					// Set the socket factory for this SSL connection only
+					LDAPJSSESecureSocketFactory ssf = new LDAPJSSESecureSocketFactory();
+					cnConn = new LDAPConnection(ssf);
+				} else {
+					// if not ssl use simple Ldap connection
+					cnConn = new LDAPConnection();
+				}
+				// collect cn and email address for person who wants to login.
+				String temp;
+				String cnValue = ldapAuthenticationManager.searchCn(version,
+						cnConn, host, port, username, baseDn,
+						ldapObject.getUserAttribute(), anonymousBaseDn,
+						anonymousPassword, ldapObject.isAllowAnonymous());
+				ldapEmail = ldapAuthenticationManager.getLdapUserEmail(version,
+						cnConn, host, port, username, baseDn,
+						ldapObject.getUserAttribute(), anonymousBaseDn,
+						anonymousPassword, ldapObject.isAllowAnonymous());
+				temp = "cn=" + cnValue + ",";
+				String baseTemp[] = baseDn.split(":");
+				for (int i = 0; i < baseTemp.length; i++)
+					baseDnWithUserName.add(temp + baseTemp[i]);
+			} else if (ldapObject.getUserAttribute().equals("uid")) {
+				String temp;
+				temp = ldapObject.getUserAttribute();
+				temp += "=" + username + ",";
+				String baseTemp[] = baseDn.split(":");
+				for (int i = 0; i < baseTemp.length; i++)
+					baseDnWithUserName.add(temp + baseTemp[i]);
+			} else {
+				throw new DisabledException(
+						"User Attribute in Ldap Setting page is not correct contact your Admin");
+			}
+
+			// we need to split multiple base dns and make multiple dn to
+			// authenticate against it.
+			Iterator<String> it = baseDnWithUserName.iterator();
+			while (it.hasNext()) {
+				String name = it.next();
+				// Check whether it is SSL or simple communication . Communicate
+				// accordingly
+				if (ldapObject.isTls()) {
+					if (!ldapAuthenticationManager.SSLBindAuthentication(
+							version, cnConn, host, port, name, password)) {
+						continue;
+					} else
+						return true;
+				} else {
+					LDAPConnection simpleConn = new LDAPConnection();
+					if (!ldapAuthenticationManager.simpleBindAuthentication(
+							version, simpleConn, host, port, name, password)) {
+						continue;
+					} else
+						return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+}

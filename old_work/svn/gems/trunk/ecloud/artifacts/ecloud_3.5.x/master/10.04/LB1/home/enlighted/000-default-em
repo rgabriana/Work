@@ -1,0 +1,38 @@
+<VirtualHost *:443>
+	ServerAdmin webmaster@localhost
+	ServerName {serverName}
+
+	SSLEngine On
+	SSLCertificateFile	/etc/enlighted/CA/ssl/certs/us-tx-m-p-6854f521b058.enlightedcloud.net.pem
+	SSLCertificateKeyFile	/etc/enlighted/CA/ssl/private/us-tx-m-p-6854f521b058.enlightedcloud.net.key
+	SSLCACertificateFile	/etc/enlighted/CA/ssl/certs/enlca.crt
+	SSLCACertificatePath	/etc/enlighted/CA/ssl/
+	SSLCARevocationFile	/etc/enlighted/CA/ssl/crl/enlca.crl
+	SSLCARevocationPath	/etc/enlighted/CA/ssl/crl/
+	SSLOptions +ExportCertData +StdEnvVars
+	SSLVerifyClient none
+	SSLVerifyDepth  2
+
+	BrowserMatch "MSIE [2-6]" \
+                nokeepalive ssl-unclean-shutdown \
+                downgrade-1.0 force-response-1.0
+	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+
+	RewriteEngine On
+
+	ErrorLog /var/log/apache2/error.log
+	LogLevel warn
+
+	CustomLog /var/log/apache2/access.log combined
+
+	ProxyRequests on
+	
+	ProxyPass		/ems http://localhost:{port}/ems
+	ProxyPassReverse	/ems http://localhost:{port}/ems
+
+	<Location /ems>
+		Order allow,deny
+		Allow from all
+	</Location>
+	
+</VirtualHost>

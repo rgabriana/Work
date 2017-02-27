@@ -1,0 +1,12 @@
+# this file is managed by puppet
+/var/log/postgresql/*.log {
+       daily
+       rotate 7
+       minsize 250M
+       copytruncate
+       delaycompress
+       compress
+       notifempty
+       missingok
+       create 644  postgres postgres
+}

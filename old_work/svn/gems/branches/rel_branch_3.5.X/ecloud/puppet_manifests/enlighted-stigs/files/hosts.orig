@@ -1,0 +1,19 @@
+# This file is being managed by puppet 
+127.0.0.1	localhost
+192.168.0.224	puppet-master.enlightedcloud.net	puppet-master puppet
+192.168.0.15	master.enlightedcloud.net	master
+192.168.0.20	replica1.enlightedcloud.net	replica1
+192.168.0.21	replica2.enlightedcloud.net	replica2
+192.168.0.22	replica3.enlightedcloud.net	replica3
+192.168.0.23	replica4.enlightedcloud.net	replica4
+192.168.0.24	replica5.enlightedcloud.net	replica5
+192.168.0.25	replica6.enlightedcloud.net	replica6
+192.168.0.26	replica7.enlightedcloud.net	replica7
+192.168.0.27	replica8.enlightedcloud.net	replica8 
+192.168.0.28	replica9.enlightedcloud.net	replica9
+192.168.0.29	replica10.enlightedcloud.net	replica10
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters

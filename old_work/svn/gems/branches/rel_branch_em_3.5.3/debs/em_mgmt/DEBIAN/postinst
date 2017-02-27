@@ -1,0 +1,14 @@
+#!/bin/bash -x
+source /etc/environment
+#Check the tomcat status
+t2=$(sudo service $TOMCAT_SUDO_SERVICE status)
+
+if [[ $t2 =~ "not running"  ]]
+then
+        echo "Tomcat not running......."
+        sudo service $TOMCAT_SUDO_SERVICE start
+else
+        echo "Tomcat already running ..........:"
+fi
+
+

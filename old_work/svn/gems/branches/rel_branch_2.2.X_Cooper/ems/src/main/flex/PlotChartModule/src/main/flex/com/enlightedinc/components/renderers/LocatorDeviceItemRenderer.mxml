@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   xmlns:mx="library://ns.adobe.com/flex/mx" 
+		   width="100%" height="100%"
+		   name="{Constants.LOCATOR_DEVICE_RENDERER}"
+		   buttonMode="true"
+		   doubleClickEnabled="true" doubleClick="showLocatorDeviceDetails(event)"
+		   >
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.assets.images.Images;
+			import com.enlightedinc.components.Constants;
+			
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			
+			public function onUpdateComplete() : void
+			{
+				var locatorDeviceTypeStr:String = data.item.locatorDeviceType;
+				
+				if(locatorDeviceTypeStr == Constants.LOCATORDEVICE_ENLIGHTED_MANAGER)
+				{
+					locatorDeviceImage.source = Images.EnlightedManager ;
+				}
+				else if(locatorDeviceTypeStr == Constants.LOCATORDEVICE_EMERGENCY_FIXTURE) 
+				{
+					locatorDeviceImage.source = Images.EmergencyFixture ;
+				}
+				else if(locatorDeviceTypeStr == Constants.LOCATORDEVICE_NON_ENLIGHTED_FIXTURE) 
+				{
+					locatorDeviceImage.source = Images.NonEnlightedFixture ;
+				}
+			}
+					
+			private function showLocatorDeviceDetails(event:MouseEvent) : void
+			{
+				if((ExternalInterface.available) && (FlexGlobals.topLevelApplication.m_propertyMode == Constants.FLOORPLAN))
+				{
+					ExternalInterface.call("showLocatorDeviceForm", data.item.id,"","",Constants.FLOORPLAN);
+					FlexGlobals.topLevelApplication.showAlertMarquee("Please wait. Opening Locator Device Form details", true);
+				}
+				if((ExternalInterface.available) && (FlexGlobals.topLevelApplication.m_propertyMode == Constants.COMMISSION))
+				{
+					ExternalInterface.call("showLocatorDeviceForm", data.item.id,"","",Constants.COMMISSION);
+					FlexGlobals.topLevelApplication.showAlertMarquee("Please wait. Opening Locator Device Form details", true);
+				}
+			}
+			
+			
+		]]>
+	</fx:Script>
+	
+	<mx:Image id="locatorDeviceImage" width="16" height="16"/>
+	
+</mx:Canvas>

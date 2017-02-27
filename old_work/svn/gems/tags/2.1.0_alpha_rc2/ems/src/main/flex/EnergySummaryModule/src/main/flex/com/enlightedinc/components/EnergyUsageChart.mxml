@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:ColumnChart xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			 xmlns:s="library://ns.adobe.com/flex/spark" 
+			 xmlns:mx="library://ns.adobe.com/flex/mx"
+			 height="100%" width="100%"
+			 showDataTips="true"
+			 columnWidthRatio="0.5"
+			 maxColumnWidth="30"
+			 dataTipFunction="chartDataTipFunction"
+			 styleName="energyGraph"
+			 dataProvider="{CountsCalculator.getInstance().chartDataCollection}" creationComplete="init()" >
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="MMM DD"/>
+		<mx:DateFormatter id="yearDateFormatter" formatString="MMM YYYY"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.common.CountsCalculator;
+			
+			import mx.charts.HitData;
+			import mx.charts.chartClasses.IAxis;
+			import mx.charts.series.items.ColumnSeriesItem;
+			import mx.charts.series.items.LineSeriesItem;
+			import mx.collections.ArrayCollection;
+			import mx.utils.StringUtil;
+			
+			[Bindable]
+			public var dataPeriod:String;
+			
+			private var chartColumnItem:Object = new Object();
+			private var columnItemDictionary:Dictionary = new Dictionary();
+			
+			[Bindable]
+			public var rotationVal:Number =0;
+			
+			private function init():void{
+				columnItemDictionary['powerused'] = "Power Used";
+				columnItemDictionary['occsaving'] = "Occpancy Saving";
+				columnItemDictionary['ambientsaving'] = "Ambient Saving";
+				columnItemDictionary['tasktuneupsaving'] = "Task Tuneup Saving";
+			}
+			private function timeLabelFunction(categoryValue:Object, previousCategoryValue:Object, axis:CategoryAxis, categoryItem:Object) : String
+			{
+				var timeStr:String = categoryValue.slice(0,10);
+				var datestr:String="";
+				if(dataPeriod == Constants.WEEK || dataPeriod == Constants.MONTH || dataPeriod == Constants.MAX)
+				{
+					if(dataPeriod == Constants.WEEK)
+						rotationVal =0;
+					else
+						rotationVal =60;
+					datestr = categoryValue.slice(8,10) + "/" + categoryValue.slice(5,7) + "/" + categoryValue.slice(2,4);
+					return datestr;
+				}	
+				if(dataPeriod == Constants.DAY)
+				{
+					rotationVal =60;
+					datestr = categoryValue.slice(11,16);
+					return datestr;
+				}	
+				if(dataPeriod == Constants.YEAR)
+				{
+					rotationVal =0;
+					datestr = yearDateFormatter.format(timeStr);
+					return datestr//categoryValue.slice(5,7) + "/" + categoryValue.slice(2,4);
+				}	
+				return "";
+			}
+			
+			private function chartDataTipFunction(item:HitData):String 
+			{
+				if (item.element is ColumnSeries)
+				{
+					var cSI:ColumnSeriesItem = item.chartItem as ColumnSeriesItem;
+					var col:String = ColumnSeries(item.element).yField;
+					
+					var columnName:String = columnItemDictionary[col];
+					
+					var categoryValue:String = cSI.item.captureon;
+					var timeStr:String="";
+					if(dataPeriod == Constants.WEEK || dataPeriod == Constants.MONTH || dataPeriod == Constants.MAX)
+					{
+						timeStr =categoryValue.slice(8,10) + "/" + categoryValue.slice(5,7) + "/" + categoryValue.slice(2,4);
+					}	
+					if(dataPeriod == Constants.DAY)
+					{
+						timeStr =categoryValue.slice(11,16);
+					}	
+					if(dataPeriod == Constants.YEAR)
+					{
+						var str:String = categoryValue.slice(0,10);
+						timeStr =  yearDateFormatter.format(str);
+						//timeStr =categoryValue.slice(5,7) + "/" + categoryValue.slice(2,4);
+					}	
+					var itemValue:String= cSI.item[col] +"%";
+					return StringUtil.substitute("<b>{0}</b><br>{1}: {2}",timeStr, columnName, itemValue);
+				}
+				
+				return "";
+			}
+			
+		]]>
+	</fx:Script>
+		<mx:horizontalAxis>
+			<mx:CategoryAxis id="dateAxis" categoryField="captureon" labelFunction="timeLabelFunction" />
+		</mx:horizontalAxis>
+		<mx:verticalAxis>
+			<mx:LinearAxis id="energyAxis" displayName="%" minimum="0" maximum="100"/>
+		</mx:verticalAxis>
+		<mx:horizontalAxisRenderers>
+			<mx:AxisRenderer axis="{dateAxis}" labelRotation="{rotationVal}" canDropLabels="false">
+				<mx:axisStroke>
+					<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+				</mx:axisStroke>
+				<mx:tickStroke>
+					<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+				</mx:tickStroke>
+				<mx:minorTickStroke>
+					<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+				</mx:minorTickStroke>
+				<mx:labelRenderer>
+					<fx:Component>
+						<mx:Label toolTip="{this.customToolTip}">
+							<fx:Script><![CDATA[
+								[Bindable]
+								private var customToolTip:String;
+								override public function set data(value:Object):void{
+									if(value == null)
+										return;
+									customToolTip = value.text;
+									var length:int = value.text.toString().length;
+									if (length > 20) {
+										text = value.text.toString().substr(0, 20) + "...";
+									} else {
+										text = value.text;
+									}
+								}
+							]]></fx:Script>
+						</mx:Label>
+					</fx:Component>
+				</mx:labelRenderer>
+
+			</mx:AxisRenderer>
+			
+		</mx:horizontalAxisRenderers>
+		<mx:verticalAxisRenderers>
+			<mx:AxisRenderer axis="{energyAxis}"
+							 verticalAxisTitleAlignment="vertical" showLine="false"/>
+		</mx:verticalAxisRenderers>
+		
+		<mx:series>
+			<mx:ColumnSet type="stacked"> 
+				<mx:ColumnSeries id="poweredSeries"
+								 yField="powerused" >
+					<mx:fill>
+						<mx:LinearGradient>
+							<mx:entries>
+								<mx:GradientEntry 
+									color="0xff9900" 
+									ratio="0" 
+									alpha="1"
+									/>
+								<mx:GradientEntry 
+									color="0xffb23e" 
+									ratio=".33" 
+									alpha="1"
+									/>
+								</mx:entries>
+							</mx:LinearGradient>
+					</mx:fill>
+				</mx:ColumnSeries>
+				
+				<mx:ColumnSeries id="occupancySavingsSeries"
+								 yField="occsaving" >
+					<mx:fill>
+						<mx:LinearGradient>
+							<mx:entries>
+								<mx:GradientEntry 
+									color="0x569814" 
+									ratio="0" 
+									alpha="1"
+									/>
+								<mx:GradientEntry 
+									color="0x91bc67" 
+									ratio=".33" 
+									alpha="1"
+									/>
+							</mx:entries>
+						</mx:LinearGradient>
+					</mx:fill>
+				</mx:ColumnSeries>
+				
+				
+				<mx:ColumnSeries id="ambientSavingsSeries"
+								 yField="ambientsaving" >
+					<mx:fill>
+						<mx:LinearGradient>
+							<mx:entries>
+								<mx:GradientEntry 
+									color="0xffff33" 
+									ratio="0" 
+									alpha="1"
+									/>
+								<mx:GradientEntry 
+									color="0xffff66" 
+									ratio=".33" 
+									alpha="1"
+									/>
+							</mx:entries>
+						</mx:LinearGradient>
+					</mx:fill>
+				</mx:ColumnSeries>
+				
+				<mx:ColumnSeries id="taskTuningSavingsSeries"
+								 yField="tasktuneupsaving">
+					<mx:fill>
+						<mx:LinearGradient>
+							<mx:entries>
+								<mx:GradientEntry 
+									color="0x3299cc" 
+									ratio="0" 
+									alpha="1"
+									/>
+								<mx:GradientEntry 
+									color="0x80c0e0" 
+									ratio=".33" 
+									alpha="1"
+									/>
+							</mx:entries>
+						</mx:LinearGradient>
+					</mx:fill>
+				</mx:ColumnSeries>
+			</mx:ColumnSet>
+		</mx:series>
+</mx:ColumnChart>

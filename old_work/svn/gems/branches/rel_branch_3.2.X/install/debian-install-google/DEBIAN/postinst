@@ -1,0 +1,111 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+
+# Add AUTHBIND to tomcat6 script in /etc/default
+grep -v "AUTHBIND" /etc/default/tomcat6 > /tmp/tomcat6
+echo "AUTHBIND=yes" >> /tmp/tomcat6
+cp /tmp/tomcat6 /etc/default/tomcat6
+
+# Install SNAP Monitoring tool
+# if [ -x /etc/init.d/enLightedZigbeeGW ]; then
+# 	/usr/sbin/update-rc.d enLightedZigbeeGW start 98 2 3 4 5 . stop 20 0 1 6 .
+# fi
+
+#sudo iptables-restore /etc/iptables.rules
+
+check=$(apache2ctl -v)
+if [[ "$check" =~ "Apache/2" ]]
+    then
+        echo "*** Upgrade tomcat6 configuration as part of em management ***"
+    else
+	    #chmod 0440 /usr/local/google/home/enlighted/sudoers
+	#	sudo cp /usr/local/google/home/enlighted/sudoers /etc/
+	#	sudo chown root:root /etc/sudoers
+		
+		# Copy Tomcat server.xml to /etc/tomcat6/server.xml
+		cp /usr/local/google/home/enlighted/server.xml /etc/tomcat6/server.xml
+		
+		# Copy Tomcat web.xml to /etc/tomcat6/web.xml
+		cp /usr/local/google/home/enlighted/web.xml /etc/tomcat6/web.xml
+fi
+
+if [ ! -f "/var/lib/tomcat6/Enlighted/cloudServerInfo.xml" ]
+then
+    cp /usr/local/google/home/enlighted/cloudServerInfo.xml /var/lib/tomcat6/Enlighted/cloudServerInfo.xml
+fi
+
+#sudo chown root:root /etc/ssh/sshd_config
+sudo cp /usr/local/google/home/enlighted/tomcat6 /etc/init.d/
+sudo chown root:root /etc/init.d/tomcat6
+sudo chmod +x /etc/init.d/tomcat6
+chmod +x /usr/local/google/home/enlighted/*.sh
+
+#change permission on authorized keys
+chmod 755 /usr/local/google/home/enlighted/.ssh
+chmod 644 /usr/local/google/home/enlighted/.ssh/authorized_keys
+
+# Copy Tomcat tomcat-users.xml to /etc/tomcat6/tomcat-users.xml
+cp /usr/local/google/home/enlighted/tomcat-users.xml /etc/tomcat6/tomcat-users.xml
+# Copy Tomcat context.xml to /etc/tomcat6/context.xml
+cp /usr/local/google/home/enlighted/context.xml /etc/tomcat6/context.xml
+# 1000 is user id for enlighted user
+chown 1000:1000 /usr/local/google/home/enlighted/.pgpass
+chmod 600 /usr/local/google/home/enlighted/.pgpass
+chown -R 1000:1000 /usr/local/google/home/enlighted
+chown -R 1000:1000 /opt/enLighted
+chmod -R 777 /opt/enLighted/DB/
+chown -R tomcat6:tomcat6 /var/lib/tomcat6/Enlighted
+chmod 775 -R /var/lib/tomcat6/Enlighted
+chown -R tomcat6:tomcat6 /var/lib/tomcat6/webapps
+
+if [ -f "/etc/logrotate.d/tomcat6" ]
+then
+  sudo rm  -f /etc/logrotate.d/tomcat6
+fi
+
+if [ ! -f "/var/lib/tomcat6/webapps/ROOT/heartbeat.jsp" ]
+then
+    cp /usr/local/google/home/enlighted/heartbeat.jsp /var/lib/tomcat6/webapps/ROOT/heartbeat.jsp
+    chown tomcat6:tomcat6 /var/lib/tomcat6/webapps/ROOT/heartbeat.jsp
+else
+    
+    if [[ ! $(grep systat /var/lib/tomcat6/webapps/ROOT/heartbeat.jsp) =~ "systat" ]]
+    then
+        cp /usr/local/google/home/enlighted/heartbeat.jsp /var/lib/tomcat6/webapps/ROOT/heartbeat.jsp
+    	chown tomcat6:tomcat6 /var/lib/tomcat6/webapps/ROOT/heartbeat.jsp
+    fi
+fi
+
+if [[ ! $(grep maintenance /var/lib/tomcat6/webapps/ROOT/heartbeat.jsp) =~ "maintenance" ]]
+then
+    sed -i 's/\(<div\ id="systat">\)/\1<span\ id="maintenance">N<\/span>/' /var/lib/tomcat6/webapps/ROOT/heartbeat.jsp
+fi
+
+chmod -R 775 /var/lib/tomcat6/webapps/ROOT
+
+#ps -ef |grep postgresql |grep -v grep > /dev/null
+
+#if [ $? -eq 0 ]
+#then
+#   if [ `psql -q -U postgres -h localhost  -t -c "select count(*) from pg_database where datname='ems'"` -eq 1 ]
+#   then
+#		#remove the firstboot files
+#		sudo rm -rf /etc/firstboot/*
+#    else 
+#      	echo "*** ems DB not exists ***"
+#    fi
+#else
+#    echo "*** postgres not running ***"
+#fi
+
+sudo fromdos /var/lib/tomcat6/Enlighted/ems_log4j/log*.properties*
+sudo fromdos /var/lib/tomcat6/Enlighted/ems_log4j/*ableDebugLogging.sh
+
+sudo bash /usr/local/google/home/enlighted/setcron.sh
+
+sudo service cron restart
+
+
+sudo rm -f /usr/sbin/bacnetd
+sudo rm -rf /var/lib/tomcat6/Enlighted/bacnet*
+sudo rm -rf /opt/enLighted/DB/restoreDB.sh

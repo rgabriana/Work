@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.LdapSettings"
+        table="ldap_settings"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+        	 <generator class="native">
+                <param name="sequence">ldap_settings_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-SystemConfiguration.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+           
+        </id>
+
+   <property name="name" type="java.lang.String" update="true"
+			insert="true" column="name" />
+
+		<property name="server" type="java.lang.String" update="true"
+			insert="true" column="server" />
+
+		<property name="port" type="java.lang.Integer" update="true"
+			insert="true" column="port" />
+
+		<property name="tls" type="java.lang.Boolean" update="true"
+			insert="true" column="tls" />
+
+		<property name="passwordEncrypType" type="java.lang.String" update="true"
+			insert="true" column="password_encryp_type" />
+
+		<property name="baseDns" type="java.lang.String" update="true"
+			insert="true" column="base_dns" />
+
+		<property name="userAttribute" type="java.lang.String" update="true"
+			insert="true" column="user_attribute" />
+			
+	<property name="allowAnonymous" type="java.lang.Boolean" update="true"
+			insert="true" column="allow_anonymous" />
+
+	<property name="nonAnonymousDn" type="java.lang.String" update="true"
+			insert="true" column="non_anonymous_dn" />
+			
+		<property name="nonAnonymousPassword" type="java.lang.String" update="true"
+			insert="true" column="non_anonymous_password" />
+				
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-SystemConfiguration.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

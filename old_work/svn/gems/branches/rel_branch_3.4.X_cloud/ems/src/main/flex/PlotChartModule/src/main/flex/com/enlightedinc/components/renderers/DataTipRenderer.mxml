@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 creationComplete="updateData()"
+		 styleName="dataTipRenderer">
+	
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="YYYY-MM-DD JJ:NN:SS"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.assets.images.Images;
+			import com.enlightedinc.components.Constants;
+			import com.enlightedinc.utils.GlobalUtils;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			
+			private var lightLevel:Number;
+			private var ambientLevel:Number;
+			private var lastOccupancy:Number;
+			private var temperature:Number;
+			
+			[Bindable]
+			public var obj:Object;
+			
+			[Bindable]
+			private var showFixtureData:Boolean = false;
+			[Bindable]
+			private var showGatewayData:Boolean = false;
+			[Bindable]
+			private var showSwitchData:Boolean = false;
+			[Bindable]
+			private var showLocatorDeviceData:Boolean = false;
+			[Bindable]
+			private var showOnlyName:Boolean = false;
+			[Bindable]
+			public var connectivityDelay:Boolean = false;
+			[Bindable]
+			public var showBulbOutage:Boolean = false;
+			
+			[Bindable]
+			private var showPlugloadData:Boolean = false;
+			
+			public function updateData() : void
+			{
+				showOnlyName = (FlexGlobals.topLevelApplication.m_propertyMode != Constants.FLOORPLAN);
+				showBulbOutage = FlexGlobals.topLevelApplication.plotChartView.bulbStatusMode;
+				if(showOnlyName)
+				{
+					if(FlexGlobals.topLevelApplication.m_propertyMode ==Constants.IMAGE_UPGRADE && obj.imageUpgradeHoverStatus)
+					{
+						commissionName.text = obj.imageUpgradeHoverStatus;
+					}
+					else if(FlexGlobals.topLevelApplication.m_propertyMode == Constants.SCHEDULE_IMAGE_UPGRADE && (obj.type == Constants.FIXTURE || obj.type == Constants.GATEWAY || obj.type == Constants.WDS) ){
+						commissionName.text = obj.name + " (V: " + obj.version+")";
+					}
+					else
+					{
+						commissionName.text = obj.name;
+					}
+					return;
+				}
+				
+				if(showBulbOutage && obj.type == Constants.FIXTURE)
+				{
+					var calibratedDataTimeLblTxt:String = "Last Characterized DateTime:";
+					calibratedDataTimeLbl.text=calibratedDataTimeLblTxt;
+					connectivityDelay =false;
+					outagesensorName.text = obj.name;
+					var curveType:Number = obj.curvetype;
+					if(obj.fixtureOut==true || obj.lampOut==true )
+					{
+						calibratedDataTimeLbl.text="Last Outage DateTime:";
+						var outageTime:Date = createDate(obj.outageSince);
+						calibratedDataTimeText.text = dateFormatter.format(obj.outageSince);
+					}else if(obj.calibrated==true && curveType==1)
+					{
+						var outageTime1:Date = createDate(obj.lastCalibratedTime);
+						calibratedDataTimeText.text = dateFormatter.format(obj.lastCalibratedTime);
+					}else
+					{
+						calibratedDataTimeText.text="NA";
+					}
+					noOfBallast.text = obj.nooffixtures;
+					noOfLamps.text = obj.noofbulbs;
+					lampWattage.text= obj.bulbwattage;
+					//outageDescription.text = obj.outageDescription;
+					if(obj.fixtureOut==true)
+					{
+						outageType.text=Constants.FIXTURE_OUT;
+					}else if(obj.lampOut==true)
+					{
+						outageType.text=Constants.LAMP_OUT;
+					}else
+					{
+						outageType.text="NA";
+						//outageDescription.text = "NA";
+					}
+					return;
+				}else
+				{
+					//Set False for All other type other than Fixture
+					showBulbOutage= false;
+				}
+				
+				if(connectivityDelay)
+				{
+					var serverDate:Date = createDate(obj.lastconnectivityat);
+					sensorName.text = obj.name;
+					connectivityImage.source = Images.NoConnectivity;
+					connectivityText.text = dateFormatter.format(serverDate);
+					return;
+				}
+				
+				if(obj.type == Constants.FIXTURE)
+				{
+					showFixtureData = true;
+					
+					sensorDetails.text = obj.name + "  -  " + obj.currentprofile;
+					
+					if(obj.currentstate != null)
+					{
+						sensorDetails.text += "  -  ";
+						sensorDetails.text += obj.currentstate;
+					}
+					
+					lightLevel = obj.lightlevel;
+					ambientLevel = obj.ambientlight;
+					lastOccupancy = obj.lastoccupancyseen;
+					temperature = obj.avgtemperature;
+					
+					// Light Level Icon
+					if(lightLevel == 0)
+					{
+						lightLevelImage.source = Images.LightOff;
+					}
+					else if(lightLevel > 0 && lightLevel < 25)
+					{
+						lightLevelImage.source = Images.Light10On;
+					}
+					else if(lightLevel >= 25 && lightLevel < 50)
+					{
+						lightLevelImage.source = Images.Light25On;
+					}
+					else if(lightLevel >= 50 && lightLevel < 75)
+					{
+						lightLevelImage.source = Images.Light50On;
+					}
+					else if(lightLevel >= 75 && lightLevel < 100)
+					{
+						lightLevelImage.source = Images.Light75On;
+					}
+					else if(lightLevel == 100)
+					{
+						lightLevelImage.source = Images.LightFullOn;
+					}else
+					{
+						lightLevelImage.source = Images.LightOff;
+					}
+					
+					// Ambient Light icon
+					if(ambientLevel < 10)
+					{
+						ambientImage.source = Images.AmbientDark;
+					}
+					else if(ambientLevel >= 10 && ambientLevel < 30)
+					{
+						ambientImage.source = Images.AmbientDim;
+					}
+					else if(ambientLevel >= 30 && ambientLevel < 65)
+					{
+						ambientImage.source = Images.AmbientNormal;
+					}
+					else if(ambientLevel >= 65)
+					{
+						ambientImage.source = Images.AmbientBright;
+					}
+					
+					//Ocuupany Icon
+					if(lastOccupancy <= 30)
+					{
+						occupancyImage.source = Images.OccupancyOccupied;
+					}
+					else if(lastOccupancy > 30 &&  lastOccupancy< 300)
+					{
+						occupancyImage.source = Images.OccupancyJustVacated; 
+					}
+					else
+					{
+						occupancyImage.source = Images.OccupancyVacated;
+					}
+					
+					//Temperature Icon
+					if(temperature > 82)
+					{
+						temperatureImage.source = Images.TemperatureHot;
+					}
+					else if(temperature > 75 && temperature <= 82)
+					{
+						temperatureImage.source = Images.TemperatureWarm;
+					}
+					else if(temperature > 68 && temperature <= 75)
+					{
+						temperatureImage.source = Images.TemperatureNormal;
+					}
+					else if(temperature > 65 && temperature <= 68)
+					{
+						temperatureImage.source = Images.TemperatureCool;
+					}
+					else if(temperature <= 65)
+					{
+						temperatureImage.source = Images.TemperatureCold;
+					}
+					
+					lightLevelText.text = getDimmerControlString(obj.lightlevel);
+					wattageText.text = wattPrecision(Number(obj.wattage), obj.lightlevel);
+					ambientText.text = getLightLevelString(obj.ambientlight);
+					//ambientValue.text = getLightLevelValue(obj.ambientlight);
+					occupancyText.text = getOccupancyString(obj.lastoccupancyseen);
+					temperatureText.text = getTemperatureString(obj.avgtemperature);
+					temperatureValue.text = getTemperatureValue(obj.avgtemperature); 
+				} 
+				else if(obj.type == Constants.GATEWAY)
+				{
+					showGatewayData = true;
+					gatewayName.text = obj.name;
+					if(FlexGlobals.topLevelApplication.m_propertyMode == Constants.FLOORPLAN)
+					{
+						gatewayFixtureCount.text = "Bound Fixtures: " + obj.noofactivesensors;
+						gatewayFixtureCount.visible = true;
+						gatewayFixtureCount.includeInLayout = true;
+				}  
+					
+				}  
+				else if(obj.type == Constants.SWITCH)
+				{
+					showSwitchData = true;
+					switchName.text = obj.name;
+				}
+				else if(obj.type == Constants.WDS)
+				{
+					showSwitchData = true;
+					switchName.text = obj.name + "\nBattery Level: "+obj.batteryLevel+"\nCapture At: "+obj.captureAtStr;
+				}
+				else if(obj.type == Constants.LOCATORDEVICE)
+				{
+					showLocatorDeviceData= true;
+					locatorDeviceName.text = obj.name;
+					var locatorDeviceTypeStr:String = obj.locatorDeviceType;
+					var reg:RegExp = /_/g;
+					locatorDeviceType.text = locatorDeviceTypeStr.replace(reg, " ");
+				}else if(obj.type == Constants.PLUGLOAD)
+				{
+					showPlugloadData = true;
+					lastOccupancy = obj.lastoccupancyseen;
+					plugloadDetails.text = obj.name + "  -  " + obj.currentProfile;
+					if(obj.currentState != null)
+					{
+						plugloadDetails.text += "  -  ";
+						plugloadDetails.text += obj.currentState;
+					}
+					onOffText.text = getDimmerControlString(obj.avgVolts);
+					managedLoadText.text = wattPrecisionPlugload(obj.managedLoad);
+					unmanagedLoadValue.text = wattPrecisionPlugload(obj.unmanagedLoad);
+					//Ocuupany Icon
+					if(lastOccupancy <= 30)
+					{
+						ploccupancyImage.source = Images.OccupancyOccupied;
+					}
+					else if(lastOccupancy > 30 &&  lastOccupancy< 300)
+					{
+						ploccupancyImage.source = Images.OccupancyJustVacated; 
+					}
+					else
+					{
+						ploccupancyImage.source = Images.OccupancyVacated;
+					}
+					//temperature = obj.avgTemperature;
+					//Temperature Icon
+					/*
+					if(temperature > 82)
+					{
+						pltemperatureImage.source = Images.TemperatureHot;
+					}
+					else if(temperature > 75 && temperature <= 82)
+					{
+						pltemperatureImage.source = Images.TemperatureWarm;
+					}
+					else if(temperature > 68 && temperature <= 75)
+					{
+						pltemperatureImage.source = Images.TemperatureNormal;
+					}
+					else if(temperature > 65 && temperature <= 68)
+					{
+						pltemperatureImage.source = Images.TemperatureCool;
+					}
+					else if(temperature <= 65)
+					{
+						pltemperatureImage.source = Images.TemperatureCold;
+					}
+					*/
+					var currentPlState:String = obj.currentState;
+					if(currentPlState != null && currentPlState.toUpperCase()  == Constants.SAFETY_STATE.toUpperCase())
+					{
+						occupiedLabel.text = "Unknown";
+						ploccupancyText.text = "";
+					}else
+					{
+						if(!isNaN(lastOccupancy))
+							ploccupancyText.text = getOccupancyString(obj.lastoccupancyseen);
+						else
+							ploccupancyText.text = "Unknown";
+					}
+					//pltemperatureText.text = getTemperatureString(obj.avgTemperature);
+					//pltemperatureValue.text = getTemperatureValue(obj.avgTemperature); 
+				}
+			}
+			
+			public function setBackgroundColor(color:String) : void
+			{
+				this.setStyle("backgroundColor", color);
+				showFixtureData = false;
+				showGatewayData = false;
+				showSwitchData = false;
+				showLocatorDeviceData = false;
+				showOnlyName = false;
+				connectivityDelay = false;
+			}
+			
+			private function createDate(str:String) : Date
+			{
+				var date:Date=null;
+				if(str!=null)
+				{
+					date = new Date();
+					date.setFullYear(str.slice(0,4));
+					date.setMonth(str.slice(5,7));
+					date.setMonth(date.getMonth() - 1);
+					date.setDate(str.slice(8,10));
+					date.setHours(str.slice(11,13));
+					date.setMinutes(str.slice(14,16));
+					date.setSeconds(str.slice(17,19));
+				}
+				return date;
+			}
+			
+			private function getDimmerControlString(value:int):String
+			{
+				if(value < 0 || value > 100)
+				{
+					return "-";
+				}
+				if(value == 0)
+					return "Off";
+				else if(value == 100)
+					return "Full On";
+				else
+					return value + "% ON";
+			}
+			
+			private function wattPrecision(value:Number, lightLevel:Number) : String
+			{
+				if(lightLevel == 0)
+					return "0 W";
+				if(!value)
+					return "-";
+				else if(value < 0)
+					return "-";
+				else if (value >= 1000000)
+					return (value/1000000).toFixed(2) +" MW";
+				else if (value >= 1000)
+					return (value/1000).toFixed(2) +" kW";
+				else
+					return value.toFixed(2) + " W";
+			}
+			
+			private function wattPrecisionPlugload(value:Number) : String
+			{
+				if(value == 0)
+					return "0 W";
+				if(!value)
+					return "-";
+				else if(value < 0)
+					return "-";
+				else if (value >= 1000000)
+					return (value/1000000).toFixed(2) +" MW";
+				else if (value >= 1000)
+					return (value/1000).toFixed(2) +" kW";
+				else
+					return value.toFixed(2) + " W";
+			}
+			private function getLightLevelString(iLightLevel:Number):String
+			{
+				if(iLightLevel > 65)
+					return "Bright";
+				else if(iLightLevel > 30)
+					return "Normal";
+				else if(iLightLevel > 10)
+					return "Dim";
+				else
+					return "Dark";
+			}
+			
+			/* private function getLightLevelValue(iLightLevel:Number):String
+			{
+				return iLightLevel + " f.c.";
+			} */
+			
+			private function getOccupancyString(strOccValue:Number):String
+			{
+				var date:Date = new Date(0, 0, 0, 0, 0, strOccValue, 0);
+				if(date.getDay() > 0)
+				{
+					if(date.getHours() > 0)
+						return date.getDay().toString() + " days, " + date.getHours().toString() + " hrs ago";
+					else
+						return "Occupied:" + date.getDay().toString() + " days ago";
+				}
+				else if(date.getHours() > 0)
+				{
+					if(date.getMinutes() > 0)
+						return date.getHours().toString() + " hrs, " + date.getMinutes().toString() + " min ago";
+					else
+						return date.getHours().toString() + " hrs ago";
+				}
+				else if(date.getMinutes() > 0)
+				{
+					if(date.getSeconds() > 0)
+						return date.getMinutes().toString() + " min, " + date.getSeconds().toString() + " sec ago";
+					else
+						return date.getMinutes().toString() + " min ago";
+				}
+				else
+					return date.getSeconds().toString() + " sec ago";
+			}
+			
+			private function getTemperatureString(num:Number):String
+			{
+				if(num > 82)
+					return "Hot";
+				else if(num > 75)
+					return "Warm";
+				else if(num > 68)
+					return "Normal";
+				else if(num > 65)
+					return "Cool";
+				else if(num > 0)
+					return "Cold";
+				else
+					return "N/A";
+			}
+			
+			private function getTemperatureValue(num:Number):String
+			{
+				var temperaturStr:String ="";
+				var temperatureUnit:String = FlexGlobals.topLevelApplication.plotChartView.temperatureUnit;
+				if(temperatureUnit.toUpperCase()=="C")
+				{
+					temperaturStr = GlobalUtils.getFarenhitToCelicus(num).toFixed(1) + " C";
+				}else
+				{
+					temperaturStr = num + " F";
+				}
+				return temperaturStr;
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:VBox visible="{showFixtureData}" includeInLayout="{showFixtureData}"
+			 horizontalAlign="center">
+		<mx:HBox id="fixtureRenderer"
+				 styleName="fixtureTooltipRenderer">
+			<mx:VBox styleName="toolTipRendererBox">
+				<mx:Image id="lightLevelImage" width="16" height="16"/>
+				<s:Label id="lightLevelText"/>
+				<s:Label id="wattageText"/>
+			</mx:VBox>
+			<mx:VRule height="80"/>
+			<mx:VBox styleName="toolTipRendererBox">
+				<mx:Image id="ambientImage" width="16" height="16"/>
+				<s:Label id="ambientText"/>
+				<s:Label id="ambientValue"/>
+			</mx:VBox>
+			<mx:VRule height="80"/>
+			<mx:VBox styleName="toolTipRendererBox">
+				<mx:Image id="occupancyImage" width="16" height="16"/>
+				<s:Label text="Occupied"/>
+				<s:Label id="occupancyText"/>
+			</mx:VBox>
+			<mx:VRule height="80"/>
+			<mx:VBox styleName="toolTipRendererBox">
+				<mx:Image id="temperatureImage" width="16" height="16"/>
+				<s:Label id="temperatureText"/>
+				<s:Label id="temperatureValue"/>
+			</mx:VBox>
+		</mx:HBox>
+	
+		<s:Label id="sensorDetails"/>
+	</mx:VBox>
+	
+	<mx:VBox id="connectivityRenderer" 
+			 backgroundAlpha="0"
+			 visible="{connectivityDelay}" includeInLayout="{connectivityDelay}"
+			 styleName="toolTipRenderer">
+		<s:Label id="sensorName"/>
+		<mx:Image id="connectivityImage"/>
+		<s:Label id="connectivityLabel" text="Last Connected"/>
+		<s:Label id="connectivityText"/>
+	</mx:VBox>
+	
+	<mx:VBox id="bulbOutageRenderer" 
+			 backgroundAlpha="0"
+			 visible="{showBulbOutage}" includeInLayout="{showBulbOutage}" 
+			 styleName="toolTipRenderer">
+		<s:Label id="outagesensorName"/>
+		<mx:HRule width="180"/>
+		<s:Label id="ballastDetailsLbl" text="Ballast Details"/>
+		
+		<mx:HBox horizontalAlign="left">
+			<mx:VBox>
+				<s:Label id="noOfBallastLbl" text="No. Of Ballast:"/>
+				<s:Label id="noOfLampsLbl" text="No. Of Lamps Per Ballast:"/>
+				<s:Label id="ballastWattageLbl" text="Lamp Wattage:"/>
+			</mx:VBox>
+			<mx:VBox>
+				<s:Label id="noOfBallast"/>
+				<s:Label id="noOfLamps" />
+				<s:Label id="lampWattage" />
+			</mx:VBox>
+		</mx:HBox>
+		<mx:HRule width="180"/>
+		<s:Label id="calibratedDataTimeLbl" />
+		<s:Label id="calibratedDataTimeText"/>
+		<mx:HRule width="180"/>
+		<mx:HBox>
+			<s:Label id="outageTypeLbl" text="Outage Type :" textAlign="left"/>
+			<s:Label id="outageType" />
+		</mx:HBox>
+	
+	</mx:VBox>
+	
+	<mx:VBox id="gatewayRenderer"
+			 visible="{showGatewayData}" includeInLayout="{showGatewayData}"
+			 styleName="toolTipRenderer">
+		<s:Label id="gatewayName"/>
+		<s:Label id="gatewayFixtureCount"
+				 visible="false" includeInLayout="false"/>
+	</mx:VBox>
+	
+	<mx:HBox id="switchRenderer"
+			 visible="{showSwitchData}" includeInLayout="{showSwitchData}"
+			 styleName="toolTipRenderer">
+		<s:Label id="switchName"/>
+	</mx:HBox>
+	
+	<mx:VBox id="locatorDeviceRenderer"
+			 visible="{showLocatorDeviceData}" includeInLayout="{showLocatorDeviceData}"
+			 styleName="toolTipRenderer">
+		<s:Label id="locatorDeviceName"/>
+		<s:Label id="locatorDeviceType"/>
+	</mx:VBox>
+	
+	<mx:HBox id="commissionRenderer"
+			 visible="{showOnlyName}" includeInLayout="{showOnlyName}"
+			 styleName="toolTipRenderer">
+		<s:Label id="commissionName"/>
+	</mx:HBox>
+	
+	<!--<mx:HBox id="plugloadRenderer"
+			 visible="{showPlugloadData}" includeInLayout="{showPlugloadData}"
+			 styleName="toolTipRenderer">
+		<s:Label id="plugloadName"/>
+	</mx:HBox>-->
+	
+	<mx:VBox visible="{showPlugloadData}" includeInLayout="{showPlugloadData}"
+			 horizontalAlign="center">
+		<mx:HBox id="plugloadRenderer"
+				 styleName="fixtureTooltipRenderer">
+			<mx:VBox styleName="toolTipRendererBox">
+				<s:Label id="onOffText"/>
+				<s:Label id="managedLoadLbl" text="Managed Load"/>
+				<s:Label id="managedLoadText"/>
+			</mx:VBox>
+			<mx:VRule height="80"/>
+			<mx:VBox styleName="toolTipRendererBox">
+				<!--<mx:Image id="plambientImage" width="16" height="16"/>-->
+				<s:Label id="tt"/>
+				<s:Label id="unmanagedLoadLbl" text="Unmanaged Load"/>
+				<s:Label id="unmanagedLoadValue"/>
+			</mx:VBox>
+			<mx:VRule height="80"/>
+			<mx:VBox styleName="toolTipRendererBox">
+				<mx:Image id="ploccupancyImage" width="16" height="16"/>
+				<s:Label id="occupiedLabel" text="Occupied"/>
+				<s:Label id="ploccupancyText"/>
+			</mx:VBox>
+			<!--
+			<mx:VRule height="80"/>
+			<mx:VBox styleName="toolTipRendererBox">
+				<mx:Image id="pltemperatureImage" width="16" height="16"/>
+				<s:Label id="pltemperatureText"/>
+				<s:Label id="pltemperatureValue"/>
+			</mx:VBox>
+			-->
+		</mx:HBox>
+		
+		<s:Label id="plugloadDetails"/>
+	</mx:VBox>
+</mx:VBox>

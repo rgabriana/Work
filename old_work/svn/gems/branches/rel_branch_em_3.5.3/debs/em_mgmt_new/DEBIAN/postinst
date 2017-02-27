@@ -1,0 +1,255 @@
+#!/bin/bash -x
+source /etc/environment
+cd $ENLIGHTED_HOME/apache2/installation/
+
+sudo chmod 755 -R $EM_MGMT_BASE/em_mgmt/
+
+sudo mkdir -p $ENL_APP_HOME/Enlighted/UpgradeImages
+ 
+sudo chmod 775 $ENL_APP_HOME/Enlighted/UpgradeImages
+
+sudo chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted/UpgradeImages
+
+sudo rm -f /media/usb
+
+sudo cp $ENLIGHTED_HOME/usbmount.conf /etc/usbmount/
+sudo chown root:root  /etc/usbmount/usbmount.conf
+sudo chmod 644 /etc/usbmount/usbmount.conf
+
+sudo chmod 751 $TOMCAT_LOG/
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/adminpasswd" ]
+then
+	adminpass=$(psql -U postgres -x ems -c "select password from users where email = 'admin' limit 1" | grep password | cut -d " " -f3)
+	if test -z "$adminpass"
+	then
+		echo -n "admin" | md5sum | cut -d" " -f1 > $ENL_APP_HOME/Enlighted/adminpasswd
+	else
+		echo "$adminpass" > $ENL_APP_HOME/Enlighted/adminpasswd
+	fi
+	sudo chmod 775 $ENL_APP_HOME/Enlighted/adminpasswd
+	sudo chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted/adminpasswd
+fi
+
+sudo chmod 755 /bin/authadmin.sh
+
+# Remove tomcat-manager and tomcat-host-manager
+sudo rm -f $ENL_APP_HOME/conf/Catalina/localhost/manager.xml
+sudo rm -f $ENL_APP_HOME/conf/Catalina/localhost/host-manager.xml
+
+##Insert/update python variables in apache
+function  updatepythonenv(){
+	sudo sed -i "/$1/d" $2
+	sudo sed -i "$ a os.environ.setdefault(\"$1\", \"$3\")" $2
+}
+updatepythonenv ENL_APP_HOME $EM_MGMT_HOME/enlenv.py  $ENL_APP_HOME
+updatepythonenv ENL_TOMCAT_HOME $EM_MGMT_HOME/enlenv.py $ENL_TOMCAT_HOME
+updatepythonenv OPT_ENLIGHTED $EM_MGMT_HOME/enlenv.py $OPT_ENLIGHTED 
+updatepythonenv ENLIGHTED_HOME $EM_MGMT_HOME/enlenv.py $ENLIGHTED_HOME 
+updatepythonenv EM_MGMT_BASE $EM_MGMT_HOME/enlenv.py $EM_MGMT_BASE
+updatepythonenv ENL_APACHE_HOME $EM_MGMT_HOME/enlenv.py $ENL_APACHE_HOME 
+
+startapache=$(sudo /etc/init.d/apache2 start)
+if [[ "$startapache" =~ "done" ]]
+    then
+    	check=$(apache2ctl -t -D DUMP_MODULES)
+    	if [[ "$check" =~ "wsgi_module" ]]
+    	then
+    		echo "*** wsgi_module is already installed ***"
+    	else
+    		echo "*** Installing wsgi_module... ***"
+    		sudo rm -rf mod_wsgi-3.3/
+			sudo tar -xvf mod_wsgi-3.3.tar.gz
+			cd mod_wsgi-3.3/
+			sudo make install
+			
+			if [ $? -eq 0 ]
+			then
+				cd $ENLIGHTED_HOME/apache2/installation/
+				
+				sudo cp ./mod_wsgi.load $ENL_APACHE_HOME/mods-available/
+				sudo chown root:root $ENL_APACHE_HOME/mods-available/mod_wsgi.load
+				cd $ENL_APACHE_HOME/mods-enabled/
+				sudo ln -s ../mods-available/mod_wsgi.load
+				echo "*** wsgi_module is installed successfully ***"
+			else 
+				echo "*** Could Not install wsgi module successfully. Exit ***"
+				exit 1
+			fi
+    	fi
+        
+		check=$(sudo django-admin.py --version)
+    	if [[ "$check" =~ "1.4" ]]
+    	then
+    		echo "*** Django is already installed ***"
+    	else
+    	
+    		echo "*** Installing Django framework... ***"
+			cd $ENLIGHTED_HOME/apache2/installation/
+			
+			sudo rm -rf Django-1.4/
+			sudo tar -xvzf Django-1.4.tar.gz
+			cd ./Django-1.4 
+			sudo python setup.py install
+			if [ $? -eq 0 ]
+			then
+				echo "*** Django is installed successfully ***"
+			else 
+				echo "*** Could Not install Django successfully. Exit ***"
+				exit 1
+			fi
+		fi
+		
+		cd $ENLIGHTED_HOME/apache2/installation/
+		
+		sudo a2enmod mod_wsgi
+		sudo a2enmod ssl
+		sudo a2enmod rewrite
+		sudo a2enmod proxy
+		sudo a2enmod proxy_http
+        sudo a2enmod headers
+		
+		sudo cp ./httpd.conf $ENL_APACHE_HOME/httpd.conf
+		sudo chown root:root $ENL_APACHE_HOME/httpd.conf
+		
+		sudo mkdir $ENL_APACHE_HOME/ssl
+		sudo cp apache.key $ENL_APACHE_HOME/ssl/
+		sudo cp apache.pem $ENL_APACHE_HOME/ssl/
+		sudo chown -R root:root $ENL_APACHE_HOME/ssl/
+		
+		sudo cp apache2.conf $ENL_APACHE_HOME/apache2.conf
+		sudo chown root:root $ENL_APACHE_HOME/apache2.conf
+		
+		sudo cp ports.conf $ENL_APACHE_HOME/ports.conf
+		sudo chown root:root $ENL_APACHE_HOME/ports.conf
+		
+		sudo cp default $ENL_APACHE_HOME/sites-available/default
+		sudo chown root:root $ENL_APACHE_HOME/sites-available/default
+		
+		sudo cp proxy.conf $ENL_APACHE_HOME/mods-enabled/proxy.conf
+		sudo chown root:root $ENL_APACHE_HOME/mods-enabled/proxy.conf
+		
+		chmod 744 rewrite_prg.pl
+		sed -i "s|/var/lib/tomcat6|$ENL_APP_HOME|g" rewrite_prg.pl
+		sudo cp rewrite_prg.pl $ENL_APACHE_HOME/rewrite_prg.pl
+		sudo chown root:root $ENL_APACHE_HOME/rewrite_prg.pl
+		
+		fstabcheck=$(grep usb1 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb1"* ]]
+		then
+			echo "/dev/usb1 /media/usb1 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		fstabcheck=$(grep usb2 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb2"* ]]
+		then
+			echo "/dev/usb2 /media/usb2 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		fstabcheck=$(grep usb3 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb3"* ]]
+		then
+			echo "/dev/usb3 /media/usb3 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		fstabcheck=$(grep usb4 /etc/fstab | grep vfat)
+		if [[ "$fstabcheck" != *"usb4"* ]]
+		then
+			echo "/dev/usb4 /media/usb4 vfat defaults,user,dmask=000,fmask=111,nobootwait 0 0" >> /etc/fstab
+		fi
+		
+		sudo cp $ENLIGHTED_HOME/99-usb.rules /etc/udev/rules.d/99-usb.rules
+		sudo chown root:root /etc/udev/rules.d/99-usb.rules
+		
+		sudo cp $ENLIGHTED_HOME/addUSB.sh /etc/udev/addUSB.sh
+		sudo chown root:root /etc/udev/addUSB.sh
+		sudo chmod 755 /etc/udev/addUSB.sh
+		
+		sudo cp $ENLIGHTED_HOME/removeUSB.sh /etc/udev/removeUSB.sh
+		sudo chown root:root /etc/udev/removeUSB.sh
+		sudo chmod 755 /etc/udev/removeUSB.sh
+		
+		sudo chmod 777 $ENL_APP_HOME/Enlighted/emsmode
+		
+		sudo cp $ENLIGHTED_HOME/checkandsetemmode.sh /bin/checkandsetemmode.sh
+		sudo chown root:root /bin/checkandsetemmode.sh
+		sudo chmod 755 /bin/checkandsetemmode.sh
+		
+		sudo service udev restart
+		
+		sudo cp $ENLIGHTED_HOME/rc.local /etc/rc.local
+		sudo chown root:root /etc/rc.local
+		sudo chmod 755 /etc/rc.local
+		
+		sudo cp $ENLIGHTED_HOME/dailybackup.sh $OPT_ENLIGHTED/DB/dailybackup.sh
+		
+		chmod 0440 ./sudoers
+		sudo cp ./sudoers /etc/
+		sudo chown root:root /etc/sudoers
+		
+		cp ./server.xml $ENL_APP_HOME/conf/server.xml
+		
+		cp ./web.xml $ENL_APP_HOME/conf/web.xml
+		
+		# Add www-data to tomcat group
+		sudo sed -i.bak  's/\('$TOMCAT_USER':x:[0-9]*:\).*/\1www-data/' /etc/group
+		
+		mkdir $ENLIGHTED_HOME/django_cache
+		
+		sudo updatedb
+		
+		check=$(sudo locate "distribute-0.6.27-py2.6.egg/easy_install.py")
+		if [[ "$check" =~ "/usr/local/lib/python2.6/dist-packages/distribute-0.6.27-py2.6.egg/easy_install.py" ]]
+    	then
+    		echo "*** Django Easy Install is already installed ***"
+    	else
+			sudo rm -rf distribute-0.6.27/
+			sudo tar -xvzf distribute-0.6.27.tar.gz
+			cd ./distribute-0.6.27
+			sudo python setup.py install
+			if [ $? -eq 0 ]
+			then
+				echo "*** Django Easy Install is installed successfully ***"
+			else 
+				echo "*** Could Not install Django Easy Install successfully. Exit ***"
+				exit 1
+			fi
+		fi
+		
+		cd $ENLIGHTED_HOME/apache2/installation/
+		
+		check=$(sudo locate "piston/resource.py")
+		if [[ "$check" =~ "/usr/local/lib/python2.6/dist-packages/" ]]
+    	then
+    		echo "*** Django Piston is already installed ***"
+    	else
+			sudo rm -rf django-piston-0.2.3/
+			sudo tar -xvzf django-piston-0.2.3.tar.gz
+			cd ./django-piston-0.2.3
+			sudo python setup.py egg_info
+			sudo python setup.py install
+			if [ $? -eq 0 ]
+			then
+				echo "*** Django Piston is installed successfully ***"
+			else 
+				echo "*** Could Not install Django Piston successfully. Exit ***"
+				exit 1
+			fi
+		fi
+
+	else
+		echo "*** Could Not Start Apache Server. Contact Admin ***"
+		exit 1
+fi
+
+#Future backups should not use the stale ec data which might be based on different schema.
+rm -f $OPT_ENLIGHTED/DB/DBBK/daily_ec_dump.backup
+
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/emsmode" ]
+then
+	sudo cp $ENLIGHTED_HOME/emsmode $ENL_APP_HOME/Enlighted/
+	sudo chmod 777 $ENL_APP_HOME/Enlighted/emsmode
+	sudo chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted/emsmode
+fi
+

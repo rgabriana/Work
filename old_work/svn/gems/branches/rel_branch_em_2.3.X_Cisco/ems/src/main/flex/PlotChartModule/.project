@@ -1,0 +1,14 @@
+<projectDescription>
+  <name>PlotChartModule</name>
+  <comment>NO_M2ECLIPSE_SUPPORT: Project files created with the maven-eclipse-plugin are not supported in M2Eclipse.</comment>
+  <projects/>
+  <buildSpec>
+    <buildCommand>
+      <name>com.adobe.flexbuilder.project.flexbuilder</name>
+    </buildCommand>
+  </buildSpec>
+  <natures>
+    <nature>com.adobe.flexbuilder.project.flexnature</nature>
+    <nature>com.adobe.flexbuilder.project.actionscriptnature</nature>
+  </natures>
+</projectDescription>

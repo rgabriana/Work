@@ -1,0 +1,32 @@
+# /etc/sudoers
+#
+# This file MUST be edited with the 'visudo' command as root.
+#
+# See the man page for details on how to write a sudoers file.
+#
+
+Defaults	env_reset
+
+# Host alias specification
+
+# User alias specification
+
+# Cmnd alias specification
+
+# User privilege specification
+root	ALL=(ALL) ALL
+
+# Allow members of group sudo to execute any command after they have
+# provided their password
+# (Note that later entries override this, so you might need to move
+# it further down)
+%sudo ALL=(ALL) ALL
+#
+#includedir /etc/sudoers.d
+
+# Members of the admin group may gain root privileges
+%admin ALL=(ALL) ALL
+
+# tomcat6 given restricted permissions
+tomcat6 ALL=NOPASSWD: /bin/cp,/bin/ls,/bin/tar,/usr/bin/dpkg,/usr/bin/tee,/usr/sbin/dpkg-reconfigure,/etc/init.d/networking,/bin/date,/etc/init.d/tomcat6,/etc/init.d/dhcp3-server,/sbin/ifup,/sbin/ifdown,/usr/bin/killall,/sbin/reboot,/bin/sed,/bin/rm,/sbin/hwclock,/usr/bin/find,/var/lib/tomcat6/Enlighted/bacnet/bacnetLighting,/bin/pidof,/bin/kill
+

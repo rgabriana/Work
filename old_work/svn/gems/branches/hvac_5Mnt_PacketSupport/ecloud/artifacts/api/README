@@ -1,0 +1,22 @@
+Login
+curl -d "j_username=admin&j_password=xxx" -c cookie.tmp -k https://192.168.56.1/ecloud/j_spring_security_check
+
+Logout
+curl --get -b cookie.tmp  -k https://192.168.56.1/ecloud/j_spring_security_logout
+
+Get Facility hirearchy
+curl --get -b cookie.tmp -k https://192.168.56.1/ecloud/services/org/eminstance/emInstfacilityTree/50?ts=1402465147350
+
+
+#curl -v -X POST -b cookie.tmp -H"Content-Type: application/xml" -d @fixture.data -k
+curl --get -b cookie.tmp -k https://192.168.56.1/ecloud/services/org/fixture/list/{property}/{pid}
+
+curl --get -b cookie.tmp -k https://192.168.56.1/ecloud/services/org/gateway/list/{property}/{pid}
+
+Direct call on Replica Service
+curl --get --header "em_mac: 08:00:27:6c:a5:32" -v --cacert $CERTS/enlca.crt --key $CERTS/ecloud_replica.key --cert $CERTS/ecloud_replica.pem:ecloud_replica  https://in-pu-r-p-6854f5000b.enlightedcloud.net/em_cloud_instance/services/org/facilitytree/getEmFacilityTree/?ts=20202
+
+Direct call on EM server
+ts=date +"%s"
+Authorization=sha1sum(Apikey + SecretKey + ts)
+curl --get --header "Host: enlightedcloud.net" --header "Authorization:" --header "ApiKey:" --header "ts:" -v https://ecloud_ip/em_cloud_instance/services/org/facilitytree/getEmFacilityTree/?ts=20202

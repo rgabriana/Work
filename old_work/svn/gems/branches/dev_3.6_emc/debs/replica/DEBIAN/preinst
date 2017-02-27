@@ -1,0 +1,18 @@
+#!/bin/bash -x
+
+t1=$(sudo service tomcat6 status)
+if [[ $t1 =~ "is running"  ]]
+then
+        echo "Tomcat6 is running......."
+        sudo service tomcat6 stop
+else
+        echo "Tomcat6 not running ..........:"
+fi
+
+if [ -d /home/enlighted/upgrade ]
+then
+        rm -rf /home/enlighted/upgrade/*
+else
+        mkdir /home/enlighted/upgrade
+fi
+

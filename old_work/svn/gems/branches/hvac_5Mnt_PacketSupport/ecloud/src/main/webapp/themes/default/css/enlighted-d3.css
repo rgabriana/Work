@@ -1,0 +1,198 @@
+ body {
+     background-color: white;
+     color: black;
+}
+
+html body{ margin:5px 40px;
+			color: #333;
+			background-color: #ffffff!important;
+			font:13px arial,helvetica,clean,sans-serif;
+			min-height: 100%;
+			height: auto !important;
+			height:100%;
+			}
+
+ p {
+            font-family: sans-serif;
+            color: lime;
+        }
+        
+div.bar {
+    display: inline-block;
+    margin-right: 2px;
+    width: 20px;
+    height: 75px;   /* We'll override this later */
+    background-color: teal;
+}
+#utilizationGraphTableDiv{
+    padding: 5px;
+    float: left;
+    /*width: 100%;*/
+}
+#nonFloorutilizationGraphTableDiv{
+    padding: 5px;
+    float: left;
+    /*width: 100%;*/
+}
+#utilizationGraph{
+}
+#barChart svg {
+      height: 400px;
+    }
+    
+
+#nonFloorbarChart svg {
+      height: 400px;
+    }
+    
+#nonFloorwrapBarChart{
+    width : 70%;
+    float : left;
+    padding-bottom: 50px;
+}
+
+#wrapBarChart{
+    width : 70%;
+    float : left;
+}
+
+#barChart{
+	
+}
+#allStatTypes{
+width : 50%;
+float: left;
+padding-top: -10px;
+padding-left: 10px;
+}
+#nonFloorallStatTypes{
+width : 50%;
+float: left;
+padding-top: -10px;
+padding-left: 10px;
+}
+#wrapDonutChart{
+    float : left;
+    width : 20%;
+    height:350px;
+    padding-left: 5%;
+}
+#nonFloorwrapDonutChart{
+    float : left;
+    width : 20%;
+    height:350px;
+    padding-left: 5%;
+}
+#allOccTypes{
+width : 10%;
+ float : right;
+ padding-top: 8px;
+}
+
+#nonFloorallOccTypes{
+ padding-right:10px;
+ float:right;
+}
+
+#sensorDonutChart {
+    height:50%;
+     border: 1px;
+     border-style: groove;
+}
+
+#nonFloorsensorDonutChart {
+    height:50%;
+     border: 1px;
+     border-style: groove;
+}
+#sensorDonutChart svg {
+	margin-left:auto; margin-right: auto;
+}
+
+#nonFloorsensorDonutChart svg {
+	margin-left:auto; margin-right: auto;
+}
+
+#sensorDonutChart svg g text {
+ font-size: 50%;
+ font-family: Arial;
+ font-weight:bold;
+}   
+
+#nonFloorsensorDonutChart svg g text {
+ font-size: 50%;
+ font-family: Arial;
+ font-weight:bold;
+}
+
+#totalsqftDonutChart{
+    height:50%;
+     border: 1px;
+     border-style: groove;
+     margin-top: 5px;
+}
+
+#nonFloortotalsqftDonutChart{
+    height:50%;
+     border: 1px;
+     border-style: groove;
+     margin-top: 5px;
+}
+
+#totalsqftDonutChart svg {
+	margin-left:auto; margin-right: auto;
+}
+
+#nonFloortotalsqftDonutChart svg {
+	margin-left:auto; margin-right: auto;
+}
+
+#totalsqftDonutChart svg g text {
+ font-size: 50%;
+ font-family: Arial;
+  font-weight:bold;
+}   
+
+#nonFloortotalsqftDonutChart svg g text {
+ font-size: 50%;
+ font-family: Arial;
+  font-weight:bold;
+}
+
+#sensorMountTitle, #totalsqftTitle{
+    float: right;
+    width: 100%;
+    text-align: center;
+}
+  
+#breadscrumHeader
+{
+	padding-top: 5px;
+}  
+svg {
+  font: 10px sans-serif;
+}
+
+.area {
+  fill: steelblue;
+  clip-path: url(#clip);
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
+
+ui-widget-content {
+    background: none repeat scroll 0 0 #ffffff !important;
+    border: 0 !important;
+    padding: 0 !important;
+}

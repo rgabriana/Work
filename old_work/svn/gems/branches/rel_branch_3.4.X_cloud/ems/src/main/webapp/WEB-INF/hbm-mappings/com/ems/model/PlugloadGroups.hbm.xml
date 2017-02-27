@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.PlugloadGroups" table="plugload_groups">
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">plugload_group_seq</param>
+			</generator>
+		</id>
+
+		<property name="name" type="java.lang.String" update="true"
+			insert="true" column="name" />
+
+		<property name="displayProfile" type="boolean"
+			update="true" insert="true" column="display_profile" />
+
+		<property name="defaultProfile" type="boolean"
+			update="true" insert="true" column="default_profile" />
+		<property name="profileNo" type="java.lang.Short" update="true"
+			insert="true" column="profile_no" />
+		
+		<many-to-one name="derivedFromGroup" class="com.ems.model.PlugloadGroups"
+			cascade="none" outer-join="auto" update="true" insert="true"
+				column="derived_from_group" />
+			
+		<many-to-one name="plugloadProfileTemplate" class="com.ems.model.PlugloadProfileTemplate"
+		cascade="none" outer-join="auto" update="true" insert="true" column="template_id" />
+			
+		<many-to-one name="company" class="com.ems.model.Company"
+			cascade="none" outer-join="auto" update="true" insert="true" column="company_id" />
+
+		<many-to-one name="tenant" class="com.ems.model.Tenant"
+			cascade="none" outer-join="auto" update="true" insert="true" column="tenant_id" />
+
+		<many-to-one name="plugloadProfileHandler" class="com.ems.model.PlugloadProfileHandler"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="profile_handler_id" />
+
+
+
+	</class>
+
+</hibernate-mapping>

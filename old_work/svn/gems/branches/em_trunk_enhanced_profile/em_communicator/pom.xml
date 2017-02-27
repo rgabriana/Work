@@ -1,0 +1,82 @@
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.em.communicator</groupId>
+    <artifactId>em_communicator</artifactId>
+    <version>2.2.0</version>
+	<name>em_communicator</name>
+    <packaging>jar</packaging>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <org.springframework.version>3.0.5.RELEASE</org.springframework.version>
+        <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+		<dependency>
+			<groupId>com.enlightedinc.gem</groupId>
+			<artifactId>ems_utils</artifactId>
+			<type>jar</type>
+			<version>${project.version}</version>
+		</dependency>
+    </dependencies>
+    <build>
+		<finalName>em_communicator</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>${maven.jar.plugin.version}</version>
+				<configuration>
+	                <archive>
+	                    <manifest>
+	                        <mainClass>com.em.communicator.Communicator</mainClass>
+	                    </manifest>
+	                </archive>
+	            </configuration>
+			</plugin>
+			<plugin>
+	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-shade-plugin</artifactId>
+	            <version>1.5</version>
+	            <executions>
+	                <execution>
+	                    <phase>package</phase>
+	                    <goals>
+	                        <goal>shade</goal>
+	                    </goals>
+	                    <configuration>
+	                        <transformers>
+	                            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+	                                <resource>META-INF/spring.handlers</resource>
+	                            </transformer>
+	                            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+	                                <resource>META-INF/spring.schemas</resource>
+	                            </transformer>
+	                        </transformers>
+	                    </configuration>
+	                </execution>
+	            </executions>
+        	</plugin>
+			
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.1</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

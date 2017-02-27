@@ -1,0 +1,9 @@
+source /etc/environment
+
+if [ `psql -q -Upostgres ems -t -c "select count(*) from users"`  ]
+then
+	echo "upgrade"
+else
+	psql -U postgres < /tmp/ems/etc/firstboot/DBSetup.sql
+	psql -U postgres ems < /tmp/ems/home/enlighted/InstallSQL.sql
+fi

@@ -1,0 +1,6 @@
+--------------------------------------------------------------------------------
+enLighted Certificate authority
+--------------------------------------------------------------------------------
+apache2: Configuration file with rule to apply on Certificate verification
+
+scripts: To generate CA authority, server & client certificates

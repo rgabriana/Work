@@ -1,0 +1,10 @@
+#!/bin/bash -x
+
+source /etc/environment
+
+if [ -d /tmp/em_all ]
+then
+        rm -rf /tmp/em_all/
+fi
+
+

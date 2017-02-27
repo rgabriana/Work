@@ -1,0 +1,139 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+source /etc/environment
+# Add AUTHBIND to tomcat script in /etc/default
+grep -v "AUTHBIND" $TOMCAT_CONF > /tmp/tomcat
+echo "AUTHBIND=yes" >> /tmp/tomcat
+cp /tmp/tomcat $TOMCAT_CONF
+
+# Install SNAP Monitoring tool
+# if [ -x /etc/init.d/enLightedZigbeeGW ]; then
+# 	/usr/sbin/update-rc.d enLightedZigbeeGW start 98 2 3 4 5 . stop 20 0 1 6 .
+# fi
+
+#sudo iptables-restore /etc/iptables.rules
+
+check=$(apache2ctl -v)
+if [[ "$check" =~ "Apache/2" ]]
+    then
+        echo "*** Upgrade tomcat configuration as part of em management ***"
+    else
+	    #chmod 0440 $ENLIGHTED_HOME/sudoers
+	#	sudo cp $ENLIGHTED_HOME/sudoers /etc/
+	#	sudo chown root:root /etc/sudoers
+		
+		# Copy Tomcat server.xml to $ENL_APP_HOME/conf/server.xml
+		cp $ENLIGHTED_HOME/server.xml $ENL_APP_HOME/conf/server.xml
+		
+		# Copy Tomcat web.xml to $ENL_APP_HOME/conf/web.xml
+		cp $ENLIGHTED_HOME/web.xml $ENL_APP_HOME/conf/web.xml
+fi
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/cloudServerInfo.xml" ]
+then
+    cp $ENLIGHTED_HOME/cloudServerInfo.xml $ENL_APP_HOME/Enlighted/cloudServerInfo.xml
+fi
+
+#sudo chown root:root /etc/ssh/sshd_config
+sudo cp $ENLIGHTED_HOME/tomcat6 /etc/init.d/
+sudo chown root:root /etc/init.d/tomcat6
+sudo chmod +x /etc/init.d/tomcat6
+chmod +x $ENLIGHTED_HOME/*.sh
+
+#change permission on authorized keys
+chmod 755 $ENLIGHTED_HOME/.ssh
+chmod 644 $ENLIGHTED_HOME/.ssh/authorized_keys
+
+# Copy Tomcat tomcat-users.xml to $ENL_APP_HOME/conf/tomcat-users.xml
+cp $ENLIGHTED_HOME/tomcat-users.xml $ENL_APP_HOME/conf/tomcat-users.xml
+# Copy Tomcat context.xml to $ENL_APP_HOME/conf/context.xml
+cp $ENLIGHTED_HOME/context.xml $ENL_APP_HOME/conf/context.xml
+# 1000 is user id for enlighted user
+chown 1000:1000 $ENLIGHTED_HOME/.pgpass
+chmod 600 $ENLIGHTED_HOME/.pgpass
+chown -R 1000:1000 $ENLIGHTED_HOME
+chown -R 1000:1000 $OPT_ENLIGHTED
+chmod -R 777 $OPT_ENLIGHTED/DB/
+chown -R $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted
+chmod 775 -R $ENL_APP_HOME/Enlighted
+chown -R $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/webapps
+
+if [ -f "/etc/logrotate.d/tomcat" ]
+then
+  sudo rm  -f /etc/logrotate.d/tomcat
+fi
+
+if [ ! -f "$ENL_APP_HOME/webapps/ROOT/heartbeat.jsp" ]
+then
+    cp $ENLIGHTED_HOME/heartbeat.jsp $ENL_APP_HOME/webapps/ROOT/heartbeat.jsp
+    chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/webapps/ROOT/heartbeat.jsp
+else
+    
+    if [[ ! $(grep systat $ENL_APP_HOME/webapps/ROOT/heartbeat.jsp) =~ "systat" ]]
+    then
+        cp $ENLIGHTED_HOME/heartbeat.jsp $ENL_APP_HOME/webapps/ROOT/heartbeat.jsp
+    	chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/webapps/ROOT/heartbeat.jsp
+    fi
+fi
+
+if [[ ! $(grep maintenance $ENL_APP_HOME/webapps/ROOT/heartbeat.jsp) =~ "maintenance" ]]
+then
+    sed -i 's/\(<div\ id="systat">\)/\1<span\ id="maintenance">N<\/span>/' $ENL_APP_HOME/webapps/ROOT/heartbeat.jsp
+fi
+
+chmod -R 775 $ENL_APP_HOME/webapps/ROOT
+
+#ps -ef |grep postgresql |grep -v grep > /dev/null
+
+#if [ $? -eq 0 ]
+#then
+#   if [ `psql -q -U postgres -h localhost  -t -c "select count(*) from pg_database where datname='ems'"` -eq 1 ]
+#   then
+#		#remove the firstboot files
+#		sudo rm -rf /etc/firstboot/*
+#    else 
+#      	echo "*** ems DB not exists ***"
+#    fi
+#else
+#    echo "*** postgres not running ***"
+#fi
+
+sudo fromdos $ENL_APP_HOME/Enlighted/ems_log4j/log*.properties*
+sudo fromdos $ENL_APP_HOME/Enlighted/ems_log4j/*ableDebugLogging.sh
+
+sudo bash $ENLIGHTED_HOME/setcron.sh
+
+sudo service cron restart
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/bacnet/config/bacnet.conf" ]
+then
+    cp $ENLIGHTED_HOME/bacnet/config/bacnet.conf $ENL_APP_HOME/Enlighted/bacnet/config/bacnet.conf
+fi
+
+    cp $ENLIGHTED_HOME/bacnet/config/bacnet_objects.cfg $ENL_APP_HOME/Enlighted/bacnet/config/bacnet_objects.cfg
+
+chown -R $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted/bacnet
+chmod -R 777 $ENL_APP_HOME/Enlighted/bacnet/config
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/em_private.key" ]
+then
+    cp $ENLIGHTED_HOME/em_private.key $ENL_APP_HOME/Enlighted/em_private.key
+fi
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/em_public.key" ]
+then
+    cp $ENLIGHTED_HOME/em_public.key $ENL_APP_HOME/Enlighted/em_public.key
+fi
+
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/emsmode" ]
+then
+	sudo cp $ENLIGHTED_HOME/emsmode $ENL_APP_HOME/Enlighted/
+	sudo chmod 777 $ENL_APP_HOME/Enlighted/emsmode
+	sudo chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted/emsmode
+fi
+
+	cp $ENLIGHTED_HOME/sensor_profile.xsd $ENL_APP_HOME/Enlighted/
+
+	cp $ENLIGHTED_HOME/plugload_profile.xsd $ENL_APP_HOME/Enlighted/
+

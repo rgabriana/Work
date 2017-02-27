@@ -1,0 +1,11 @@
+#!/bin/bash -x
+
+chmod 755 /tmp/em_all/home/enlighted/setAllEMEnvironment.sh 
+/tmp/em_all/home/enlighted/setAllEMEnvironment.sh
+
+source /etc/environment
+sudo mkdir -p $ENL_APP_HOME/Enlighted/bkRestoreFolderTemp
+sudo chmod 775 $ENL_APP_HOME/Enlighted/bkRestoreFolderTemp
+sudo chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted/bkRestoreFolderTemp
+cd /tmp/em_all
+sudo cp etc/apt/sources.list /etc/apt/sources.list

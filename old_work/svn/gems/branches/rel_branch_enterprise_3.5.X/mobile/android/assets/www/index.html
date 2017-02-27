@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable =no;" />
+	
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    
+    
+    <link rel="stylesheet" href="js/jquery.mobile-1.0.min.css" type="text/css" />
+    <!-- <link rel="stylesheet" href="css/styles.css" type="text/css" /> -->
+    
+    <!--Device Spesific CSS Start>-->
+ 	<link type="text/css" rel="stylesheet" media="only screen and (max-device-width: 480px)" href="css/styles.css" />
+ 	<link type="text/css" rel="stylesheet" media="only screen and (min-device-width: 768px)" href="css/tablet.css" />
+ 	<!--<!Device Spesific CSS End-->
+    
+	
+	<!-- If your application is targeting iOS BEFORE 4.0 you MUST put json2.js from http://www.JSON.org/json2.js into your www directory and include it here 
+	<script type="text/javascript" charset="utf-8" src="js/phonegap-1.1.0.js"></script>-->
+    <script src="js/jquery.js"></script> 
+    <script type="text/javascript" src="js/LoginPlugin.js"> </script>
+     <script type="text/javascript" src="js/main.js" charset="utf-8">
+	</script>
+	<script type="text/javascript" src="js/gems2.js"> </script>
+	<script type="text/javascript" src="js/gems3.js"> </script>
+	<script type="text/javascript" src="js/gems_ga.js"> </script>
+	<script type="text/javascript" src="js/versionControl.js"> </script>
+	<script src="js/jquery.mobile-1.0.min.js"></script>
+	<script>
+		if (navigator.userAgent.toLowerCase().match(/android/)) {
+			document.write("<script charset=\"utf-8\" src=\"js/platform/android/phonegap-1.1.0.js\"><\/script>");
+		} else {
+			document.write("<script charset=\"utf-8\" src=\"js/platform/ios/phonegap-1.1.0.js\"><\/script>");
+		}
+</script>
+
+	
+  </head>
+ 	<body onload="onBodyLoad()">
+		
+		<div id="loginPage" data-role="page">
+			
+			<div class="imageWrapper"><img src="js/images/enlighted-logo.png" id="logo" ></div>
+			
+			<div id="loginDiv">
+				<div class="title">Sign in</div>
+				
+				<div id="errorMessage" style="color:red"></div>
+				
+				<form name = "myform" id="loginform" data-ajax="false">					
+					<p class="form_field">
+						<span>Username</span>
+						<input type="text" id="username" name="username" >
+					</p>
+					<p class="form_field">
+						<span>Password</span>
+						<input type="password" id="password" name="pword" >
+					</p>
+					<p class="form_field">
+						<input type="checkbox" name="remember" id="rememberme"/>
+						<label for="rememberme">Remember me</label>
+					</p>
+					<p class="form_field button_field">
+						<input type="submit" id="submitButton" data-role="button" value="Sign in" >
+						<!-- <a  id="submitButton" data-role="button">Sign in</a> -->
+					</p>
+				</form>
+			</div>
+			
+			<div data-role="footer"  data-position="fixed" >
+				<div data-role="navbar" data-iconpos="top">
+					<ul>
+						<!-- <li><a href="settings.html" data-icon="grid">Settings</a></li> -->
+						<li><a  data-icon="grid" onclick="toSettings()">Settings</a>
+						<li><a data-icon="info" onclick=" infoDialog()">About</a></li>
+						<!-- <li><a data-icon="delete" onclick="quitApp()">Quit</a></li> -->
+					</ul>
+				</div>
+			</div>	
+
+		</div>
+			
+	</body>
+	
+</html>

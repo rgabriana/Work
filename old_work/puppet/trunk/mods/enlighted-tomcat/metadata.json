@@ -1,0 +1,13 @@
+{
+  "name": "enlighted-tomcat",
+  "version": "0.1.0",
+  "author": "Rolando R. Gabriana JR.",
+  "summary": "puppet module to control tomcat configurations.",
+  "license": "Apache 2.0",
+  "source": "rolando.gabriana@enightedinc.com",
+  "project_page": "rolando.gabriana@enlightedinc.com",
+  "issues_url": "rolando.gabriana@enlightedinc.com",
+  "dependencies": [
+  ]
+}
+

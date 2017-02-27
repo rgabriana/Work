@@ -1,0 +1,14 @@
+{
+  "name": "enlighted-puppet_master",
+  "version": "0.1.0",
+  "author": "Rolando R. Gabriana",
+  "summary": "module to control the puppet modules",
+  "license": "Apache 2.0",
+  "source": "rolando.gabriana@enlightedinc.com",
+  "project_page": "rolando.gabriana@enlightedinc.com",
+  "issues_url": "rolando.gabriana@enlightedinc.com",
+  "dependencies": [
+    {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"}
+  ]
+}
+

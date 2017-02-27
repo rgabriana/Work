@@ -1,0 +1,62 @@
+{% extends "pages/layouts/mainLayout.html" %}
+
+{% load i18n %}
+
+{% load customtemplatetags %}
+
+{% block body %}
+
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.tablesorter.min.js"> </script>
+<style> table#logslisttable td{overflow: hidden !important; text-overflow: ellipsis;} </style>
+<div class="pgset">
+<div class="outermostdiv">
+	<div class="outerContainer">
+		<span id="userlist_header_text">{% trans "history.title" %}</span>
+    <div class="i1"></div>
+    <input class="action" type="button" value="{% trans 'history.download.dailybackup.log' %}" 
+		onclick="window.location = '{{ STATIC_URL }}logs/download/?file=dailybackup'"/>
+    <input class="action" type="button" value="{% trans 'history.download.tomcat.log' %}" 
+		onclick="window.location = '{{ STATIC_URL }}logs/download/?file=tomcat'"/>
+		<div style="margin-top: 15px; width:100%;">
+			<fieldset style="padding: 10px;">
+				<legend style="font-weight: bold">{% trans "history.list.legend" %}</legend>
+				<div>				
+					<div id="tableContainer">
+						<table id="logslisttable" class="tablesorter entable" width="100%">
+						<thead>
+							<tr>
+								<th>{% trans "history.label.list.modified.time" %}</th>
+								<th>{% trans "restore.label.list.file" %}</th>
+								<th>{% trans "history.label.list.download.log" %}</th>
+							</tr>
+						</thead>
+						<tbody>
+                {% for file in filelist %}
+								<tr id="{{ forloop.counter }}Trow" >
+									<td id="{{ forloop.counter }}Tdate" >{{ file.lastModifiedDate }}</td>
+									<td id="{{ forloop.counter }}Tname" title="{{ file.filename }}" >{{ file.filename }}</td>
+									<td class="alignright">
+										<input class="action" type="button" value="{% trans 'action.download' %}" id="{{ forloop.counter }}Tdownload"
+											onclick="window.location = '{{ STATIC_URL }}logs/download/?file={{ file.filename }}'"/>
+									</td>
+								</tr>
+                {% endfor %}
+						</tbody>
+						</table>
+					</div>
+				</div>
+			</fieldset>
+			</div>
+			<script type="text/javascript">
+			  $("#logslisttable").tablesorter({
+							  sortList: [[0,1]],
+							  headers: { 0: {sorter:'text'}, 1: {sorter: 'text'}, 2: {sorter: false} }
+				  });
+			</script>
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+

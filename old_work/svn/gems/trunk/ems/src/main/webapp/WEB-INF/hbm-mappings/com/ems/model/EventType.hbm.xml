@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.EventType" table="event_type" mutable="false">
+		<cache usage="read-only" />
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">event_type_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-EventType.xml 
+					containing the additional parameters and place it in your merge dir. -->
+			</generator>
+		</id>
+
+		<property name="type" type="java.lang.String" update="true"
+			insert="true" column="type" />
+
+		<property name="description" type="java.lang.String" update="true"
+			insert="true" column="description" />
+
+		<property name="active" type="java.lang.Short" update="true"
+			insert="true" column="active" />
+		<property name="severity" type="java.lang.Short" update="true"
+			insert="true" column="severity" />
+
+		<!-- To add non XDoclet property mappings, create a file named hibernate-properties-EventType.xml 
+			containing the additional properties and place it in your merge dir. -->
+
+	</class>
+
+</hibernate-mapping>

@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ReportsTable is used to display details of the fixture status, location, etc. 
+This table is reused for both "Bulb Report" and "Outage Report".
+If "Bulb Report" is inserted again, table columns should be handled.
+-->
+<mx:VBox xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" xmlns:components="com.enlightedinc.components.*">
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="YYYY-MM-DD JJ:NN:SS"/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.events.IndexChangedEvent;
+			import mx.events.ListEvent;
+			[Bindable]
+			public var application:Object = FlexGlobals.topLevelApplication;
+			[Bindable]
+			public var imageUpgradeFixtureData:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var imageUpgradeGatewayData:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var switchFixtureData:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var wdsData:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var groupFixtureData:ArrayCollection = new ArrayCollection();
+			
+			[Bindable]
+			public var currentTab:String ="";
+			
+			[Bindable]
+			private var showImageUpgradeGroup:Boolean=false;
+			[Bindable]
+			private var showReportGroup:Boolean=true;
+			[Bindable]
+			private var showWdsGroup:Boolean=false;
+			[Bindable]
+			private var showFixturesGroup:Boolean=false;
+			[Bindable]
+			private var showSceneTableGroup:Boolean=false;
+			[Bindable]
+			private var showGrpFixturesGroup:Boolean=false;
+			
+			public function showView(m_propertyMode:String,widgetTabSelected:String):void
+			{
+				if(m_propertyMode == Constants.IMAGE_UPGRADE)
+				{
+					showImageUpgradeGroup=true;
+					showReportGroup=false;
+					showWdsGroup=false;
+					showFixturesGroup = false;
+					showSceneTableGroup=false;
+				}
+				else if(m_propertyMode == Constants.SWITCH_MODE)
+				{
+					if(widgetTabSelected==Constants.FIXTURE_TAB)
+					{
+						showImageUpgradeGroup=false;
+						showFixturesGroup = true;
+						showWdsGroup=false;
+						showReportGroup=false;
+						showSceneTableGroup=false;
+						
+					}else if(widgetTabSelected==Constants.WDS_TAB)
+					{
+						showWdsGroup=true;
+						showImageUpgradeGroup=false;
+						showReportGroup=false;
+						showSceneTableGroup=false;
+						showFixturesGroup = false;
+					}
+					else if( widgetTabSelected==Constants.SCENE_TAB)
+					{
+						showSceneTableGroup=true;
+						showImageUpgradeGroup=false;
+						showReportGroup=false;
+						showWdsGroup=false;
+						showFixturesGroup = false;
+					}
+				}
+				else if(m_propertyMode == Constants.GROUP_MODE || m_propertyMode == Constants.MOTION_BITS_GROUP_MODE)
+				{
+					if(widgetTabSelected==Constants.FIXTURE_TAB)
+					{
+						showImageUpgradeGroup=false;
+						showFixturesGroup = false;
+						showWdsGroup=false;
+						showReportGroup=false;
+						showSceneTableGroup=false;
+						showGrpFixturesGroup=true;
+					}
+				}
+				else
+				{
+					showReportGroup=true;
+					showImageUpgradeGroup=false;
+					showWdsGroup=false;
+					showFixturesGroup = false;
+				}
+			}
+			
+			public function removeSelection():void
+			{
+				if(showSceneTableGroup)
+					sceneTableGrid.selectedItems = [];
+				else if(showFixturesGroup)
+					fixturesTableGrid.selectedItems = [];
+				else if(showGrpFixturesGroup)
+					grpFixturesTableGrid.selectedItems = [];
+			}
+			
+			public function selectFixture(fixtureId:String):void
+			{
+				if(showGrpFixturesGroup)
+				{
+					for(var n:int=0; n<groupFixtureData.length; n++)
+					{
+						if(groupFixtureData[n].id == fixtureId)
+						{
+							var selArray1:Array = new Array();
+
+							selArray1 = grpFixturesTableGrid.selectedItems;
+							selArray1.push(groupFixtureData[n]);
+							grpFixturesTableGrid.selectedItems = selArray1;
+							break;
+						}
+					}
+				}
+				else
+				{
+					for(var l:int=0; l<switchFixtureData.length; l++)
+					{
+						if(switchFixtureData[l].id == fixtureId)
+						{
+							var selArray:Array = new Array();
+							if(showSceneTableGroup)
+								selArray = sceneTableGrid.selectedItems;
+							else if(showFixturesGroup)
+								selArray = fixturesTableGrid.selectedItems;
+	
+							selArray.push(switchFixtureData[l]);
+							
+							if(showSceneTableGroup)
+								sceneTableGrid.selectedItems = selArray;
+							else if(showFixturesGroup)
+								fixturesTableGrid.selectedItems = selArray;
+							break;
+						}
+					}
+				}
+			}
+
+			public function selectGateway(gatewayId:String):void
+			{
+				for(var l:int=0; l<imageUpgradeGatewayData.length; l++)
+				{
+					if(imageUpgradeGatewayData[l].id == gatewayId)
+					{
+						reportTabNavigator.selectedIndex = 1;
+						imageUpGradeGatewayGrid.selectedIndex = l;
+						break;
+					}
+				}
+			}
+			
+			private function outageSince(obj:Object,column:DataGridColumn):String
+			{
+				return dateFormatter.format(obj.outageSince);
+			}
+			//change="foo.text = imageUpgradeFixtureGrid.selectedIndices.toString()"
+
+			protected function reportTabNavigator_changeHandler(event:IndexChangedEvent):void
+			{
+				
+			}
+
+			private function sortOutageSince(obj1:Object, obj2:Object):int 
+			{
+				var date1:Date = application.plotChartView.createDate(obj1.outageSince);
+				var date2:Date = application.plotChartView.createDate(obj2.outageSince);
+				
+				if(date1.valueOf() < date2.valueOf())
+					return -1;
+				else if(date1.valueOf() > date2.valueOf())
+					return 1;
+				else
+					return 0;
+			}
+
+			private function fixtureClickEvent(event:ListEvent):void {
+				application.removeSelection(false);
+				
+				for(var n:int = 0; n < event.currentTarget.selectedItems.length; n++)
+					application.selectFixture(event.currentTarget.selectedItems[n].id);
+			}
+
+			private function gatewayClickEvent(event:ListEvent):void {
+				application.selectGateway(this.switchFixtureData[event.rowIndex].id);
+			}
+			
+			private function wdsClickEvent(event:ListEvent):void {
+				application.removeSelection();
+				
+				for(var n:int = 0; n < event.currentTarget.selectedItems.length; n++)
+					application.selectWDS(event.currentTarget.selectedItems[n].id);
+			}
+
+			public function wdsEditHandler(event:MouseEvent) : void {
+				
+			}
+			public function wdsDeleteHandler(event:MouseEvent) : void {
+				
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:VBox id="imageUpgradeTableGroup" includeInLayout="{showImageUpgradeGroup}" visible="{showImageUpgradeGroup}" width="100%" height="100%">
+		<mx:TabNavigator creationPolicy="all" borderStyle="solid" id="reportTabNavigator"  width="100%" height="100%" change="reportTabNavigator_changeHandler(event)">
+			<mx:VBox label="Fixture" 
+					 width="100%" 
+					 height="100%">
+				<mx:DataGrid id="imageUpgradeFixtureGrid" width="100%" height="100%"
+											 allowMultipleSelection="true" dataProvider="{imageUpgradeFixtureData}"  >
+					<mx:columns>
+						<mx:DataGridColumn dataField="name" headerText="Fixture Name" />
+						<mx:DataGridColumn dataField="upgradestatus" headerText="Upgrade Status" />
+						<mx:DataGridColumn dataField="version" headerText="Version" />
+					</mx:columns>
+				</mx:DataGrid>
+			</mx:VBox>
+			<mx:VBox label="Gateway" 
+					 width="100%" 
+					 height="100%">
+				
+				<mx:DataGrid id="imageUpGradeGatewayGrid" width="100%" height="100%"
+											 allowMultipleSelection="true" dataProvider="{imageUpgradeGatewayData}" >
+					<mx:columns>
+						<mx:DataGridColumn dataField="name" headerText="Gateway Name" />
+						<mx:DataGridColumn dataField="upgradestatus" headerText="Upgrade Status" />
+						<mx:DataGridColumn dataField="app2version" headerText="Version" />
+					</mx:columns>
+				</mx:DataGrid>
+				
+				
+			</mx:VBox>
+			<mx:VBox label="WDS" 
+				 width="100%" 
+				 height="100%">
+				<mx:DataGrid id="imageUpgradeWDSGrid" width="100%" height="100%"
+										 allowMultipleSelection="true" dataProvider="{wdsData}"  >
+				<mx:columns>
+					<mx:DataGridColumn dataField="name" headerText="WDS Name" />
+					<mx:DataGridColumn dataField="upgradestatus" headerText="Upgrade Status" />
+					<mx:DataGridColumn dataField="version" headerText="Version" />
+				</mx:columns>
+				</mx:DataGrid>
+		</mx:VBox>
+			
+		</mx:TabNavigator>
+	</mx:VBox>
+	
+	<mx:VBox id="reportTableGroup"  width="100%" height="100%" includeInLayout="{showReportGroup}" visible="{showReportGroup}">
+		<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					 xmlns:s="library://ns.adobe.com/flex/spark" 
+					 xmlns:mx="library://ns.adobe.com/flex/mx"
+					 width="100%" height="100%" id="reportTableGrid">
+			<mx:columns>
+				<mx:DataGridColumn headerText="Fixture Name" dataField="name"/>
+				<mx:DataGridColumn headerText="Location" dataField="location"/>
+				<mx:DataGridColumn headerText="Outage Since" labelFunction="outageSince" sortCompareFunction="sortOutageSince"/>
+				<mx:DataGridColumn headerText="Description" dataField="description"/>
+			</mx:columns>
+		</mx:DataGrid>
+	</mx:VBox>
+
+	<mx:VBox id="grpFixturesTableGroup"  width="100%" height="100%" includeInLayout="{showGrpFixturesGroup}" visible="{showGrpFixturesGroup}">
+		<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					 xmlns:s="library://ns.adobe.com/flex/spark" 
+					 xmlns:mx="library://ns.adobe.com/flex/mx"
+					 width="100%" height="100%" id="grpFixturesTableGrid" dataProvider="{groupFixtureData}" itemClick="fixtureClickEvent(event);" allowMultipleSelection="true" >
+			<mx:columns>
+				<mx:DataGridColumn headerText="Name" dataField="name" itemRenderer="com.enlightedinc.components.renderers.WidgetFixtureLabelRenderer"/>
+			</mx:columns>
+		</mx:DataGrid>
+	</mx:VBox>
+
+	<mx:VBox id="fixturesTableGroup"  width="100%" height="100%" includeInLayout="{showFixturesGroup}" visible="{showFixturesGroup}">
+		<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					 xmlns:s="library://ns.adobe.com/flex/spark" 
+					 xmlns:mx="library://ns.adobe.com/flex/mx"
+					 width="100%" height="100%" id="fixturesTableGrid" dataProvider="{switchFixtureData}" itemClick="fixtureClickEvent(event);" allowMultipleSelection="true" >
+			<mx:columns>
+				<mx:DataGridColumn headerText="Fixture Name" dataField="name" itemRenderer="com.enlightedinc.components.renderers.WidgetFixtureLabelRenderer"/>
+				<mx:DataGridColumn headerText="Gateway Name" dataField="gateway.name" />
+			</mx:columns>
+		</mx:DataGrid>
+	</mx:VBox>
+	
+	<mx:VBox id="wdsTableGroup"  width="100%" height="100%" includeInLayout="{showWdsGroup}" visible="{showWdsGroup}">
+		<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					 xmlns:s="library://ns.adobe.com/flex/spark" 
+					 xmlns:mx="library://ns.adobe.com/flex/mx"
+					 width="100%" height="100%" id="wdsTableGrid" dataProvider="{wdsData}" itemClick="wdsClickEvent(event);">
+			<mx:columns>
+				<mx:DataGridColumn headerText="Name" dataField="name"/>
+				<mx:DataGridColumn headerText="Model" />
+				<mx:DataGridColumn width="100" headerText="Action">
+					<mx:itemRenderer>
+						<fx:Component>
+							<mx:HBox>
+								<mx:Button label="Edit" click="outerDocument.wdsEditHandler(event);"/>
+							</mx:HBox>
+						</fx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+			</mx:columns>
+		</mx:DataGrid>
+	</mx:VBox>
+	
+	<mx:VBox id="sceneTableGroup" width="100%" height="100%" includeInLayout="{showSceneTableGroup}" visible="{showSceneTableGroup}">
+		<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					 xmlns:s="library://ns.adobe.com/flex/spark" 
+					 xmlns:mx="library://ns.adobe.com/flex/mx"
+					 allowMultipleSelection="true"
+					 width="100%" height="100%" id="sceneTableGrid" dataProvider="{switchFixtureData}" itemClick="fixtureClickEvent(event);" >
+			<mx:columns>
+				<mx:DataGridColumn headerText="Fixture Name" dataField="name" itemRenderer="com.enlightedinc.components.renderers.WidgetFixtureLabelRenderer" />
+				<mx:DataGridColumn headerText="Light Level" dataField="lightlevel" itemRenderer="com.enlightedinc.components.renderers.WidgetFixtureLabelRenderer"/>
+			</mx:columns>
+		</mx:DataGrid>
+	</mx:VBox>
+
+</mx:VBox>

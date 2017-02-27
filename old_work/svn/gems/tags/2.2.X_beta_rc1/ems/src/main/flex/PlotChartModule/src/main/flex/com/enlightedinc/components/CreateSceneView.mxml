@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 showCloseButton="true"
+		 title="Create Scene"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" close="closeWindow(event)" >
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:StringValidator id="sceneValidator"
+							source="{sceneValue}"
+							property="text"	/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.core.IFlexDisplayObject;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			[Bindable]
+			public var application:Object = FlexGlobals.topLevelApplication.plotChartView;
+			private function closeWindow(e:CloseEvent):void {
+				PopUpManager.removePopUp(e.target as IFlexDisplayObject);
+			}
+			private function saveScene():void{
+				(application as PlotChartView).saveScene(sceneValue.text);
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</fx:Script>
+	<s:VGroup width="100%" height="100%">
+		<s:HGroup width="100%" height="100%" paddingTop="10" paddingLeft="5" paddingRight="5" paddingBottom="10" verticalAlign="middle">
+			<s:Label text="Scene Name :" id="sceneName" />
+			<s:TextInput id="sceneValue" creationComplete="sceneValue.setFocus();"/>
+		</s:HGroup>
+		<s:HGroup width="100%" height="100%" horizontalAlign="right">
+			<mx:Button id="saveSceneButton" label="Save" click="saveScene();"/>
+		</s:HGroup>
+	</s:VGroup>
+</mx:TitleWindow>

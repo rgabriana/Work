@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+
+{% load customtemplatetags %}
+
+{% load i18n %}
+
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}static/themes/default/css/style.css" />
+
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}static/themes/standard/css/jquery/jquery-ui-1.8.16.custom.css" />
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.1.6.4.min.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.ui.1.8.16.custom.min.js"></script>
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Enlighted Management</title>
+
+<script type="text/javascript">	
+	function validateForm(){
+		$('#errorMsg').html('');
+		
+		var username = $('#userNameTextBox').val();
+		if (username == null || username == "") {
+			$('#error').html("{% trans 'username.required' %}");
+			return false;
+		}
+
+		var password = $('#passwordTextBox').val();
+		if (password == null || password == "") {
+			$('#error').html("{% trans 'password.required' %}");
+			return false;
+		}
+		return true;
+	}
+
+	$().ready(function() {
+		$(function() {
+			$(window).resize(function() {
+				var setSize = $(window).height();
+				setSize = setSize - 30;
+				$(".login").css("height", setSize);
+			});
+		});
+		$(".login").css("height", $(window).height() - 30);
+	});
+</script>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		//define configurations for dialog
+		var dialogOptions = {
+			title : "{% trans 'enlighted.energy.manager.title' %}",
+			modal : true,
+			autoOpen : false,
+			height : 300,
+			width : 500,
+			draggable : true
+		}
+
+		$("#notesDialog").dialog(dialogOptions);
+
+		$('#contactUs').click(function() {
+			$("#notesDialog").dialog('open');
+			return false;
+		});
+		
+		$('#passwordTextBox').focus();
+	});
+</script>
+</head>
+<body>
+	<div id="notesDialog">
+		<table border="0" cellpadding="0" cellspacing="5">
+			<tr>
+				<td><b>{% trans 'enlighted.corporate.headquaters' %}</b></td>
+			</tr>
+			<tr>
+				<td>{% trans 'enlighted.corporate.address1' %}<br />
+					{% trans 'enlighted.corporate.address2' %}<br /> {% trans 'enlighted.corporate.phone' %}<br /> {% trans 'enlighted.corporate.fax' %}<br /> {% trans 'enlighted.corporate.email' %}
+				</td>
+			</tr>
+			<tr>
+				<td style="padding-top:5px;"><b>{% trans 'enlighted.sales.heading' %}</b></td>
+			</tr>
+			<tr>
+				<td>{% trans 'enlighted.sales.email' %}<br /> {% trans 'enlighted.sales.phone' %}</td>
+			</tr>
+			<tr>
+				<td style="padding-top:5px;"><b>{% trans 'enlighted.customerservice.heading' %}</b></td>
+			</tr>
+			<tr>
+				<td>{% trans 'enlighted.customerservice.email' %}<br />
+					{% trans 'enlighted.customerservice.phone' %}
+				</td>
+			</tr>		
+		</table>
+	</div>
+	<div class="login">
+		<div align="left">
+			<img id="enlogo" src="{{ STATIC_URL }}static/themes/default/images/enlighted-logo.png" />
+		</div>
+		<div id='ver' align="center">
+			<b>{% trans 'version.label' %} {% revision %}</b>
+		</div>
+		<div class="loginForm">
+			<div class="loginHeader">
+				<span>{% trans 'sign.in' %}</span>
+			</div>
+			<div class="errorMsg" id="error"></div>
+      {% if error %}
+				<script>$('#error').html("{% trans 'login.incorrect' %}");</script>
+      {% endif %}
+      {% if sessionExpire %}
+				<script>$('#error').html("{% trans 'session.expired' %}");</script>
+      {% endif %}
+      {% if UnkownSecurityException %}
+				<script>$('#error').html("{% trans 'security.exception' %}");</script>
+      {% endif %}
+			<form method="post" name="loginForm" id="loginForm"
+				onsubmit="return validateForm();" action="{{ STATIC_URL }}authenticate/">
+        {% csrf_token %}
+        <input type="hidden" name="forwardURL" id="forwardURL" value="{{ forward }}" />
+		        <div>
+					<span class="loginPrompt">{% trans 'username.text' %}</span> <input type="text"
+						id="userNameTextBox" class="loginField" name="username"></input>
+				</div>
+				<div>
+					<span class="loginPrompt dvpwd">{% trans 'password.text' %}</span> <input type="password"
+						id="passwordTextBox" class="loginField" name="password"></input>
+				</div>
+				<div class="loginsignup">
+					<input class="submitAction" id="loginButton" type="submit"
+						value='Sign in' />
+				</div>
+			</form>
+		</div>
+	</div>
+	<div class="footer footerlogin">
+		<div style="float: left" class="footerinner">
+			{% trans 'enlighted.copyright' %}
+		</div>
+		<div style="float: right" class="footerinner">
+			<a id="contactUs" href="">{% trans 'enlighted.contactus' %}</a>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.SceneLevel"
+        table="lightlevels"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">lightlevel_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-SceneLevel.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="switchId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="switch_id"
+        />
+
+        <property
+            name="sceneId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="scene_id"
+        />
+
+        <property
+            name="fixtureId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="f_id"
+        />
+
+        <property
+            name="lightLevel"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="lightlevel"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-SceneLevel.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

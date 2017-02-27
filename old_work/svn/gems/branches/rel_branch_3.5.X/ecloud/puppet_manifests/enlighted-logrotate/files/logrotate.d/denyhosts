@@ -1,0 +1,9 @@
+/var/log/denyhosts {
+	daily
+	minsize 250M
+	rotate 7
+	copytruncate
+	missingok 
+	notifempty
+	delaycompress
+	create 644 syslog adm}

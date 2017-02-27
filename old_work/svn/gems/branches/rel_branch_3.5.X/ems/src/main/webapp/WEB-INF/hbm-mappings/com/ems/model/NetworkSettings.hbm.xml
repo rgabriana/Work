@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.NetworkSettings" table="network_settings">
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">network_settings_seq</param>				
+			</generator>
+
+		</id>
+
+		<property name="name" type="java.lang.String"
+			update="true" insert="true" column="interface_name" />	
+
+		<property name="configureIPV4" type="java.lang.String"
+			update="true" insert="true" column="configure_ipv4" />
+
+		<property name="ipaddress" type="java.lang.String" update="true"
+			insert="true" column="ipv4_address" />
+
+		<property name="subnet_mask" type="java.lang.String" update="true"
+			insert="true" column="subnet_mask" />
+
+		<property name="default_gateway" type="java.lang.String" update="true"
+			insert="true" column="gateway" />
+		<property name="macaddress" type="java.lang.String" update="true"
+			insert="true" column="mac_address" />
+		
+		<property name="dns" type="java.lang.String" update="true"
+			insert="true" column="dns" />
+		
+		<property name="search_domain_fields" type="java.lang.String" update="true"
+			insert="true" column="search_domain" />
+		
+		<property name="enablePort" type="java.lang.Boolean" update="true"
+			insert="true" column="port_enabled" />
+		
+		
+
+	</class>
+
+</hibernate-mapping>

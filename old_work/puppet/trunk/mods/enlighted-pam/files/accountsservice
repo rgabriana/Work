@@ -1,0 +1,7 @@
+#%PAM-1.0
+# This file is being managed by puppet
+# Must use substack here, so the success of pam_unix will still
+# cause our pam_pin to run
+password   substack      common-password
+password   optional      pam_pin.so
+

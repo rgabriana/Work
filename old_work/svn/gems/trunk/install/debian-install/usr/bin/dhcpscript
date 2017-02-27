@@ -1,0 +1,29 @@
+#! /bin/bash
+ClientIP=$2
+ClientMAC=$3
+DHCPKey=$4
+ClientIPREV=$5
+ClientMACF=$6
+ClientHost=`echo "GW-"$3.enlightedcustomer.net.`
+
+if [ "$1" == "commit" ]; then
+# Register with DNS
+cat <<EOF > /tmp/test
+server 127.0.0.1
+key DHCP_UPDATER $DHCPKey
+zone 0.254.169.in-addr.arpa.
+update add $ClientIPREV 600 IN PTR enlightedcustomer.net.
+send
+zone enlightedcustomer.net.
+update add $ClientHost 600 IN A $ClientIP
+send
+EOF
+cat /tmp/test | /usr/bin/nsupdate
+
+if [[ "$ClientMACF" == "68:54:f5"* ]]; then
+    if [ -x /home/enlighted/discovergateway.sh ]; then
+        sh /home/enlighted/discovergateway.sh $2 $6 255.255.255.0
+    fi
+fi
+
+fi

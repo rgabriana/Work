@@ -1,0 +1,299 @@
+########################################
+# This file is being managed by puppet #
+########################################
+# This file contains the auditctl rules that are loaded
+# whenever the audit daemon is started via the initscripts.
+# The rules are simply the parameters that would be passed
+# to auditctl.
+
+# First rule - delete all
+-D
+
+# Increase the buffers to survive stress events.
+# Make this bigger for busy systems
+-b 2048 
+
+# Set Failure mode to panic
+#-f 2
+# Feel free to add below this line. See auditctl man page
+
+#V-38522 Audit all attempts to alter the time system through settimeofday.
+-a always,exit -F arch=b64 -S settimeofday -k time_changes
+
+#V-38525 Audit all attempts to alter the time system through stime
+-a always,exit -F arch=b64 -S adjtimex -S settimeofday -S clock_settime -k time_changes
+
+#V-38527 Audit all attempts to alter system time through clock_settime.
+-a always,exit -F arch=b64 -S clock_settime -k time_changes
+
+#V-38530 Audit all attempts to alter system time through /etc/localtime
+-w /etc/localtime -p wa -k time_changes
+
+#V-38531 Audit account creation
+-w /etc/group -p wa -k account_changes
+-w /etc/passwd -p wa -k account_changes
+-w /etc/gshadow -p wa -k account_changes
+-w /etc/shadow -p wa -k account_changes
+-w /etc/security/opasswd -p wa -k account_changes
+
+#V-38540 Audit modifications to the system network configuration
+-a always,exit -F ARCH=b64 -S sethostname -S setdomainname -k network_mods
+-w /etc/issue -p wa -k network_mods
+-w /etc/issue.net -p wa -k network_mods
+-w /etc/hosts -p wa -k network_mods
+-w /etc/network/interfaces -p wa -k network_mods
+-w /etc/resolv.conf -p wa -k audit_domain_modifications
+
+#V-38543 audit all discretionary access control permission modifications using chmod 
+-a always,exit -F arch=b64 -S chmod -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S chmod -F auid=0 -k perm_mod
+
+#V-38545 audit all discretionary access control ownership modifications using chown
+-a always,exit -F arch=b64 -S chown -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S chown -F auid=0 -k perm_mod
+
+#V-38547 audit all discretionary access control permission modification using fchmod
+-a always,exit -F arch=b64 -S fchmod -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S fchmod -F auid=0 -k perm_mod
+
+#V-38550 audit all discretionary access control permission modification using fchmodat
+-a always,exit -F arch=b64 -S fchmodat -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S fchmodat -F auid=0 -k perm_mod
+
+#V-38552 audit all discretionary access control ownership modification using fchown
+-a always,exit -F arch=b64 -S fchown -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S fchown -F auid=0 -k perm_mod
+
+#V-38554 audit all discretionary access control ownership modification using fchownnat
+-a always,exit -F arch=b64 -S fchownat -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S fchownat -F auid=0 -k perm_mod
+
+#V-38556 audit all discretionary access control attribute removal using fremovexattr
+-a always,exit -F arch=b64 -S fremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S fremovexattr -F auid=0 -k perm_mod
+
+#V-38557 audit all discretionary access control attribute modification using fsetxattr
+-a always,exit -F arch=b64 -S fsetxattr -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S fsetxattr -F auid=0 -k perm_mod
+
+#V-38558 audit all discretionary access control ownership modification using lchown
+-a always,exit -F arch=b64 -S lchown -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S lchown -F auid=0 -k perm_mod
+
+#V-38559 audit all discretionary access control attribute removal using lremovexattr
+-a always,exit -F arch=b64 -S lremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S lremovexattr -F auid=0 -k perm_mod
+
+#V-38561 audit all discretionary access control attribute change using lsetxattr
+-a always,exit -F arch=b64 -S lsetxattr -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S lsetxattr -F auid=0 -k perm_mod
+
+#V-38563 audit all discretionary access control attribute removal using removexattr
+-a always,exit -F arch=b64 -S removexattr -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S removexattr -F auid=0 -k perm_mod
+
+#V-38565 audit all discretionary access control attribute change using setxattr
+-a always,exit -F arch=b64 -S setxattr -F auid>=500 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S setxattr -F auid=0 -k perm_mod
+
+#V-38566 audit failed attempts to access files and programs
+-a always,exit -F ARCH=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=500 -F auid!=4294967295 -k access
+-a always,exit -F ARCH=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=500 -F auid!=4294967295 -k access
+-a always,exit -F ARCH=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid=0 -k access
+-a always,exit -F ARCH=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid=0 -k access
+
+#V-38568 audit successful file system mounts
+-a always,exit -F ARCH=b64 -S mount -F auid>=500 -F auid!=4294967295 -k export
+-a always,exit -F ARCH=b64 -S mount -F auid=0 -k export
+
+#V-38575 audit user deletions of files and programs
+-a always,exit -F ARCH=b64 -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=500 -F auid!=4294967295 -k delete
+-a always,exit -F ARCH=b64 -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid=0 -k delete
+
+#V-38578 audit changes to /etc/sudoers file
+-w /etc/sudoers -p wa -k actions
+
+#V-38580 audit the loading and unloading of dynamic kernel modules
+-w /sbin/insmod -p x -k modules
+-w /sbin/rmmod -p x -k modules
+-w /sbin/modprobe -p x -k modules
+-a always,exit -F arch=b64 -S init_module -S delete_module -k modules
+
+#V-38636
+-a always,exit -F arch=b64 -S adjtimex -k time_changes
+
+##User, group, password databases
+-w /etc/group -p wa -k etcgroup
+-w /etc/passwd -p wa -k etcpasswd
+-w /etc/gshadow -k etcgshadow
+-w /etc/shadow -k etcshadow
+-w /etc/security/opasswd -k opasswd
+
+## monitor usage of passwd
+-w /usr/bin/passwd -p x -k passwd_modification
+
+#Monitor for use of tools to change group identifiers
+-w /usr/sbin/groupadd -p x -k group_modification
+-w /usr/sbin/groupmod -p x -k group_modification
+-w /usr/sbin/addgroup -p x -k group_modification
+-w /usr/sbin/useradd -p x -k user_modification
+-w /usr/sbin/usermod -p x -k user_modification
+-w /usr/sbin/adduser -p x -k user_modification
+
+## login configuration and information
+-w /etc/login.defs -p wa -k login
+-w /etc/securetty -p wa -k login
+-w /var/log/faillog -p wa -k login
+-w /var/log/lastlog -p wa -k login
+-w /var/log/tallylog -p wa -k login
+
+## network configuration
+-w /etc/hosts -p wa -k hosts
+-w /etc/network/ -p wa -k network
+
+## system startup scripts
+-w /etc/inittab -p wa -k init
+-w /etc/init.d/ -p wa -k init
+-w /etc/init/ -p wa -k init
+
+## library search paths
+-w /etc/ld.so.conf -p wa -k libpath
+
+## local time zone
+-w /etc/localtime -p wa -k localtime
+
+## kernel parameters
+-w /etc/sysctl.conf -p wa -k sysctl
+
+## modprobe configuration
+-w /etc/modprobe.conf -p wa -k modprobe
+
+## pam configuration
+-w /etc/pam.d/ -p wa -k pam
+-w /etc/security/limits.conf -p wa -k pam
+-w /etc/security/pam_env.conf -p wa -k pam
+-w /etc/security/namespace.conf -p wa -k pam
+-w /etc/security/namespace.init -p wa -k pam
+
+
+## ssh configuration
+-w /etc/ssh/sshd_config -k sshd
+
+## changes to hostname
+-a exit,always -F arch=b64 -S sethostname -k hostname
+
+## changes to issue
+-w /etc/issue -p wa -k etcissue
+-w /etc/issue.net -p wa -k etcissue
+
+
+## Mount Operations
+-a exit,always -F arch=b64 -S mount -S umount2 -k mount
+
+## Changes to Cron
+-w /etc/cron.allow -p wa -k cron 
+-w /etc/cron.deny/ -p wa -k cron 
+-w /etc/cron.d/ -p wa -k cron
+-w /etc/cron.daily/ -p wa -k cron 
+-w /etc/cron.hourly/ -p wa -k cron
+-w /etc/cron.monthly/ -p wa -k cron
+-w /etc/cron.weekly/ -p wa -k cron
+-w /etc/crontab -p wa -k cron
+-w /var/spool/cron/crontabs/ -k cron
+-w /usr/bin/crontab -p x -k crontab
+
+## Capture all failures to access on critical elements
+-a exit,always -F arch=b64 -S open -F dir=/etc -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b64 -S open -F dir=/bin -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b64 -S open -F dir=/sbin -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b64 -S open -F dir=/usr/bin -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b64 -S open -F dir=/usr/sbin -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b64 -S open -F dir=/var -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b64 -S open -F dir=/home -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b64 -S open -F dir=/srv -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b64 -S open -F dir=/etc/apache2/ -F success=0 -k unauthedfileaccess
+
+## Monitor for use of process ID change (switching accounts) applications
+-w /bin/su -p x -k priv_esc
+-w /usr/bin/sudo -p x -k priv_esc
+-w /etc/sudoers -p rw -k priv_esc
+
+
+## Monitor usage of commands to change power state
+-w /sbin/shutdown -p x -k power
+-w /sbin/poweroff -p x -k power
+-w /sbin/reboot -p x -k power
+-w /sbin/halt -p x -k power
+
+## unsuccessful creation
+-a exit,always -F arch=b64 -S creat -S mkdir -S mknod -S link -S symlink -F exit=-EACCES -k creation
+-a exit,always -F arch=b64 -S mkdirat -S mknodat -S linkat -S symlinkat -F exit=-EACCES -k creation
+
+## unsuccessful open
+-a exit,always -F arch=b64 -S open -F exit=-EACCES -k open
+-a exit,always -F arch=b64 -S open -F exit=-EPERM -k open
+-a exit,always -F arch=b64 -S openat -F exit=-EACCES -k open
+
+## unsuccessful close
+-a exit,always -F arch=b64 -S close -F exit=-EACCES -k close
+
+## unsucessful modificaitons
+-a exit,always -F arch=b64 -S rename -S truncate -S ftruncate -F exit=-EACCES -k mods
+-a exit,always -F arch=b64 -S renameat -F exit=-EACCES -k mods
+-a exit,always -F perm=a -F exit=-EACCES -k mods
+-a exit,always -F perm=a -F exit=-EPERM -k mods
+
+## watch the home folders
+-w /home/ -p wa -k home_mod
+
+## watch the etc folder for config changes 
+-w /etc/ -p wa -k config_mod
+
+## Monitor Apache2 
+-w /etc/apache2/ -p wa -k apache
+
+## Monitor package installation 
+-w /usr/bin/apt-get -p x -k apt-get 
+-w /usr/bin/dpkg -p x -k dpkg
+
+## Monitor the use of kill process
+-w /bin/kill -p x -k dpkg
+
+## Monitor UFW executions and changes
+-w /etc/ufw/ufw.conf -p wa -k UFWconfig
+-w /etc/ufw/after.rules -p wa -k UFWconfig
+-w /etc/ufw/before.rules -p wa -k UFWconfig
+-w /usr/sbin/ufw -p x -k UFW
+-w /sbin/iptables -p x -k UFW
+
+## Changes to apache2 config 
+#-w /etc/apache2/sites-enabled/000-default -p wa -k apache_config
+## Replica_server
+-w /etc/apache2/sites-enabled/000-default-replica -p wa -k apache_config
+
+## Changes to tomcat config 
+-w /var/lib/tomcat6/Enlighted -p wa -k enlighted_tomcat6_config
+-w /var/lib/tomcat6/webapps -p wa -k enlighted_tomcat6_config
+-w /usr/share/tomcat6/bin/catalina.sh -p wa -k enlighted_tomcat6_catalina
+-w /var/lib/tomcat6/conf/context.xml -p wa -k enlighted_tomcat6_config
+
+## Changes to Enlighted Scripts
+#-w /home/enlighted/utils/master_daily_backup.sh -p wa -k enlighted_backup
+-w /home/enlighted/utils/replica_daily_backups.sh -p wax -k replica_daily_backups.sh
+-w /home/enlighted/utils/generateSPPACerts.php -p wax -k generateSPPACerts.php
+-w /home/enlighted/utils/kill_process.sh -p wax -k enlighted_kill_process.sh
+-w /home/enlighted/utils/monitoring -p wa -k enlighted_health_monitoring
+
+## Replica_server
+ -w /var/lib/tomcat6/Enlighted/ems_log4j/log4j.properties -p wa -k em_logs
+
+## Changes to Postgres configs 
+-w /etc/postgresql/9.3/main/pg_hba.conf -p wa -k enlighted_psql
+-w /etc/postgresql/9.3/main/postgresql.conf -p wa -k enlighted_psql
+-w /usr/bin/psql -p wax -k enlighted_psql_execution 
+
+## Watch for people usage of service 
+-w /usr/sbin/service -p wax -k service_execution
+
+## Make the configuration immutable
+#-e 2

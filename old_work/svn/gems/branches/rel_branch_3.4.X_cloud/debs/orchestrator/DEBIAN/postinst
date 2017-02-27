@@ -1,0 +1,109 @@
+#!/bin/bash -x
+# Run this after installing this package, it requires root privilage
+
+cd /var/lib/tomcat6/Enlighted/upgradeEnlFiles/
+
+hbafile=$(find /etc/postgresql | grep pg_hba.conf | sort | tail -n 1)
+postgresreboot="0"
+
+### change local server security to trust
+if [ -n "$hbafile" ]
+then
+        local=$(sudo grep -E "local\ *all" $hbafile | grep -v trust)
+        if [ -n "$local" ]
+        then
+                echo $hbafile
+                sudo sed -i 's/^\(local\ *all\ *\w*\ *\)\(\w*\)/\1trust/' $hbafile
+                postgresreboot="1"
+        fi
+        host=$(sudo grep -E "host\ *all" $hbafile | grep -v trust)
+        if [ -n "$host" ]
+        then
+                echo $hbafile
+                sudo sed -i 's/^\(host\ *all\ *\w*\ *[^\ ]*\ *\)\(\w*\)/\1trust/' $hbafile
+                postgresreboot="1"
+        fi
+fi
+
+conffile=$(find /etc/postgresql | grep postgresql.conf | sort | tail -n 1)
+
+if [ -n "$conffile" ]
+then
+        ### Change bytea from hex to escape
+        byteo=$(grep bytea_output $conffile)
+        if [[ "$byteo" =~ "#" ]] || [[ "$byteo" =~ "hex" ]]
+        then
+                echo $conffile
+                sudo sed -i "s/^#*\(bytea_output\ *=\ *'\)\w*\('\).*/\1escape\2/" $conffile
+                postgresreboot="1"
+        fi
+fi
+
+if [[ "$postgresreboot" =~ "1" ]]
+then
+        sudo /etc/init.d/postgresql restart
+    	sudo psql -U postgres -a -f sql_ascii.sql
+fi
+
+sudo a2enmod ssl
+sudo a2enmod proxy proxy_http proxy_ajp rewrite
+sudo a2enmod headers
+
+sudo cp proxy.conf /etc/apache2/mods-enabled/proxy.conf
+sudo cp 000-default /etc/apache2/sites-enabled/
+sudo cp apache2.conf /etc/apache2/
+sudo cp ports.conf /etc/apache2/
+sudo cp enlighted.pem /etc/apache2/
+sudo cp enlighted.key /etc/apache2/
+
+sudo mkdir /etc/apache2/ssl/
+
+if [ ! -h /etc/apache2/ssl/apache.pem ]
+then
+	cd /etc/apache2/ssl/
+	ln -s /etc/apache2/enlighted.pem ./apache.pem
+	cd /var/lib/tomcat6/Enlighted/upgradeEnlFiles/
+fi
+
+if [ ! -h /etc/apache2/ssl/apache.key ]
+then
+	cd /etc/apache2/ssl/
+	ln -s /etc/apache2/enlighted.key ./apache.key
+	cd /var/lib/tomcat6/Enlighted/upgradeEnlFiles/
+fi
+
+
+echo "Setting up Master server database...."
+ps -ef | grep postgresql | grep -v grep > /dev/null
+if [ $? -eq 0 ]
+then
+   if [ `psql -q -U postgres -t -c "select count(*) from pg_database where datname='emscloud'"` -eq 1 ]
+   then
+		psql -U postgres -d emscloud -f ecloud_upgrade.sql
+    else 
+      	createdb -U postgres emscloud -O postgres
+		psql -U postgres -d emscloud -f ecloud_install.sql
+		psql -U postgres -d emscloud -c "update system_configuration set value='false' where name='cloud.mode'"
+		psql -U postgres -d emscloud -c "update system_configuration set value='true' where name = 'FEATURE_ENERGY_AGGREGATION'"
+		psql -U postgres -d emscloud -c "update system_configuration set value='true' where name = 'FEATURE_SENSOR_PROFILE'"
+    fi
+else
+    echo "*** postgres not running ***"
+fi
+
+sudo cp context.xml  /var/lib/tomcat6/conf/
+sudo cp server.xml  /var/lib/tomcat6/conf/
+
+sudo cp /var/lib/tomcat6/webapps/ROOT/index.html /var/www/
+
+sudo chown -R tomcat6:tomcat6 /var/lib/tomcat6
+ 
+#Restart all the services changes,used, installed,upgraded
+echo "Restarting tomcat6 and apache services"
+sudo service tomcat6 restart
+sudo service apache2 restart 
+
+
+
+
+

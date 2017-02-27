@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.MotionGroupFixtureDetails" table="motion_group_fixture_details">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">motion_group_fixture_details_seq</param>
+			</generator>
+		</id>
+
+		<many-to-one name="gemsGroupFixture" column="gems_group_fixture_id" cascade="all" lazy="false" unique="true"/>
+		<property name="type" type="java.lang.Short" update="true"
+			insert="true" column="type" />
+		<property name="ambientType" type="java.lang.Short" update="true"
+			insert="true" column="ambient_type" />
+		<property name="useEmValue" type="java.lang.Short" update="true"
+			insert="true" column="use_em_values" />
+		<property name="loAmbValue" type="java.lang.Short" update="true"
+			insert="true" column="lo_amb_level" />
+		<property name="hiAmbValue" type="java.lang.Short" update="true"
+			insert="true" column="hi_amb_level" />
+		<property name="tod" type="java.lang.Integer" update="true"
+			insert="true" column="time_of_day" />
+		<property name="lightLevel" type="java.lang.Short" update="true"
+			insert="true" column="light_level" />
+
+	</class>
+
+</hibernate-mapping>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.enlightedinc.gem</groupId>
+	<artifactId>flex-comp</artifactId>
+	<packaging>pom</packaging>
+	<version>2.1.0i</version>
+	<!-- UPDATE -->
+	<properties>
+		<flex.sdk.version>4.5.1.21328</flex.sdk.version>
+		<flex.datavisualization.version>4.5.0.17855</flex.datavisualization.version>
+		<flexmojos.version>4.0-RC2</flexmojos.version>
+		<flexunit.version>4.0-rc-1</flexunit.version>
+	</properties>
+
+	<build>
+
+		<sourceDirectory>src/main/flex</sourceDirectory>
+		<testSourceDirectory>src/test/flex</testSourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>org.sonatype.flexmojos</groupId>
+				<artifactId>flexmojos-maven-plugin</artifactId>
+				<version>${flexmojos.version}</version>
+				<extensions>true</extensions>
+				<executions>
+					<execution>
+						<goals>
+							<goal>optimize-swf</goal>
+						</goals>
+						<configuration>
+							<!-- Apparat specific optimisations -->
+							<reduceDeblock>.5</reduceDeblock>
+							<reduceMergeABC>false</reduceMergeABC>
+							<reduce>true</reduce>
+							<reduceLzma>true</reduceLzma>
+							<reduceMergeCF>false</reduceMergeCF>
+							<reduceQuality>1.0</reduceQuality>
+							<strip>true</strip>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.adobe.flex.framework</groupId>
+			<artifactId>flex-framework</artifactId>
+			<version>${flex.sdk.version}</version>
+			<type>pom</type>
+		</dependency>
+		<dependency>
+			<groupId>com.adobe.flex.framework</groupId>
+			<artifactId>datavisualization</artifactId>
+			<version>${flex.datavisualization.version}</version>
+			<type>swc</type>
+		</dependency>
+		<dependency>
+			<groupId>com.adobe.flexunit</groupId>
+			<artifactId>flexunit</artifactId>
+			<version>${flexunit.version}</version>
+			<type>swc</type>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>flex-mojos-repository</id>
+			<url>http://repository.sonatype.org/content/groups/flexgroup</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>flex-mojos-plugin-repository</id>
+			<url>http://repository.sonatype.org/content/groups/flexgroup</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<modules>
+		<module>EnergySummaryModule</module>
+	</modules>
+
+</project>

@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   xmlns:mx="library://ns.adobe.com/flex/mx" 
+		   width="100%" height="100%"
+		   applicationComplete="onApplicationComplete(event)"
+		   backgroundColor="#FFFFFF"
+		   xmlns:components="com.enlightedinc.components.*">
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="YYYYMMDDJJNNSS"/>
+	</fx:Declarations>
+	
+	<!-- This line of code is failing in maven build. Known issue.
+	Ref: https://issues.sonatype.org/browse/FLEXMOJOS-425-->
+	<!--<fx:Style source="../../../../../../webapp/themes/default/css/flexStyle.css"/>-->
+	
+	<fx:Style source="com/enlightedinc/assets/css/flexStyle.css"/>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.components.AlertBox;
+			import com.enlightedinc.components.Constants;
+			import com.enlightedinc.components.PlotChartView;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.core.mx_internal;
+			import mx.events.FlexEvent;
+			
+			use namespace mx_internal;
+			
+			import spark.filters.GlowFilter;
+			
+			private var color:Number = 0x1F29AD;
+			private var glowFilter:GlowFilter = new GlowFilter(color, .8, 6, 6, 2, 1,false, false);
+			
+			private var m_propertyId:String;
+			private var m_propertyType:String;
+			public var m_propertyMode:String = Constants.FLOORPLAN;
+			private var m_propertyModeId:String = "";
+			
+			private var timer:Timer;
+			private var alertBox:AlertBox;
+			[Bindable]
+			private var tabBarArrayColl:ArrayCollection = new ArrayCollection([
+				{label:"Location"},
+				{label:"Fixture"},
+				{label:"Scene"},
+				{label:"ERC"}
+			]);
+			private var tabBarArrayCollNonFloor:ArrayCollection = new ArrayCollection([
+				{label:"Fixture"}
+			]);
+			private var tabBarArrayCollGroup:ArrayCollection = new ArrayCollection([
+				{label:"Fixture"}
+			]);
+			private var tabBarArrayCollNoWDS:ArrayCollection = new ArrayCollection([
+				{label:"Location"},
+				{label:"Fixture"},
+				{label:"Scene"}
+			]);
+			
+			[Bindable]
+			public var showTabBar:Boolean=false;			
+			
+			// Refresh Energy Meter data every 10 minutes
+			/// TODO - Handle stopping the timer when moved to different floor
+			//private var energyMeterTimer:Timer = new Timer(10*60*1000, 0);
+			
+			private function onApplicationComplete(event:Event) : void
+            {
+				// Allow Javascript to communicate.
+				if (ExternalInterface.available) 
+				{
+					ExternalInterface.addCallback("changeFloor", changeFloor);
+					ExternalInterface.addCallback("addGateway", addGateway);
+					ExternalInterface.addCallback("addFixture", addFixture);
+					ExternalInterface.addCallback("addSwitch", addSwitch);
+					ExternalInterface.addCallback("addWds", addWds);
+					ExternalInterface.addCallback("addLocatorDevice", addLocatorDevice);
+					ExternalInterface.addCallback("updateLocatorDevice", updateLocatorDevice);
+					ExternalInterface.addCallback("handleWheel", handleWheel);
+					ExternalInterface.addCallback("plotChartRefresh", plotChartRefresh);
+					ExternalInterface.addCallback("floorPlanRefresh", floorPlanRefresh);
+					ExternalInterface.addCallback("resetDevicePosition", resetDevicePosition);
+					ExternalInterface.addCallback("changeLevel", changeLevel);
+					ExternalInterface.addCallback("changeLevelForWidget", changeLevelForWidget);
+					ExternalInterface.addCallback("getSelectedDevices", getSelectedDevices);
+					ExternalInterface.addCallback("startImageUpgradeRefresh", startImageUpgradeRefresh);
+					ExternalInterface.addCallback("resizeEventFired", resizeEventFired);
+				} 
+				else 
+				{
+					showAlertMarquee("ExternalInterface is not available", true);
+				}
+				
+				this.systemManager.addEventListener(FlexEvent.IDLE, onUserIdle);
+				
+				var orgId:String = FlexGlobals.topLevelApplication.parameters.orgId;
+				var orgType:String = FlexGlobals.topLevelApplication.parameters.orgType;
+				var viewMode:String = FlexGlobals.topLevelApplication.parameters.mode;
+				var modeId:String = (FlexGlobals.topLevelApplication.parameters.modeid) ? (FlexGlobals.topLevelApplication.parameters.modeid) : "";
+				var enableMotionBits:String = (FlexGlobals.topLevelApplication.parameters.enableMotionBits) ? (FlexGlobals.topLevelApplication.parameters.enableMotionBits) : "";
+				var userRole:String = (FlexGlobals.topLevelApplication.parameters.role)? (FlexGlobals.topLevelApplication.parameters.role) : "";
+				var switchId:String = (FlexGlobals.topLevelApplication.parameters.switchId) ? (FlexGlobals.topLevelApplication.parameters.switchId) : "";
+				var groupId:String = (FlexGlobals.topLevelApplication.parameters.groupId) ? (FlexGlobals.topLevelApplication.parameters.groupId) : "";
+				var fixtureVersion:String = (FlexGlobals.topLevelApplication.parameters.fixtureVersion) ? (FlexGlobals.topLevelApplication.parameters.fixtureVersion) : "";
+					
+				if(viewMode==Constants.FLOORPLAN)
+				{
+					showTabBar=false;
+
+				}
+				else if(viewMode==Constants.SWITCH_MODE)
+				{
+					if(orgType != Constants.FLOOR && orgType != Constants.AREA)
+						tabs.dataProvider = tabBarArrayCollNonFloor;
+					else if(fixtureVersion.toLocaleUpperCase() == "1.X")
+						tabs.dataProvider = tabBarArrayCollNoWDS;
+					plotChartView.widgetSelectedTab = tabs.selectedItem.label;
+					showTabBar =true;
+				}
+				else if(viewMode == Constants.GROUP_MODE || viewMode == Constants.MOTION_BITS_GROUP_MODE)
+				{
+					tabs.dataProvider = tabBarArrayCollGroup;
+					if(orgType != Constants.FLOOR && orgType != Constants.AREA)
+						tabs.dataProvider = tabBarArrayCollNonFloor;
+					plotChartView.widgetSelectedTab = tabs.selectedItem.label;
+					showTabBar =true;
+				}
+				else
+				{
+					showTabBar =false;
+				}
+
+				if (orgId != null && orgType != null) 
+				{
+					plotChartView.m_propertyModeId = m_propertyModeId = modeId;
+					plotChartView.m_switchId = switchId;
+					plotChartView.m_groupId = groupId;
+					plotChartView.m_fixtureVersion = fixtureVersion;
+					plotChartView.m_enableMotionBits = enableMotionBits;
+					changeFloor(orgType, orgId, viewMode);
+				}
+				
+				if(userRole)
+				{
+					plotChartView.m_userRole = userRole;
+				}
+					
+				
+				plotChartView.setMode();
+            }
+			
+			private function changeFloor(orgType:String, orgId:String, viewMode:String) : void
+			{
+				if(m_propertyId == orgId && m_propertyType == orgType)
+					return;
+				removeMarquee();
+				plotChartView.m_propertyId = m_propertyId = orgId;
+				plotChartView.m_propertyType = m_propertyType = orgType;
+				plotChartView.m_propertyMode = m_propertyMode = viewMode;
+				plotChartView.resetDataOnFloorChange();
+				getFloorPlanData();
+			}
+			
+			private function changeLevel(orgType:String, orgId:String, viewMode:String, modeId:String) : void
+			{
+				plotChartView.m_propertyModeId = m_propertyModeId = modeId;
+				changeFloor(orgType, orgId, viewMode);
+			}
+			private function changeLevelForWidget(orgType:String, orgId:String, viewMode:String, modeId:String, switchId:String) : void
+			{
+				plotChartView.m_propertyModeId = m_propertyModeId = modeId;
+				plotChartView.m_switchId = switchId;
+				changeFloor(orgType, orgId, viewMode);
+			}
+			
+			private function getSelectedDevices(): void
+			{
+				plotChartView.getSelectedDevices();
+			}
+			
+			private function startImageUpgradeRefresh():void
+			{
+				plotChartView.startImageUpgradeRefresh();
+			}
+			private function resizeEventFired():void{
+				plotChartView.toolbarViewStack.resizeToContent=true;
+			}
+			private function getFloorPlanData() : void
+			{
+				if(m_propertyMode == Constants.REPORT || m_propertyMode == Constants.IMAGE_UPGRADE || m_propertyMode == Constants.SWITCH_MODE)
+				{
+					if(m_propertyType == Constants.FLOOR || m_propertyType == Constants.AREA)
+					{
+						plotChartView.showFloorPlan();
+						plotChartView.handleTabClick(plotChartView.widgetSelectedTab);
+					}
+					else
+					{
+						plotChartView.hideFloorPlan();
+					}
+				}
+				plotChartView.getFloorPlanData();
+			}
+
+		    private function handleWheel(event : Object) : void {
+		        var obj : InteractiveObject = null;
+		        var applicationStage : Stage = FlexGlobals.topLevelApplication.stage as Stage;
+
+		        var mousePoint : Point = new Point(applicationStage.mouseX, applicationStage.mouseY);
+		        var objects : Array = applicationStage.getObjectsUnderPoint(mousePoint);
+
+		        for (var i : int = objects.length - 1; i >= 0; i--) {
+		            if (objects[i] is InteractiveObject) {
+		                obj = objects[i] as InteractiveObject;
+		                break;
+		            }
+		            else {
+		                if (objects[i] is Shape && (objects[i] as Shape).parent) {
+		                    obj = (objects[i] as Shape).parent;
+		                    break;
+		                }
+		            }
+		        }
+
+		        if (obj) {
+		            var mEvent : MouseEvent = new MouseEvent(MouseEvent.MOUSE_WHEEL, true, false,
+		                                                     mousePoint.x, mousePoint.y, obj,
+		                                                     event.ctrlKey, event.altKey, event.shiftKey,
+		                                                     false, Number(event.delta));
+		            obj.dispatchEvent(mEvent);
+		        }
+		    }
+			
+			private function plotChartRefresh() : void
+			{
+				showAlertMarquee("Refreshing...", true);
+				getFloorPlanData();
+			}
+			
+			private function floorPlanRefresh() : void
+			{
+				plotChartView.loadFloorPlan();
+			}
+			
+			private function onUserIdle(e:FlexEvent) : void
+			{
+				var waitTime:Number = 10; //wait time is in minutes
+				var counter:Number = (waitTime * 60 * 1000)/100; // minutes * (60secs) = (600secs) = (600000msecs) = 600000/100 = 6000
+				if(e.currentTarget.mx_internal::idleCounter == counter) 
+				{
+					this.systemManager.removeEventListener(FlexEvent.IDLE, onUserIdle);
+					this.addEventListener(MouseEvent.MOUSE_MOVE, refreshData);
+					this.addEventListener(MouseEvent.MOUSE_DOWN, refreshData);
+					this.addEventListener(KeyboardEvent.KEY_DOWN, refreshData);
+				}
+			}
+			
+			private function refreshData(event:MouseEvent) : void
+			{
+				this.removeEventListener(MouseEvent.MOUSE_MOVE, refreshData);
+				this.removeEventListener(MouseEvent.MOUSE_DOWN, refreshData);
+				this.removeEventListener(KeyboardEvent.KEY_DOWN, refreshData);
+				showAlertMarquee("Refreshing...", true);
+				getFloorPlanData();
+				this.systemManager.addEventListener(FlexEvent.IDLE, onUserIdle);
+			}
+            
+            private function addGateway(orgType:String, orgId:String, gatewayId:String) : void
+            {
+            	showAlertMarquee("Adding Gateway " + gatewayId, true);
+				plotChartView.addGateway(orgType, orgId, gatewayId);
+            }
+            
+            private function addFixture(orgType:String, orgId:String, fixtureId:String, bRMAInProgress:Boolean) : void
+            {
+            	showAlertMarquee("Adding Fixture " + fixtureId + " on " + orgType + ", " + orgId, true);
+				plotChartView.addFixture(orgType, orgId, fixtureId, bRMAInProgress);
+            }
+            
+            private function addSwitch(orgType:String, orgId:String, switchId:String) : void
+            {
+            	showAlertMarquee("Adding Switch " + switchId, true);
+				plotChartView.addSwitch(orgType, orgId, switchId);
+            }
+
+            private function addWds(orgType:String, orgId:String, wdsId:String, wdsName:String, switchId:String, gwId:String) : void
+            {
+            	showAlertMarquee("Adding ERC " + wdsId, true);
+				plotChartView.addWds(orgType, orgId, wdsId, wdsName, switchId, gwId);
+            }
+            
+			private function addLocatorDevice() : void
+			{
+				showAlertMarquee("Adding LocatorDevice ",true);
+				plotChartView.addLocatorDevice();
+			}
+			
+			private function updateLocatorDevice() : void
+			{
+				showAlertMarquee("Updating LocatorDevice ",true);
+				plotChartView.updateLocatorDevice();
+			}
+
+			public function selectFixture(fixtureId:String) : void
+			{
+				plotChartView.selectFixture(fixtureId);
+			}
+
+			public function selectGateway(gatewayId:String) : void
+			{
+				plotChartView.selectFixture(gatewayId);
+			}
+
+			public function selectWDS(wdsId:String) : void
+			{
+				plotChartView.selectWDS(wdsId);
+			}
+
+			private function resetDevicePosition() : void
+			{
+				plotChartView.resetDevicePosition();
+			}
+			
+			public function removeSelection(bClearReportTableList:Boolean = true) : void
+			{
+				plotChartView.removeSelection(bClearReportTableList);
+			}
+			
+			public function showAlertMarquee(str:String, timerEnable:Boolean) : void
+			{
+				if(alertBox)
+					removeMarquee();
+				
+				alertBox = new AlertBox();
+				alertBox.marqueeText = str;
+				
+				alertBox.width = plotChartView.panCanvas.width;
+				alertBox.x = plotChartView.panCanvas.horizontalScrollPosition;
+				alertBox.y = plotChartView.panCanvas.verticalScrollPosition;
+				
+				plotChartView.panCanvas.addChild(alertBox);
+				
+				if(timerEnable)
+				{
+					if(timer)
+					{
+						timer.stop();
+						timer = null;
+					}
+					
+					timer = new Timer(5000);
+					timer.addEventListener( TimerEvent.TIMER, marqueeTimerHandler);
+					timer.start();
+				}
+			}
+			
+			private function marqueeTimerHandler(event:TimerEvent) : void
+			{
+				removeMarquee();
+				if(timer)
+				{
+					timer.stop();
+					timer = null;
+				}
+			}
+			
+			public function removeMarquee() : void
+			{
+				for (var i:int = plotChartView.panCanvas.numChildren-1 ; i >= 0; i--) {
+					if(plotChartView.panCanvas.getChildAt(i) is AlertBox)
+						plotChartView.panCanvas.removeChildAt(i);
+				}
+				alertBox = null;
+			}
+			
+			// NOTE: DO NOT DELETE/ UNCOMMENT THE COMMENTED CODE. 
+			//THIS MIGHT BE REUSED. 
+			//IF NOT REUSED, WILL BE CLEANED UP DURING CODE CLEAN UP AND OPTIMIZATION PHASE.
+			
+			/* 
+			private function getEnergyMeterData() : void
+			{
+				if (m_propertyMode == Constants.FLOORPLAN)
+				{
+					var date:Date = new Date();
+					// Local time is converted to UTC and then format the date.
+					var toDate:String = convertToUTC(date);
+					date.setMinutes(date.getMinutes() - 10);			
+					var fromDate:String = dateFormatter.format(date);
+					
+					//fixtureDock.energyGraph.energyMeterHttpService.url = Constants.serverurl + "ec/md/" + m_propertyType + "/" +  m_propertyId +"/" + fromDate + "/" + toDate;
+					//fixtureDock.energyGraph.energyMeterHttpService.send();
+				}
+			}
+			
+			private function convertToUTC( localDate:Date ) : String
+			{
+				var offsetSecs:Number = localDate.getTimezoneOffset() * 60 * 1000;
+				localDate.setTime(localDate.getTime() + offsetSecs);
+				return dateFormatter.format(localDate);
+			}
+			
+			private function onSearchItemSelected(event:SearchEvent) : void
+			{
+				plotChartView.handleChange(event);
+			}
+			
+			private function onDimFixtures(event:DimEvent) : void
+			{
+				if(plotChartView.selectedItems.length < 1)
+				{
+					showAlertMarquee(Constants.NO_FIXTURE_SELECTED_ERROR, true); 
+					return;
+				}
+				plotChartView.dimFixtureHttpService.url = Constants.serverurl + "fixture/op/dim/rel/" + event.dimPercentage + "/" + event.minutes;
+				plotChartView.dimFixtureHttpService.request = createRequestXml();
+				plotChartView.dimFixtureHttpService.send();
+			}
+			
+			private function onAutoClick(event:DockEvent) : void
+			{
+				if(plotChartView.selectedItems.length < 1)
+				{
+					showAlertMarquee(Constants.NO_FIXTURE_SELECTED_ERROR, true);
+					return;
+				}
+				plotChartView.fixuteModeHttpService.url = Constants.serverurl + "fixture/op/mode/" + event.label;
+				plotChartView.fixuteModeHttpService.request = createRequestXml();
+				plotChartView.fixuteModeHttpService.send();
+			}
+			
+			private function onRealTimeClick(event:DockEvent) : void
+			{
+				//if(plotChartView.selectedItems.length < 1)
+				//{
+					//showAlertMarquee(Constants.NO_FIXTURE_SELECTED_ERROR, true);
+					//return;
+				//}
+				plotChartView.realtimeHttpService.url = Constants.serverurl + "fixture/op/realtime";
+				plotChartView.realtimeHttpService.request = createRequestXml();
+				plotChartView.realtimeHttpService.send();
+			} 
+			
+			private function createRequestXml() : XML
+			{
+				var requestXML:XML = <fixtures></fixtures>;
+				var id:String;			
+				var selectedItems:Array = plotChartView.selectedItems;			
+				for each(var obj:PlotSeriesItem in selectedItems)
+				{
+					if(obj.itemRenderer.name == Constants.FIXTURE_RENDERER)
+					{
+						id = obj.item.id;
+						var xmlList:XMLList = XMLList("<fixture><id>" + id + "</id></fixture>");
+						requestXML.appendChild(xmlList);
+					}
+				}
+				return requestXML;
+			}
+			
+			private function showFloorPlan(event:DockEvent) : void
+			{
+			m_propertyMode = Constants.FLOORPLAN;
+			plotChartView.createFloorPlanContextMenu();
+			fixtureDock.showOrHideItem(m_propertyMode);
+			plotChartView.showOrHideItem(m_propertyMode);
+			plotChartView.loadHome();
+			}
+			
+			private function showReports(event:DockEvent) : void
+			{
+			m_propertyMode = Constants.REPORTS;
+			plotChartView.panCanvas.contextMenu = null;
+			fixtureDock.showOrHideItem(m_propertyMode);
+			plotChartView.showOrHideItem(m_propertyMode);
+			plotChartView.loadReports();
+			} 
+			*/
+
+			protected function tabs_clickHandler(event:MouseEvent):void
+			{
+				plotChartView.widgetSelectedTab = (event.currentTarget as TabBar).selectedItem.label;
+				plotChartView.handleTabClick((event.currentTarget as TabBar).selectedItem.label);
+			}
+		]]>
+	</fx:Script>
+	
+	<!--<s:controlBarContent>
+		<components:FixturesDock id="fixtureDock" width="100%"
+								 autoClick="onAutoClick(event)"
+								 searchData="{plotChartView.searchData}"
+								 realtimeClick="onRealTimeClick(event)"
+								 refreshScreen="getFloorPlanData(event)"
+								 searchComplete="onSearchItemSelected(event)"
+								 showFloorPlan="showFloorPlan(event)"
+								 showReports="showReports(event)"
+								 dimFixtures="onDimFixtures(event)"/>
+	</s:controlBarContent>-->
+	
+	<s:Scroller width="100%" height="100%">
+		<s:Group width="100%" height="100%">
+			<mx:VBox id="floorPlanDefault" width="100%" height="100%">
+				<mx:VBox verticalGap="0" width="100%" paddingTop="10">
+				<s:TabBar id="tabs"  dataProvider="{tabBarArrayColl}" click="tabs_clickHandler(event)" includeInLayout="{showTabBar}" visible="{showTabBar}"
+						   />
+				<mx:HRule width="100%" includeInLayout="{showTabBar}" visible="{showTabBar}"/>
+				</mx:VBox>
+				<components:PlotChartView id="plotChartView" width="100%" height="100%"/>
+			</mx:VBox>
+		</s:Group>
+	</s:Scroller>
+	
+</s:Application>

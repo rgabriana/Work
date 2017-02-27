@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+		 width="100%" height="100%" 
+		 xmlns:components="com.enlightedinc.components.*"
+		 creationComplete="onCreationComplete()" xmlns:s="library://ns.adobe.com/flex/spark">
+	
+	<mx:Metadata>
+		[Event(type="com.enlightedinc.events.TimePeriodFilterEvent", name="filterperiodchange")]
+		[Event(type="com.enlightedinc.events.EnergySummaryEvent", name="refresh")]
+	</mx:Metadata>
+	
+	<mx:Style>
+		
+		.vboxStyle
+		{
+			border-style : solid;
+			corner-radius : 15;
+			horizontal-align : center;
+			vertical-align : middle;
+			padding-bottom : 0;
+			padding-top : 0;
+		}
+		.gemSummaryStyle
+		{
+			border-weight:2;
+			border-style : solid;
+			corner-radius : 15;
+			horizontal-align : center;
+			vertical-align : middle;
+			padding-bottom : 0;
+			padding-top : 10;
+		}
+		
+	</mx:Style>
+	
+	<mx:HTTPService id="fixturesService" 
+					resultFormat="e4x"
+					result="onGetFixturesResult(event)" 
+					fault="onGetFixturesFault(event)"/>
+	
+	<!--<mx:HTTPService id="energyMeterService"
+					resultFormat="e4x"
+					result="onGetEnergyMeterResult(event)"
+					fault="onGetEnergyMeterFault(event)"/>-->
+	
+	<mx:Script>
+		<![CDATA[
+			import com.enlightedinc.events.EnergySummaryEvent;
+			import com.enlightedinc.events.TimePeriodFilterEvent;
+			import com.enlightedinc.images.Images;
+			
+			import mx.charts.HitData;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.Tree;
+			import mx.core.FlexGlobals;
+			import mx.core.IVisualElement;
+			import mx.core.UIComponent;
+			import mx.events.CloseEvent;
+			import mx.events.ListEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.xml.SimpleXMLDecoder;
+			
+			import spark.components.TitleWindow;
+			
+			/**
+			 * Dataprovider binded to Energy Meter and Energy Usage. 
+			 **/
+			[Bindable]
+			public var energyMeterObj: Object = new Object();
+			
+			/**
+			 * Dataprovider binded to Current Energy Meter. 
+			 **/
+			[Bindable]
+			public var currentEnergyMeterObj: Object = new Object(); 
+			
+			/**
+			 * "energyUsageData" Dataprovider binded to the Energy Usage Graph. 
+			 * "tempUsageData" is the temp array collection used to swap "energyUsageData" when required.
+			 **/
+			[Bindable]
+			public var energyUsageData:ArrayCollection = new ArrayCollection();
+			
+			private var tempUsageData:ArrayCollection = new ArrayCollection();
+			
+			[Bindable]
+			private var showMD:Boolean = false;
+			
+			private var currentPeriod:String=Constants.DAY;
+			
+			private var popUpWindow:TitleWindow;
+			
+			private var avgLoadValue:Number;
+			private var totalConsumptionValue:Number;
+			private var peakLoadValue:Number;
+			private var minLoadValue:Number;
+			private var powerUsageValue:Number;
+			private var costValue:Number;
+			private var savingsValue:Number;
+			private var currentLoadValue:Number;
+			private var basecurrentLoadValue:Number;
+			private var savedpowerValue:Number;
+			
+			private var numOfBuildings:int = 0;
+			public var currentEMCount:int = 1;
+			public var currentEGCount:int = 1;
+			private var currentProfileCount:int = 1;
+			private var numOfFixtures:int = 0;
+			
+			private function onCreationComplete():void
+			{
+				BusyStateManager.getInstance().registerComponent(energyCanvas);
+				BusyStateManager.getInstance().registerComponent(energyMeterCanvas);
+				BusyStateManager.getInstance().registerComponent(usageByProfileCanvas);
+				BusyStateManager.getInstance().registerComponent(summaryFormCanvas);
+				
+			}
+			
+			private function wattPrecision(value:Number) : String
+			{
+				if (value >= 1000000)
+					return (value/1000000).toFixed(2) +" MW";
+				else if (value >= 1000)
+					return (value/1000).toFixed(2) +" kW";
+				else
+					return value.toFixed(2) + " W";
+			}
+			
+			private function whPrecision(value:Number) : String
+			{
+				if (Number(value) >= 1000000)
+					return (Number(value)/1000000).toFixed(2) +" MWh";
+				else if (Number(value) >= 1000)
+					return (Number(value)/1000).toFixed(2) +" kWh";
+				else
+					return Number(value).toFixed(2) + " Wh";
+			}
+			
+			private function currencyPrecision(value:Number) : String
+			{
+				return "$ " + Number(value).toFixed(2).toString();
+			}
+			
+			public function resetMiniGemsData() : void
+			{
+				showMD = true;
+				
+				pieLabel.text = "Usage by Profile";
+				energyMeterObj = null;
+				currentEnergyMeterObj = null;
+				energyUsageData.removeAll();
+				energyUsageGraph.energyUsageGraph.dataProvider = energyUsageData;
+			}
+			
+			public function resetMasterGems(count:int) : void
+			{
+				showMD = false;
+				
+				pieLabel.text = "Usage by EM";
+				energyMeterObj = null;
+				currentEnergyMeterObj = null;
+				energyUsageData.removeAll();
+				energyUsageGraph.energyUsageGraph.dataProvider = energyUsageData;
+				
+				avgLoadValue = 0;
+				totalConsumptionValue = 0;
+				peakLoadValue = 0;
+				minLoadValue = -1;
+				powerUsageValue = 0;
+				costValue = 0;
+				savingsValue = 0;
+				
+				currentLoadValue = 0;
+				basecurrentLoadValue = 0;
+				savedpowerValue = 0;
+				
+				/* powerSavingValue = 0;
+				occSavingValue = 0;
+				energyusageValue = 0;
+				manualSavingValue = 0;
+				ambientSavingValue = 0;
+				tasktuneSavingValue = 0; */
+				
+				numOfBuildings = count;
+				currentEMCount = 1;
+				currentEGCount = 1;
+				currentProfileCount = 1;
+				numOfFixtures = 0;
+			}
+			
+			public function gemEntryXMLForm(e:MouseEvent=null):void
+			{
+				var content:GemEntryForm = new GemEntryForm();
+				var popup:TitleWindow = createPopup(content);
+				PopUpManager.addPopUp(popup, FlexGlobals.topLevelApplication as DisplayObject,true);
+				PopUpManager.centerPopUp(popup);
+			}
+			
+			private function createPopup(content:UIComponent):TitleWindow
+			{
+				var titleWindow:TitleWindow= new TitleWindow();
+				titleWindow.title = "Add EM"
+				titleWindow.addEventListener(CloseEvent.CLOSE,closePopUp);
+				titleWindow.addElement(content as IVisualElement);
+				content.addEventListener(CloseEvent.CLOSE,closePopUp2)
+				titleWindow.width = 450;
+				titleWindow.height = 250;
+				content.percentWidth = 100;
+				content.percentHeight=100;				
+				titleWindow.id = "gemSetting"; 
+				titleWindow.name= titleWindow.id;
+				popUpWindow = titleWindow;
+				return titleWindow;           
+			}
+			
+			private function closePopUp(event:CloseEvent):void
+			{
+				var popup:TitleWindow = event.target as TitleWindow
+				PopUpManager.removePopUp(popup);
+			}
+			
+			private function closePopUp2(event:CloseEvent):void
+			{
+				PopUpManager.removePopUp(popUpWindow);
+				popUpWindow = null;			
+			}
+			
+			private function timePeriodButtonHandler(e:MouseEvent):void
+			{
+				currentPeriod = String(e.currentTarget.label);
+				dispatchEvent( new TimePeriodFilterEvent( TimePeriodFilterEvent.FILTER_PERIOD_CHANGE, currentPeriod) );
+			}
+			
+			private function refreshScreen() : void
+			{
+				var event:EnergySummaryEvent = new EnergySummaryEvent(EnergySummaryEvent.REFRESH);
+				dispatchEvent(event);
+			}
+			
+			private function onGetFixturesResult(event:ResultEvent):void
+			{
+				numOfFixtures = numOfFixtures + int(event.result[0].status[0]);
+			}
+			
+			private function onGetFixturesFault(event:FaultEvent):void
+			{
+				
+			}
+			
+			public function calcCompanyEMData( obj:Object ) : void
+			{
+				if (obj)
+				{
+					avgLoadValue = avgLoadValue + obj.avgload;
+					peakLoadValue = (peakLoadValue > obj.peakload) ? peakLoadValue : obj.peakload;
+					minLoadValue = (minLoadValue < obj.minload) ? minLoadValue: obj.minload;
+					powerUsageValue = powerUsageValue + obj.powerused;
+					costValue = costValue + Number(obj.cost);
+					savingsValue = savingsValue + Number(obj.savedcost);
+					
+					// TODO - totalConsumptionValue = totalConsumptionValue + Number(summaryArray[9]);
+					
+					currentLoadValue = currentLoadValue + obj.currentload; // TODO - Check this value returned in obj
+					basecurrentLoadValue= basecurrentLoadValue + obj.totalload; // TODO - Check this value returned in obj
+					savedpowerValue = savedpowerValue + obj.savedpower;
+				}
+				
+				if(currentEMCount == numOfBuildings)
+					setCompanyEMData();
+				
+				currentEMCount ++;
+			}
+			
+			public function setCompanyEMData() : void
+			{
+				var obj:Object = new Object();
+				obj.avgload = (numOfFixtures != 0) ? (powerUsageValue / numOfFixtures) : 0;
+				obj.peakload = peakLoadValue;
+				obj.minload = (minLoadValue == -1) ? 0 : minLoadValue;
+				obj.cost = costValue;
+				obj.savedcost = savingsValue;
+				obj.currentload = currentLoadValue;
+				obj.totalload = basecurrentLoadValue;
+				obj.powerused = powerUsageValue;
+				obj.savedpower = savedpowerValue;
+				energyMeterObj = obj;
+				
+				BusyStateManager.getInstance().removeBusyCursor(summaryFormCanvas.name);
+				BusyStateManager.getInstance().removeBusyCursor(energyMeterCanvas.name);
+			}
+			
+			public function calcCompanyECData( data:ArrayCollection ) : void
+			{
+				if (data != null && data.length > 0)
+				{
+					if(energyUsageData.length == 0)
+					{
+						energyUsageData = data;
+					}
+					else
+					{
+						/**
+						 * If "data" length is less than chart's dataprovider length, both the arraycollections are swapped 
+						 * to make sure that all the result objects are concatenated and no data is left behind.
+						*/
+						if(data.length > energyUsageData.length)
+						{
+							tempUsageData = energyUsageData;
+							energyUsageData = data;
+							data = tempUsageData;
+						}
+						
+						for(var i:int=0; i<data.length; i++)
+						{
+							for(var j:int=0; j<energyUsageData.length; j++)
+							{
+								if(energyUsageData[j].captureon == data[i].captureon)
+								{
+									energyUsageData[j].basecost = energyUsageData[j].basecost ? (Number(energyUsageData[j].basecost) + Number(data[i].basecost)) : Number(data[i].basecost);
+									energyUsageData[j].basepowerused = energyUsageData[j].basepowerused ? (Number(energyUsageData[j].basepowerused) + Number(data[i].basepowerused)) : Number(data[i].basepowerused);
+									energyUsageData[j].cost = energyUsageData[j].cost ? (Number(energyUsageData[j].cost) + Number(data[i].cost)) : Number(data[i].cost);
+									energyUsageData[j].EN = energyUsageData[j].EN ? (Number(energyUsageData[j].EN) + Number(data[i].EN)) : Number(data[i].EN);
+									energyUsageData[j].price = energyUsageData[j].price ? (Number(energyUsageData[j].price) + Number(data[i].price)) : Number(data[i].price);
+									break;
+								}
+							}	
+						}
+					}
+				}
+				
+				if(currentEGCount == numOfBuildings)
+					setCompanyECData();
+				
+				currentEGCount ++;
+			}
+			
+			public function setCompanyECData() : void
+			{
+				energyUsageGraph.energyUsageGraph.dataProvider = energyUsageData;
+				BusyStateManager.getInstance().removeBusyCursor(energyCanvas.name);
+			}
+			public function displayGEMSData(event:ListEvent):void
+			{
+				var selectedObj:XML= (event.currentTarget as Tree).selectedItem as XML;
+				var ipadd:Array = String(selectedObj.@ip).split(":");
+				gemName.text = String(selectedObj.@name);
+				ipAddress.text=ipadd[0];
+				//port.text=ipadd[1];
+			}
+			private function removeConfirmation(e:MouseEvent):void
+			{
+				var selectedNode:XML=XML(FlexGlobals.topLevelApplication.orgTree.selectedItem);
+				var currNode:String= selectedNode.@name;
+				var title:String= "Do you really want to remove "+currNode;
+				Alert.show(title,"Warning",Alert.OK|Alert.CANCEL,this,removeGEMS,null,Alert.OK);
+			}
+			private function removeGEMS(eventObj:CloseEvent):void
+			{
+				if(eventObj.detail==Alert.OK)
+				{
+					var treeObj:Tree = FlexGlobals.topLevelApplication.orgTree;
+					var treeDP:XML = FlexGlobals.topLevelApplication.treeDataCollection;
+					var selectedNode:XML=XML(FlexGlobals.topLevelApplication.orgTree.selectedItem);
+					var deletedNode:String="";
+					if (selectedNode == null || selectedNode.localName() != "gem")
+					{
+						return;
+					}
+					var selectedChild:XMLList=treeDP.children();
+					for (var i:Number=0; i < selectedChild.length(); i++)
+					{
+						if (selectedChild[i].@name == selectedNode.@name)
+						{
+							deletedNode = selectedNode.@name;
+							delete selectedChild[i];
+							break;
+						}
+					}
+					FlexGlobals.topLevelApplication.removeNodeService.send(deletedNode);
+					treeObj.dataProvider = treeDP;
+					if(treeDP.children().length()==0)
+					{
+						treeObj.dataProvider=null;
+						alertBox.visible=false;
+						gemEntryXMLForm(null);
+					}
+					clearUI();
+				}
+				else if(eventObj.detail==Alert.CANCEL)
+				{
+					// Do thing
+				}
+
+				
+			}
+			
+			private function clearUI():void
+			{
+				gemName.text = "";
+				ipAddress.text="";
+			}
+			/* [Bindable]
+			private var gemsUsageData:ArrayCollection = new ArrayCollection();
+			
+			public function calcCompanyPieChartData(data:ArrayCollection) : void
+			{
+			var powerUsage:Number = 0;
+			var usageObj:Object = new Object();
+			
+			for(var i:int=0; i<data.length; i++)
+			{
+			var obj:Object = convertObjectToEnergyConsumptionObject(data[i]);
+			powerUsage = powerUsage + Number(obj.powerUsage);
+			}
+			usageObj.powerUsage = powerUsage;
+			usageObj.profileType = name;
+			gemsUsageData.addItem(usageObj);
+			
+			if(pieChartCount == numOfBuildings)
+			setCompanyPieChartData();
+			
+			pieChartCount ++;
+			}
+			
+			private function setCompanyPieChartData() : void
+			{
+			profileUsage.dataProvider = gemsUsageData;
+			BusyStateManager.getInstance().removeBusyCursor(this.usageByProfileCanvas.name);
+			}
+			
+			public function setPieChartData(data:ArrayCollection) : void
+			{
+			var profileUsageData:ArrayCollection = new ArrayCollection();
+			
+			for(var i:int=0; i<data.length; i++)
+			{
+			var obj:Object = convertObjectToEnergyConsumptionObject(data[i]);
+			if(obj.powerUsage > 0)
+			profileUsageData.addItem(obj);		
+			}
+			profileUsage.dataProvider = profileUsageData;
+			}
+			
+			// Add this function as "dataTipFunction" for pie chart
+			private function profileDataTipFunction(item:HitData) : String
+			{
+			return item.item.profileType + " (Power Used: " + item.item.powerUsage + " W)";
+			} 
+			
+			private function convertObjectToEnergyConsumptionObject(energyObject:Object):Object
+			{
+			var array:Array = energyObject.toString().split(',');            	
+			var obj:Object = new Object();
+			obj.id = array[0];
+			obj.profileType = array[1];
+			obj.powerUsage = array[2];       	
+			return obj;
+			} */
+			
+			/* private var powerSavingValue:int;
+			private var occSavingValue:int;
+			private var energyusageValue:int;
+			private var manualSavingValue:int;
+			private var ambientSavingValue:int;
+			private var tasktuneSavingValue:int;
+			
+			private function onGetEnergyMeterResult(event:ResultEvent):void
+			{
+			var xml:XMLDocument = new XMLDocument(event.result.toString());
+			if(event.result.toString() == "")
+			return; // TODO - How to handle the screen when there is no data
+			var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+			var resultObj:Object = decoder.decodeXML(xml);
+			var  energyMeterObj:Object = resultObj.energyDetails;
+			
+			if(energyMeterObj.power)
+			powerSavingValue = powerSavingValue + (energyMeterObj.power); 
+			if(energyMeterObj.occSavings)
+			occSavingValue = occSavingValue + (energyMeterObj.occSavings); 
+			if(energyMeterObj.power)
+			energyusageValue = energyusageValue + (energyMeterObj.power); // TODO - energyusageValue value is currently not returned in webservice call
+			if(energyMeterObj.manualSavings)
+			manualSavingValue = manualSavingValue + (energyMeterObj.manualSavings); 
+			if(energyMeterObj.ambientSavings)
+			ambientSavingValue = ambientSavingValue + (energyMeterObj.ambientSavings); 
+			if(energyMeterObj.taskTuneupSavings)
+			tasktuneSavingValue = tasktuneSavingValue + (energyMeterObj.taskTuneupSavings); 
+			}
+			
+			private function onGetEnergyMeterFault(event:FaultEvent):void
+			{
+			
+			} */
+			
+		]]>
+	</mx:Script>
+	
+	<!-- Hidding all panels as per new requirement, we will be showing the screen to add/remove gems in the tree and 
+	Displaying there details of GEMS on screen - 25th Jan 2011
+	 -->
+	
+	<mx:HBox width="100%" height="30" paddingLeft="10">
+		<mx:Button click="gemEntryXMLForm(event)" label="Add EM"/>
+		<mx:Button click="removeConfirmation(event)" label="Remove EM"/>
+		<mx:Image source="{Images.Refresh}" click="refreshScreen()" buttonMode="true"/>
+		<mx:Button id="Day" label="{Constants.DAY}" click="timePeriodButtonHandler(event)" visible="false"/>
+		<mx:Button id="Week" label="{Constants.WEEK}" click="timePeriodButtonHandler(event)" visible="false"/>
+		<mx:Button id="Month" label="{Constants.MONTH}" click="timePeriodButtonHandler(event)" visible="false"/>
+		<mx:Button id="Year" label="{Constants.YEAR}" click="timePeriodButtonHandler(event)" visible="false"/>
+		<components:AlertBox id="alertBox"  x="0" y="0" height="100%"/>
+		<mx:Spacer width="30%"/>
+	</mx:HBox>
+	
+	<mx:HBox width="100%" height="100%">
+		<mx:Canvas id="summaryFormCanvas" width="100%" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off"
+				   styleName="vboxStyle">
+			<components:LoadingLabel name="image" visible="false" parentWidth="{summaryFormCanvas.width}" parentHeight="{summaryFormCanvas.height}"/>
+			<mx:Canvas  styleName="gemSummaryStyle" width="350" height="100" horizontalCenter="0" verticalCenter="0" >
+			<s:VGroup horizontalAlign="center" width="300" paddingTop="10">
+				<s:Label text="EM Details" fontWeight="bold" fontSize="14" />
+				<s:HGroup>
+					<s:Label text="EM Name :" width="100"/>
+					<s:Label id="gemName" width="100"/>
+				</s:HGroup>
+				<s:HGroup>
+					<s:Label text="EM IP :"  width="100" />
+					<s:Label id="ipAddress" width="100"/>
+				</s:HGroup>
+				<s:HGroup visible="false">
+					<s:Label text="EM Port:" />
+					<s:Label id="port" />
+				</s:HGroup>
+			</s:VGroup>
+			</mx:Canvas>
+		</mx:Canvas>
+		<!--
+		<mx:Canvas id="summaryFormCanvas" width="100%" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" visible="false">
+			<components:LoadingLabel name="image" visible="false" parentWidth="{summaryFormCanvas.width}" parentHeight="{summaryFormCanvas.height}"/>
+			<mx:Form width="100%" height="100%" borderStyle="solid" styleName="vboxStyle">
+				<mx:FormHeading id="summaryLabel"/>
+				<mx:FormItem label="Avg. Load:">
+					<mx:Text text="{wattPrecision(energyMeterObj.avgload)}"/>
+				</mx:FormItem>
+				<mx:FormItem label="Peak Load:">
+					<mx:Text text="{wattPrecision(energyMeterObj.peakload)}"/>
+				</mx:FormItem>
+				<mx:FormItem label="Min. Load:">
+					<mx:Text text="{wattPrecision(energyMeterObj.minload)}"/>
+				</mx:FormItem>
+				<mx:FormItem label="Usage:">
+					<mx:Text text="{whPrecision(energyMeterObj.powerused)}"/>
+				</mx:FormItem>
+				<mx:FormItem label="Cost:">
+					<mx:Text text="{currencyPrecision(energyMeterObj.cost)}"/>
+				</mx:FormItem>
+				<mx:FormItem label="Savings:">
+					<mx:Text text="{currencyPrecision(energyMeterObj.savedcost)}"/>
+				</mx:FormItem>
+			</mx:Form>
+		</mx:Canvas>-->
+		<!--visible="{showMD}" -->
+		<mx:Canvas id="energyMeterCanvas" width="100%" height="100%" visible ="false"   includeInLayout="{showMD}">
+			<!--<mx:Image name="image" source="com/enlightedinc/images/refresh.png" visible="false" x="{energyMeterCanvas.width/2}" y="{energyMeterCanvas.height/2}"/>-->
+			<components:LoadingLabel name="image" visible="false" parentWidth="{energyMeterCanvas.width}" parentHeight="{energyMeterCanvas.height}"/>
+			<mx:VBox id="energyMeter" width="100%" height="100%"
+					 styleName="vboxStyle">
+				<components:EnergyMeter id="fiveMinEnergyMeter" dataProvider="{currentEnergyMeterObj}"/>
+				<!--TODO - Should get values of currentLoad and totalLoad from webservices-->
+				<mx:Text text="Current load: {wattPrecision(energyMeterObj.currentload)} of {wattPrecision(energyMeterObj.totalload)}"/>
+				<components:EnergyMeter id="profileenergyMeter" dataProvider="{energyMeterObj}" creationComplete="{profileenergyMeter.series.shift()}"/>
+				<mx:Text text="Energy: {whPrecision(energyMeterObj.powerused)} used, {whPrecision(energyMeterObj.savedpower)} saved"/>
+				<mx:Legend dataProvider="{profileenergyMeter}" direction="horizontal" width="100%"/>
+			</mx:VBox>
+		</mx:Canvas>
+		
+		<mx:Canvas id="usageByProfileCanvas" width="25%" height="100%"
+				   visible="false" includeInLayout="false">
+			<!--<mx:Image id="image" name="image" source="com/enlightedinc/images/refresh.png" visible="false" x="{usageByProfileCanvas.width/2}" y="{usageByProfileCanvas.height/2}"/>-->
+			<components:LoadingLabel name="image" visible="false" parentWidth="{usageByProfileCanvas.width}" parentHeight="{usageByProfileCanvas.height}"/>
+			<mx:VBox id="usageByProfile" width="100%" height="100%"
+					 styleName="vboxStyle">
+				<mx:Label id="pieLabel"/>
+				<mx:PieChart id="profileUsage" width="100%" height="200"
+							 showDataTips="true">
+					<mx:series>
+						<mx:PieSeries field="powerUsage" nameField="profileType" />
+					</mx:series>
+				</mx:PieChart>
+			</mx:VBox>
+		</mx:Canvas>
+		
+	</mx:HBox>
+	
+	<mx:Canvas id="energyCanvas" width="100%" height="100%" visible="false">
+		<!--<mx:Image name="image" source="com/enlightedinc/images/refresh.png" visible="false" x="{energyUsageGraph.width/2}" y="{energyUsageGraph.height/2}"/>-->
+		<components:LoadingLabel name="image" visible="false" parentWidth="{energyCanvas.width}" parentHeight="{energyCanvas.height}"/>
+		<components:EnergyUsageGraph id="energyUsageGraph" width="100%" height="100%"/>
+	</mx:Canvas>
+	
+</mx:VBox>

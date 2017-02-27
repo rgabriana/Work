@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.ImageUpgradeDBJob"
+        table="image_upgrade_job"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">image_upgrade_job_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-ImageUpgradeDBJob.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="jobName"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="job_name"
+        />
+
+        <property
+            name="imageName"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="image_name"
+        />
+
+        <property
+            name="scheduledTime"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="scheduled_time"
+        />
+
+        <property
+            name="startTime"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="start_time"
+        />
+
+        <property
+            name="endTime"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="end_time"
+        />
+
+        <property
+            name="noOfRetries"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="no_of_retries"
+        />
+
+        <property
+            name="status"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="status"
+        />
+
+        <property
+            name="description"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="description"
+        />
+
+        <property
+            name="deviceType"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="device_type"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-ImageUpgradeDBJob.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

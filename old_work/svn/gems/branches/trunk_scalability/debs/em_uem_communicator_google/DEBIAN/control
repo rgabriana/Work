@@ -1,0 +1,13 @@
+Package: enLighted-uem-communicator
+Version: 3.2.0
+Section: misc
+Priority: optional
+Architecture: all
+Essential: no
+Depends:
+Replaces: 
+Pre-Depends: libxml2
+Suggests: no
+Maintainer: enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: enLighted uem communicator upgrade utility

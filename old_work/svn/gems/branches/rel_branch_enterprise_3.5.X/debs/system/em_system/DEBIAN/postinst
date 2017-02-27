@@ -1,0 +1,14 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+
+sudo chown root:root /etc/default/rcS
+sudo chmod 644 /etc/default/rcS
+
+sudo chown root:root /etc/rc.local
+sudo chmod 755 /etc/rc.local
+
+check=$(sudo service avahi-daemon status)
+if [[ "$check" =~ "running" ]]
+then
+    sudo service avahi-daemon stop
+fi

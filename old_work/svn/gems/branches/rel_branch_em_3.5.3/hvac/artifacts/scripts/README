@@ -1,0 +1,13 @@
+1) Need to have System Setup as follows (EM <- HVAC Server <- Bacnet Gateway <- 3rd Part BMS), Individual systems polling respective server in hierarchy for occ data
+2) The main server for analysis is the HVAC server which has all the sensors, zones,  sensor zone mapping information and the sensor_history data over period of time
+3) Objective to find out the occupancy pattern from the HVAC server over period of time
+
+Utils:
+hvac_analysis.sh, parsefiles.awk, processOccStats.sh
+1) Extract occupancy data for 5 min interval for each zone in a CSV format (usage: bash hvac_analysis.sh [-st <YYYY-MM-DD HH:MM:SS>])
+This will give you the data from start Date till current date for each zone
+
+2) Run the processOccStats.sh (this is dependent on parsefiles.awk)
+usage: awk -F"," -v zone="ZoneName" -v startDay="YYYY-MM-DD" -v endDay="YYYY-MM-DD" -v startTime="HH:MM:00" -v endTime="HH:MM:00" -f parsefiles.awk Zone.csv
+
+3) Finally you can run the above command for each zone file and get the required stats

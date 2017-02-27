@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.emsdashboard.model.EnergyConsumption"
+        table="energy_consumption"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">energy_consumption_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-EnergyConsumption.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="gemsId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="gems_id"
+        />
+		 <property
+            name="tenantsId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="tenants_id"
+        />
+        
+        <property
+            name="powerUsed"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="power_used"
+        />
+
+       
+        <property
+            name="captureAt"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="capture_at"
+        />
+
+      
+
+        <property
+            name="cost"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="cost"
+        />
+
+        <property
+            name="price"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="price"
+        />
+
+        <property
+            name="basePowerUsed"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="base_power_used"
+        />
+
+        <property
+            name="baseCost"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="base_cost"
+        />
+
+        <property
+            name="savedPowerUsed"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="saved_power_used"
+        />
+
+        <property
+            name="savedCost"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="saved_cost"
+        />
+
+        <property
+            name="occSaving"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="occ_saving"
+        />
+
+        <property
+            name="tuneupSaving"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="tuneup_saving"
+        />
+
+        <property
+            name="ambientSaving"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="ambient_saving"
+        />
+
+        <property
+            name="manualSaving"
+            type="java.math.BigDecimal"
+            update="true"
+            insert="true"
+            column="manual_saving"
+        />
+
+       
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-EnergyConsumption.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

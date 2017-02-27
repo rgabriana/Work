@@ -1,0 +1,2 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/5 * * * * php /home/enlighted/utils/generateSPPACerts.php >> /home/enlighted/utils/gencerts.log 2>&1 

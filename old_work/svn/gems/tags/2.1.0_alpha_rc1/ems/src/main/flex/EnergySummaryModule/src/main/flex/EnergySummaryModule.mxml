@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="100%" height="100%"
+			   applicationComplete="onApplicationComplete(event)"
+			   xmlns:components="com.enlightedinc.components.*">
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<fx:Style source="com/enlightedinc/assets/css/flexStyle.css"/>
+	
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="YYYYMMDDJJNNSS"/>
+	</fx:Declarations>
+	
+	<!-- This line of code is failing in maven build. Known issue.
+	Ref: https://issues.sonatype.org/browse/FLEXMOJOS-425-->
+	<!--<fx:Style source="../../../../../../webapp/themes/default/css/flexStyle.css"/>-->
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.common.CountsCalculator;
+			import com.enlightedinc.components.AlertBox;
+			import com.enlightedinc.components.Constants;
+			import com.enlightedinc.events.EnergySummaryDockEvent;
+			import com.enlightedinc.events.EnergySummaryFilterEvent;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.DateField;
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			
+			private var currentProperty:String; 
+			private var currentPId:String;
+			private var currentFixedperiod:String = "day";
+			
+			private var date:Date;
+			private var fromDate:String;
+			private var toDate:String;
+			
+			private var timer:Timer;
+			private var alertBox:AlertBox;
+			private const MS_PER_DAY:uint = 1000 * 60 * 60 * 24;
+			private var contextRoot:String="";
+			
+			public var mode:String = "";
+			private var modeId:String = "";
+			
+			private function onApplicationComplete(event:Event) : void
+			{
+				this.systemManager.addEventListener(FlexEvent.IDLE, onUserIdle);
+				
+				var orgId:String = FlexGlobals.topLevelApplication.parameters.orgId;
+				var orgType:String = FlexGlobals.topLevelApplication.parameters.orgType;
+				var mode:String = FlexGlobals.topLevelApplication.parameters.mode;
+				var modeId:String = FlexGlobals.topLevelApplication.parameters.modeid;
+				contextRoot = FlexGlobals.topLevelApplication.parameters.contextRoot;
+            	if (orgId != null && orgType != null) 
+				{
+					//currentProperty = Constants.REPORT; 
+					currentProperty = orgType; 
+					currentPId = orgId;
+					
+					// Load Appropriate View depending upon the orgType
+					if(mode == Constants.REPORT)
+					{
+						ecViewStack.selectedIndex =1;
+					}else
+					{
+						ecViewStack.selectedIndex =0;
+						updateEnergyConsumption(currentProperty, currentPId, currentFixedperiod);
+						if (ExternalInterface.available) 
+						{
+							ExternalInterface.addCallback("updateEnergyConsumption", updateEnergyConsumption);
+						} 
+						else 
+						{
+							showAlertMarquee("ExternalInterface is not available", true);
+						} 
+					}
+				}
+			}
+			
+			private function onUserIdle(e:FlexEvent) : void
+			{
+				var waitTime:Number = 10; //wait time is in minutes
+				var counter:Number = (waitTime * 60 * 1000)/100; // minutes * (60secs) = (600secs) = (600000msecs) = 600000/100 = 6000
+				if(e.currentTarget.mx_internal::idleCounter == counter) 
+				{
+					this.systemManager.removeEventListener(FlexEvent.IDLE, onUserIdle);
+					this.addEventListener(MouseEvent.MOUSE_MOVE, refreshData);
+					this.addEventListener(MouseEvent.MOUSE_DOWN, refreshData);
+					this.addEventListener(KeyboardEvent.KEY_DOWN, refreshData);
+				}
+			}
+			
+			private function refreshData(event:MouseEvent) : void
+			{
+				this.removeEventListener(MouseEvent.MOUSE_MOVE, refreshData);
+				this.removeEventListener(MouseEvent.MOUSE_DOWN, refreshData);
+				this.removeEventListener(KeyboardEvent.KEY_DOWN, refreshData);
+				showAlertMarquee("Refreshing...", true);
+				updateEnergyConsumption(currentProperty, currentPId, currentFixedperiod);
+				this.systemManager.addEventListener(FlexEvent.IDLE, onUserIdle);
+			}
+			
+			private function updateEnergyConsumption(property:String, pId:String, fixedperiod:String) : void
+			{
+				currentProperty = property; 
+				currentPId = pId;
+				currentFixedperiod = fixedperiod;
+				
+				date = new Date();
+				fromDate = dateFormatter.format(date);
+				energySummaryDock.toDate.text = (int(date.getMonth()) + 1).toString() + "/" + date.getDate().toString() + "/" + date.getFullYear().toString();
+				
+				switch(fixedperiod)
+				{
+					case Constants.DAY.toLowerCase() : date.setDate(date.getDate() - 1);
+						energySummaryView.dataPeriod = Constants.DAY;
+						energySummaryView.energyUsageGraph.dataPeriod = Constants.DAY;
+						energySummaryDock.setSelectedButton=Constants.DAY;
+						break;
+					case Constants.WEEK.toLowerCase() : date.setDate(date.getDate() - 7);
+						energySummaryView.dataPeriod = Constants.WEEK;
+						energySummaryView.energyUsageGraph.dataPeriod = Constants.WEEK;
+						energySummaryDock.setSelectedButton=Constants.WEEK;
+						break;
+					case Constants.MONTH.toLowerCase() : date.setDate(date.getDate() - 30);
+						energySummaryView.dataPeriod = Constants.MONTH;
+						energySummaryView.energyUsageGraph.dataPeriod = Constants.MONTH;
+						energySummaryDock.setSelectedButton=Constants.MONTH;
+						break;
+					case Constants.YEAR.toLowerCase() : date.setDate(date.getDate() - 365);
+						energySummaryView.dataPeriod = Constants.YEAR;
+						energySummaryView.energyUsageGraph.dataPeriod = Constants.YEAR;
+						energySummaryDock.setSelectedButton=Constants.YEAR;
+						break;
+					default:
+					break;
+				}
+				energyUsageBar.showButtonSelected(Constants.CURRENCY_UNIT);
+				toDate = dateFormatter.format(date);
+				energySummaryDock.fromDate.text = (int(date.getMonth()) + 1).toString() + "/" + date.getDate().toString() + "/" + date.getFullYear().toString();
+				
+				getEnergyMeterData();
+			}
+			
+			private function getEnergyMeterData() : void
+			{
+				energySummaryView.energyMeterHttpService.url = contextRoot+ Constants.serverurl + 'ec/mds/' + currentProperty + '/' + currentPId + '/' + currentFixedperiod+ '/' + fromDate;
+				energySummaryView.energyMeterHttpService.send();
+				
+				//Get Current Data
+				var currentPeriod:String ="current";
+				var fdate:Date = new Date();
+				var fDateStr:String = dateFormatter.format(fdate);
+				//var toDate:String= "20120210062100";
+				energySummaryView.energyMeterCurrentHttpService.url = contextRoot + Constants.serverurl + 'ec/mds/' + currentProperty + '/' + currentPId + '/' + currentPeriod+ '/' + fDateStr;
+				energySummaryView.energyMeterCurrentHttpService.send();
+			}
+			
+			private function getFilterEnergySummary(event:EnergySummaryFilterEvent) : void
+			{
+				//calculateDate(currentFixedperiod);
+				fromDate = dateFormatter.format(event.toDate);//fromDate is the latest date (current date)
+				toDate = dateFormatter.format(event.fromDate); //toDate is the older date (current date - delta)
+				var diffDays:Number;
+				var tempDate:Date = new Date(((event.toDate as Date).getTime()-(event.fromDate as Date).getTime()));  
+				diffDays =  Math.round((tempDate.time / MS_PER_DAY) + 1);
+				if (diffDays <= 1) {
+					energySummaryView.energyUsageGraph.dataPeriod=Constants.DAY;
+				} else if (diffDays <= 7) {
+					energySummaryView.energyUsageGraph.dataPeriod=Constants.WEEK;
+				} else if (diffDays <= 31) {
+					energySummaryView.energyUsageGraph.dataPeriod=Constants.MONTH;
+				}else
+				{
+					energySummaryView.energyUsageGraph.dataPeriod=Constants.YEAR;
+				}
+				if(currentProperty && currentPId && (fromDate.length > 0) && (toDate.length > 0))
+				{
+					energySummaryView.filterEnergyMeterHttpService.url = contextRoot+ Constants.serverurl + 'ec/fp/mds/' + currentProperty + '/' + currentPId +'/' + fromDate + "/" + toDate;
+					energySummaryView.filterEnergyMeterHttpService.send();
+					energySummaryView.dataPeriod = "";
+				}
+			}
+
+			private function onClick(event:EnergySummaryDockEvent) : void
+			{
+				currentFixedperiod = event.label.toLowerCase();
+				updateEnergyConsumption(currentProperty, currentPId, currentFixedperiod);
+				energyUsageBar.showButtonSelected(Constants.CURRENCY_UNIT);
+			}
+			
+			private function showAlertMarquee(str:String, timerEnable:Boolean) : void
+			{
+				if(alertBox)
+					energySummaryView.esContainer.removeChildAt(1);
+				alertBox = new AlertBox();
+				alertBox.percentWidth = 100;
+				alertBox.marqueeText = str;
+				energySummaryView.esContainer.addChild(alertBox);
+				
+				if(timerEnable)
+				{
+					timer = new Timer(5000);
+					timer.addEventListener( TimerEvent.TIMER, marqueeTimerHandler);
+					timer.start();
+				}
+			}
+			
+			private function marqueeTimerHandler(event:TimerEvent) : void
+			{
+				removeMarquee();
+				timer.stop();
+			}
+			
+			private function removeMarquee() : void
+			{
+				if(energySummaryView.esContainer.numChildren > 1)
+					energySummaryView.esContainer.removeChildAt(1);
+				alertBox = null;
+			}
+			
+			private function refreshES() : void
+			{
+				showAlertMarquee("Refreshing...", true);
+				updateEnergyConsumption(currentProperty, currentPId, currentFixedperiod);
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Scroller width="100%" height="100%">
+		<s:Group id="baseGroup" width="100%">
+			<mx:ViewStack id="ecViewStack" width="100%" height="100%">
+				<!-- ENERGYSUMMARY MODULE -->
+				<s:NavigatorContent id="energySummaryNavContent" label="Search" width="100%" height="100%">
+					<s:VGroup width="100%" height="100%" paddingTop="5" paddingBottom="5">
+						<components:EnergyUsageBar id="energyUsageBar"  height="20%"/>
+						<mx:VBox width="100%" height="80%" styleName="vboxStyle">
+							<components:EnergySummaryDock id="energySummaryDock" width="100%" height="10%"
+														  filterEnergySummary="getFilterEnergySummary(event)"
+														  dockClick="onClick(event)"
+														  refreshScreen="refreshES()"/>
+							<components:EnergySummaryView id="energySummaryView" 
+														  width="100%" height="90%"/>
+						</mx:VBox>
+					</s:VGroup>
+				</s:NavigatorContent>
+				<!-- REPORTING MODULE -->
+				<s:NavigatorContent id="reportNavContent" label="Search" width="100%" height="100%">
+					<s:VGroup width="100%" height="100%" paddingTop="5" paddingBottom="5">
+						<components:UsageByProfileReport id="energySummaryReport" />
+					</s:VGroup>
+				</s:NavigatorContent>
+			</mx:ViewStack>
+		</s:Group>
+	</s:Scroller>
+</s:Application>

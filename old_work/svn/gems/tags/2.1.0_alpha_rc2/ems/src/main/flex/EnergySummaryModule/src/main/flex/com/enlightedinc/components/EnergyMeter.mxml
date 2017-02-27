@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:BarChart xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			 xmlns:s="library://ns.adobe.com/flex/spark" 
+			 xmlns:mx="library://ns.adobe.com/flex/mx"
+			 showDataTips="true"
+			 dataTipFunction="chartDataTipFunction"
+			 type="stacked" width="500" height="40">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.charts.HitData;
+			import mx.charts.series.items.BarSeriesItem;
+			
+			[Bindable]
+			public var showPowerUsage:Boolean = true;
+			
+			private function barSeriesLabelFunction(barSeriesItem:BarSeriesItem, series:BarSeries):Number 
+			{
+				return (barSeriesItem.xNumber - Number(barSeriesItem.minValue));
+			} 
+			
+			private function chartDataTipFunction(item:HitData):String 
+			{
+				var type:String = (item.element as BarSeries).displayName;
+				var value:Number = (item.chartItem as BarSeriesItem).xNumber - Number((item.chartItem as BarSeriesItem).minValue);
+				return type + ' : ' + value + '%' as String;
+			}
+			
+		]]>
+	</fx:Script>
+		
+	<mx:backgroundElements>
+		<mx:GridLines alpha="0"/>
+	</mx:backgroundElements>
+	
+	<mx:horizontalAxisRenderers>
+		<mx:AxisRenderer axis="{haxis}" showLabels="false" showLine="false" tickLength="0"/>
+	</mx:horizontalAxisRenderers>
+	<mx:verticalAxisRenderers>
+		<mx:AxisRenderer axis="{vaxis}" showLabels="false" showLine="false" tickLength="0"/>
+	</mx:verticalAxisRenderers>
+	<mx:horizontalAxis>
+		<mx:LinearAxis id="haxis"/>
+	</mx:horizontalAxis>
+	<mx:verticalAxis>
+		<mx:LinearAxis id="vaxis"/>
+	</mx:verticalAxis>
+	
+	<mx:series>
+		<!--<mx:BarSeries id="powerSeries"
+					  xField="powersavingpercent"
+					  yField="price"
+					  displayName="Power"
+					  labelPosition="inside"
+					  labelFunction="barSeriesLabelFunction"
+					  visible="{showPowerUsage}"
+					  includeInLayout="{showPowerUsage}">
+			<mx:fill>
+				<s:SolidColor color="#F9B2EE" alpha="0.7"/>
+			</mx:fill>
+		</mx:BarSeries>-->
+		
+		<mx:BarSeries id="energyUsageSeries"
+					  xField="powersavingpercent"
+					  yField="price"
+					  displayName="Energy Usage"
+					  labelPosition="inside"
+					  labelFunction="barSeriesLabelFunction">
+			<mx:fill>
+				<s:SolidColor color="#FFCC00" alpha="0.7"/>
+			</mx:fill>
+		</mx:BarSeries>
+		
+		<mx:BarSeries id="manualSavingsSeries"
+					  xField="manualsavingpercent"
+					  yField="price"
+					  displayName="Manual Savings"
+					  labelPosition="inside"
+					  labelFunction="barSeriesLabelFunction">
+			<mx:fill><s:SolidColor color="#357EC7" alpha="0.7"/></mx:fill>
+		</mx:BarSeries>
+		
+		<mx:BarSeries id="occupanySavingsSeries"
+					  xField="occsavingpercent"
+					  yField="price"
+					  displayName="Occupancy Savings"
+					  labelPosition="inside"
+					  labelFunction="barSeriesLabelFunction">
+			<mx:fill>
+				<s:SolidColor color="#99FF66" alpha="0.7"/>
+			</mx:fill>
+		</mx:BarSeries>
+		
+		<mx:BarSeries id="ambientSavingsSeries"
+					  xField="ambientsavingpercent"
+					  yField="price"
+					  displayName="Ambient Savings"
+					  labelPosition="inside"
+					  labelFunction="barSeriesLabelFunction">
+			<mx:fill>
+				<s:SolidColor color="#F79749" alpha="0.7"/>
+			</mx:fill>
+		</mx:BarSeries>
+		
+		<mx:BarSeries id="taskTuningSavingsSeries"
+					  xField="tasktuneupsavingpercent"
+					  yField="price"
+					  displayName="Task Tuning Savings"
+					  labelPosition="inside"
+					  labelFunction="barSeriesLabelFunction">
+			<mx:fill>
+				<s:SolidColor color="#006600" alpha="0.7"/>
+			</mx:fill>
+		</mx:BarSeries>
+	</mx:series>
+	
+	<mx:seriesFilters>
+		<fx:Array/>
+	</mx:seriesFilters>
+	
+</mx:BarChart>

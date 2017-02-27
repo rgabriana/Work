@@ -1,0 +1,12 @@
+# this file is managed by puppet
+/var/log/puppet/masterhttp.log
+{
+	rotate 4
+	size 500M
+	daily
+	missingok
+	notifempty
+	compress
+	delaycompress
+	create 644 puppet puppet 
+}

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.enlightedinc</groupId>
+	<artifactId>gem</artifactId>
+	<packaging>pom</packaging>
+	<version>1.0-SNAPSHOT</version>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<currentVersion>3.4.1</currentVersion>
+	</properties>
+
+	<profiles>
+		<profile>
+			<id>deploy</id>
+			<build>
+				<finalName>gem</finalName>
+				<plugins>					
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<modules>
+		<module>ems/src/main/flex</module>
+		<module>ems_common</module>
+		<module>hvac_utils</module>
+		<module>ems</module>
+		<module>em_cloud_communicator</module>
+		<module>adrcom</module>
+		<module>adr</module>
+		<module>ecloud/src/main/flex</module>
+		<module>ecloud</module>
+		<module>em_cloud_instance</module>
+		<module>qa_kwd</module>
+		<module>hvac</module>
+           <module>em_uem_communicator</module>
+	</modules>
+
+</project>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.enlightedinc.hvac.model.ZonesSensor" table="zones_sensor">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">zones_sensor_seq</param>
+			</generator>
+		</id>
+		
+		<many-to-one name="zone" class="com.enlightedinc.hvac.model.Zone"
+			cascade="none" outer-join="auto" update="true" insert="true" column="zone_id" />
+			
+		<many-to-one name="sensor" class="com.enlightedinc.hvac.model.Sensor"
+			cascade="none" outer-join="auto" update="true" insert="true" column="sensor_id" />
+
+	</class>
+
+</hibernate-mapping>

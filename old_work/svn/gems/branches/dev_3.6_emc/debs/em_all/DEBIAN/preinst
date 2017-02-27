@@ -1,0 +1,9 @@
+#!/bin/bash -x
+
+if [ -d $ENLIGHTED_HOME/debs ]
+then
+        rm -rf $ENLIGHTED_HOME/debs/*
+else
+        mkdir $ENLIGHTED_HOME/debs
+fi
+

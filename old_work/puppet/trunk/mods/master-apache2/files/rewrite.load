@@ -1,0 +1,4 @@
+LoadModule rewrite_module /usr/lib/apache2/modules/mod_rewrite.so
+#############################
+# This file is being managed by puppet #
+########################################

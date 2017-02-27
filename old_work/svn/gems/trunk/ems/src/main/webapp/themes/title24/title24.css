@@ -1,0 +1,219 @@
+﻿#tab2para, #tab2div{
+}
+#netSettingsForm, #profileSettingsForm, #profileSettingsForm, #systestForm, #nextdivform2, #divform2{
+	padding-top:0px!important;
+		padding-right:10px!important;
+		padding-bottom:20px!important;
+
+}
+
+#prevform2, #prevdivform2{
+	float:right;
+		margin-top:-27px!important;
+		margin-right:250px;
+				margin-bottom:0px!important;
+
+}
+
+button, input[type=button], input[type=submit] {
+	
+	padding-top:0px!important;
+		padding-bottom:0px!important;
+}
+#prevdivform2.formPrompt, #prevdivform2.formValue{
+	
+float:right;
+
+}
+
+
+body {
+	font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+	font-size: 62.5%;
+}
+
+.ui-accordion-content-active{
+	color:black!important;
+}
+[id^="ui-accordion-accordionsystest-panel"] {
+    /* height:500px!important; */
+}
+#accordionsystest h3{
+	
+}
+.accordianContentCustom{
+	height:800px!important;
+	overflow-y:scroll;
+}
+div[id^=ui-id-] {
+     /* height: 200px!important;  */
+}
+form#systestForm {
+	/* position:fixed!important; */
+}
+#controlLightingDiv{
+	
+}
+.floatLeft{
+	float:left;
+}
+
+.subsection{
+	font-weight:bold;
+	font-size:large;
+	text-decoration:underline;
+}
+.accordianHeaders{
+    padding-left:10px;
+	font-size:small;
+
+}
+.controlLightingDivjqgrid1{
+	margin-left:50px!important;
+white-space:normal !important;
+}
+.ui-widget-overlay { 
+	background:white;
+}
+
+.ui-jqgrid tr.jqgrow td { word-wrap: break-word; /* IE 5.5+ and CSS3 */ white-space: pre-wrap; /* CSS3 */ white-space: -moz-pre-wrap; /* Mozilla, since 1999 */ white-space: -pre-wrap; /* Opera 4-6 */ white-space: -o-pre-wrap; /* Opera 7 */ overflow: hidden; height: auto; vertical-align: middle; padding-top: 3px; padding-bottom: 3px; }
+    /*.ui-jqgrid tr.jqgrow td { white-space: normal !important; height: auto; vertical-align: text-top; padding-top: 2px; }*/
+    th.ui-th-column div {  word-wrap: break-word; /* IE 5.5+ and CSS3 */ white-space: pre-wrap; /* CSS3 */ white-space: -moz-pre-wrap; /* Mozilla, since 1999 */ white-space: -pre-wrap; /* Opera 4-6 */ white-space: -o-pre-wrap; /* Opera 7 */ overflow: hidden; height: auto; vertical-align: middle; padding-top: 3px; padding-bottom: 3px;  }
+
+.comingsoon{
+	/*padding-top:200px!important;*/
+	padding-left:150px!important;
+	font-size:50px!important;	
+	font-weight:bold;
+}
+/**
+	css for accordian contents that will adjust the height of individual accordian div content
+**/
+
+
+.tabcolorgreen{
+	background-color:green!important;
+	/* border:2px solid green!important; */
+}
+.tabcolordefault{
+	background-color:#d42720!important;
+	/* border:2px solid #d42720!important; */
+}
+.ui-tabs .ui-tabs-nav .ui-tabs-anchor{
+	background-color:#d42720!important;
+}
+.tabcolorred{
+	background-color:red!important;
+	/* border:2px solid red!important; */
+}
+
+.title24tabul{
+	background:white!important;	
+	border:1px solid white!important;
+
+}
+.title24tabul a{
+	color:white!important;	
+
+}
+.notesmedium{
+	font-size:9px!important;
+	vertical-align:middle!important;
+	font-weight:normal;
+	
+}
+.innerContainer{
+	background-color:inherit;
+}
+.outerContainer{
+	background-color:inherit;
+}
+.tabvisitedActive{
+	background-color:#d42720!important;
+	color:red!important;
+    text-decoration:underline!important;
+}
+
+.ui-jqgrid tr.jqgrow td.stepdetailcol{
+    padding-left: 25px!important;
+}
+.maingroup{
+	font-size:medium!important;
+	white-space:normal !important;
+}
+.subgroup{
+	font-size:small!important;
+	text-decoration: underline;
+	white-space:normal !important;
+}
+.ui-jqgrid .ui-jqgrid-htable th div{
+
+}
+.subgrid-cell { 
+	display: none;
+
+}
+/*#gview_profiles_1_t*/
+#profiles_1{
+	padding-left:50px!important;
+}
+
+th.ui-th-column div{
+   white-space:normal !important;
+   height:auto !important;
+   padding:2px;
+}
+#outerTitle24Container{
+}
+#footerCompliance{
+}
+.springcheckboxdiv {
+	padding-top:12px;
+	
+	clear:both;
+}
+.springcheckboxlabeldiv {
+	padding-top:12px;
+	padding-left:25px;
+}
+.top12{
+	padding-top:12px;
+}
+.springmulticheckboxdiv {
+	padding-left:85.81px;
+}
+.springmulticheckboxdivADC{
+	padding-left:50.40px;
+}
+.clearboth{
+	clear:both;
+}
+.mainHeadPoint{
+	font-size:16px;
+	font-weight: bold;
+}
+.subHeadPoint{
+	font-size:13px;
+	font-weight: bold;
+}
+.autoDLControlSystemGridMain{
+	margin-left:50px!important;
+	white-space:normal !important;
+}
+
+/* jqgrid header of table*/
+.ui-jqgrid-titlebar.ui-jqgrid-caption.ui-widget-header.ui-corner-top.ui-helper-clearfix {
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    white-space:normal !important;
+    height: 100%;
+}
+th.ui-state-default.ui-th-column-header.ui-th-ltr{
+	overflow: hidden !important;
+    text-overflow: ellipsis;
+    white-space:normal !important;
+    height: 100%;
+}
+.ui-jqgrid tr.jqgroup td{
+	white-space:normal !important;
+}

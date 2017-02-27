@@ -1,0 +1,13 @@
+Package: enLighted-communicator
+Version: 3.6.1
+Section: misc
+Priority: optional
+Architecture: i386
+Essential: no
+Depends:
+Replaces: 
+Pre-Depends: 
+Suggests: no
+Maintainer: enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: enLighted communicator upgrqade utility

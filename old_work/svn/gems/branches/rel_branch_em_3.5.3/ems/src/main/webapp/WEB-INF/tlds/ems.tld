@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<!DOCTYPE taglib PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.1//EN"
+	"http://java.sun.com/j2ee/dtds/web-jsptaglibrary_1_1.dtd">
+<taglib>
+	<tlibversion>1.0.0</tlibversion>
+	<jspversion>1.1</jspversion>
+	<shortname>CustomTag</shortname>
+	<uri>http://ems.enlightedinc/tags</uri>
+	<info>ems tags</info>
+	<tag>
+		<name>showAppVersion</name>
+		<tagclass>com.ems.tags.AppVersionTag</tagclass>
+		<bodycontent>empty</bodycontent>
+		<info>Tag to display current version</info>
+	</tag>
+	
+	
+	<tag>
+		<name>breakDateDiffInString</name>
+		<tagclass>com.ems.tags.DateIntervalTag</tagclass>
+		<bodycontent>empty</bodycontent>
+		<info>Tag to break down difference between the specified date and current date into String of combination of hours, minutes and seconds</info>
+		<attribute>
+			<name>dateValue</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>datePattern</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	
+	<tag>
+		<name>decimalToHex</name>
+		<tagclass>com.ems.tags.ConvertDecimalToHexTag</tagclass>
+		<bodycontent>empty</bodycontent>
+		<info>Jsp Tag to convert decimal value in to hexadecimal value</info>
+		<attribute>
+			<name>decimalValue</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	
+	<tag>
+		<name>breakSecondsInString</name>
+		<tagclass>com.ems.tags.SecondsIntervalStringTag</tagclass>
+		<bodycontent>empty</bodycontent>
+		<info>Tag to break down seconds interval into String of combination of hours, minutes and seconds</info>
+		<attribute>
+			<name>seconds</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+</taglib>

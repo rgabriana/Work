@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service id="remoting-service" 
+    class="flex.messaging.services.RemotingService">
+
+    <adapters>
+        <adapter-definition id="java-object" class="flex.messaging.services.remoting.adapters.JavaAdapter" default="true"/>
+    </adapters>
+
+    <default-channels>
+        <channel ref="my-secure-amf"/>
+        <channel ref="my-amf"/>
+    </default-channels>
+	
+	<destination id="loadCompany">
+		<properties>
+			<factory>spring</factory>
+			<source>companyManager</source>
+		</properties>
+	</destination>
+	
+	<destination id="groupService">
+		<properties>
+			<factory>spring</factory>
+			<source>groupManager</source>
+		</properties>
+	</destination>
+	
+	<destination id="companyCampusService">
+		<properties>
+			<factory>spring</factory>
+			<source>companyCampusManager</source>
+		</properties>
+	</destination>
+	
+	<destination id="campusService">
+		<properties>
+			<factory>spring</factory>
+			<source>campusManager</source>
+		</properties>
+	</destination>
+
+	<destination id="buildingService">
+		<properties>
+			<factory>spring</factory>
+			<source>buildingManager</source>
+		</properties>
+	</destination>
+
+	<destination id="floorService">
+		<properties>
+			<factory>spring</factory>
+			<source>floorManager</source>
+		</properties>
+	</destination>	
+
+	<destination id="fixtureService">
+		<properties>
+			<factory>spring</factory>
+			<source>fixtureManager</source>
+		</properties>
+	</destination>	
+
+	<destination id="fixtureGroupService">
+		<properties>
+			<factory>spring</factory>
+			<source>fixtureGroupManager</source>
+		</properties>
+	</destination>	
+	
+	<destination id="energyConsumptionService">
+		<properties>
+			<factory>spring</factory>
+			<source>energyConsumptionManager</source>
+		</properties>
+	</destination>	
+
+	<destination id="areaService">
+		<properties>
+			<factory>spring</factory>
+			<source>areaManager</source>
+		</properties>
+	</destination>	
+
+	<destination id="subareaService">
+		<properties>
+			<factory>spring</factory>
+			<source>subAreaManager</source>
+		</properties>
+	</destination>
+	
+	<destination id="eventsAndFaultService">
+		<properties>
+			<factory>spring</factory>
+			<source>eventsAndFaultManager</source>
+		</properties>
+	</destination>
+	
+	<destination id="sessionService">
+		<properties>
+			<factory>spring</factory>
+			<source>flexService</source>
+		</properties>
+		<adapter ref="java-object"/>
+	</destination>
+	
+	<destination id="userService">
+		<properties>
+			<factory>spring</factory>
+			<source>userManager</source>
+		</properties>
+	</destination>
+	<destination id="gatewayService">
+		<properties>
+			<factory>spring</factory>
+			<source>gatewayManager</source>
+		</properties>
+	</destination>
+	<destination id="inventoryDeviceService">
+		<properties>
+			<factory>spring</factory>
+			<source>inventoryDeviceService</source>
+		</properties>
+	</destination>
+	
+	<destination id="switchService">
+		<properties>
+			<factory>spring</factory>
+			<source>switchManager</source>
+		</properties>
+	</destination>
+		
+	<destination id="profileService">
+		<properties>
+			<factory>spring</factory>
+			<source>profileManager</source>
+		</properties>	
+	</destination>
+	
+	<destination id="emsAuditService">
+		<properties>
+			<factory>spring</factory>
+			<source>emsAuditService</source>
+		</properties>	
+	</destination>
+	
+	
+</service>

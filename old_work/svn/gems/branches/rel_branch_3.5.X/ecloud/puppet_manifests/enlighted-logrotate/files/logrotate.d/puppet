@@ -1,0 +1,12 @@
+# this file is managed by puppet
+/var/log/puppet/*
+{
+	rotate 7 
+	minsize 250M
+	daily
+	missingok
+	notifempty
+	compress
+	delaycompress
+	create 644 puppet puppet 
+}

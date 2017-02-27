@@ -1,0 +1,11 @@
+Setup
+
+1. Copy file get_cloud_data.sh to /bin/ folder with appropriate executable permissions.
+2. Execute psql -U postgres ems < getCloudData.sql
+3. Execute psql -U postgres ems < getCloudEnergyData.sql
+4. Create directory /home/enlighted/clouddata with 777 permissions.
+5. Copy CloudDataManifest.MF to /var/lib/tomcat6/Enlighted/
+6. Copy file txn_and_zip.sh to /bin/ folder with appropriate executable permissions.
+7. Copy communicator.properties to /var/lib/tomcat6/Enlighted . Give 777 permission 
+8> put communicator jar and Main.sh file on desktop. 
+9> run from terminal sudo sh Main.sh

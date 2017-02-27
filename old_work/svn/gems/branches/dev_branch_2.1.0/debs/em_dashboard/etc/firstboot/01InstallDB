@@ -1,0 +1,6 @@
+if [ `psql -q -Upostgres emsdashboard -t -c "select count(*) from users"`  ]
+    then
+	echo "upgrade"
+    else
+        su postgres -c /home/enlighted/installdb_dashboard.sh > /home/enlighted/installdb.log
+fi

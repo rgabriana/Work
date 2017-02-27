@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.EmStats"
+        table="em_stats"
+    >
+
+	<id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">em_stats_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-EmsAudit.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="captureAt"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="capture_at"
+        />
+
+        <property
+            name="activeThreadCount"
+            type="java.lang.Integer"
+            update="true"
+            insert="true"
+            column="active_thread_count"
+        />
+
+        <property
+            name="gcCount"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="gc_count"
+        />
+
+        <property
+            name="gcTime"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="gc_time"
+        />
+
+        <property
+            name="heapUsed"
+            type="java.lang.Double"
+            update="true"
+            insert="true"
+            column="heap_used"
+        />
+
+        <property
+            name="nonHeapUsed"
+            type="java.lang.Double"
+            update="true"
+            insert="true"
+            column="non_heap_used"
+        />
+	  <property
+            name="sysLoad"
+            type="java.lang.Double"
+            update="true"
+            insert="true"
+            column="sys_load"
+        />
+
+	  <property
+            name="cpuPercentage"
+            type="java.lang.Float"
+            update="true"
+            insert="true"
+            column="cpu_percentage"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-EmStats.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

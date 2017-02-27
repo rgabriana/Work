@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%"
+		  height="100%" xmlns:components="com.enlightedinc.components.*" 
+		  creationComplete="initReport()">
+	<fx:Declarations>
+		<s:HTTPService id="usageByProfileGroupHttpService"
+					   method="GET"
+					   resultFormat="e4x"
+					   useProxy="false"
+					   result="onUsageByProfileGroupData(event)"
+					   fault="usageByProfileGroupHttpService_faultHandler(event)"/>
+		
+		<s:HTTPService id="locationHttpService" 
+					   method="GET"
+					   resultFormat="e4x"
+					   useProxy="false"
+					   showBusyCursor="true"   
+					   result="onLocationHttpService(event)"
+					   fault="locationHttpService_faultHandler(event)"/>
+		
+		<mx:DateFormatter id="dateFormatter" formatString="YYYYMMDDJJNNSS"/>
+	</fx:Declarations>
+	
+	<fx:Metadata>
+		[Event(type="com.enlightedinc.events.ScreenChangeEvent", name="screenChange")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.events.EnergySummaryDockEvent;
+			import com.enlightedinc.events.EnergySummaryFilterEvent;
+			import com.enlightedinc.events.ScreenChangeEvent;
+			
+			import mx.charts.ChartItem;
+			import mx.charts.HitData;
+			import mx.charts.LegendItem;
+			import mx.charts.series.items.PieSeriesItem;
+			import mx.collections.ArrayCollection;
+			import mx.containers.GridItem;
+			import mx.containers.GridRow;
+			import mx.core.FlexGlobals;
+			import mx.graphics.IFill;
+			import mx.graphics.SolidColor;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.xml.SimpleXMLDecoder;
+			import mx.utils.StringUtil;
+			
+			[Bindable]
+			public var profileUsageData:ArrayCollection;
+			//[Bindable]
+			//public var customFilterData:ArrayCollection = new ArrayCollection();
+			private var fromDate:String;
+			private var toDate:String;
+			private var date:Date;
+			private var currentFixedperiod:String = "day";
+			private const MS_PER_DAY:uint = 1000 * 60 * 60 * 24;
+			
+			private var colorDictionary:Dictionary = new Dictionary();
+			[Bindable]
+			private var rowSize:int = 1;
+			[Bindable]
+			private var isAnyPowerAvailable:Boolean = false;
+			private var contextRoot:String  = "";
+			private var currentPId:String = "";
+			private var currentProperty:String = "";
+			public var transactionId:Number=0;
+			private function creatColorDictionary():void
+			{
+				colorDictionary['Custom'] = "0xE48701";
+				colorDictionary['Default'] = "0xA5BC4E";
+				colorDictionary['Breakroom'] = "0x1B95D9";
+				colorDictionary['Conference Room'] = "0xCACA9E";
+				colorDictionary['Open Corridor'] = "0x6693B0";
+				colorDictionary['Closed Corridor'] = "0xF05E27";
+				colorDictionary['Egress'] = "0x86D1E4";
+				colorDictionary['Lobby'] = "0xE4F9A0";
+				colorDictionary['Warehouse'] = "0xFFD512";
+				colorDictionary['Open Office'] = "0x75B000";
+				colorDictionary['Private Office'] = "0x0662B0";
+				colorDictionary['Restroom'] = "0xEDE8C6";
+				colorDictionary['Lab'] = "0xCC3300";
+				colorDictionary['Custom1'] = "0xD1DFE7";
+				colorDictionary['Custom2'] = "0x52D4CA";
+				colorDictionary['Standalone'] = "0xC5E05D";
+				colorDictionary['Highbay'] = "0xE7C174";
+			}
+			private function initReport():void
+			{
+				currentPId = FlexGlobals.topLevelApplication.parameters.orgId;
+				currentProperty =  FlexGlobals.topLevelApplication.parameters.orgType;
+				contextRoot = FlexGlobals.topLevelApplication.parameters.contextRoot;
+				pieChartGroup.visible=false;
+				isAnyPowerAvailable = false;
+				updateUsageByProfile();
+				usageReportDock.setSelectedButton = Constants.DAY;
+				
+				//Location Service- to get the current Path
+				locationHttpService.url = contextRoot + Constants.serverurl + 'facilities/nodepath/' + currentProperty + '/' + currentPId +"? ts="+ new Date();
+				locationHttpService.send();
+			}
+			private function updateUsageByProfile():void
+			{
+				cursorManager.setBusyCursor();
+				calculateDateRange();
+				transactionId++;
+				var object:Object = new Object();
+				object.transactionId = transactionId;
+				//fromDate = dateFormatter.format(usageReportDock.toDate.text);//fromDate is the latest date (current date)
+				//toDate = dateFormatter.format(usageReportDock.fromDate.text); //toDate is the older date (current date - delta)
+				usageByProfileGroupHttpService.url = contextRoot+ Constants.serverurl + 'ec/gmd/'+currentProperty+"/"+ currentPId +"/"+ fromDate + "/" + toDate;
+				usageByProfileGroupHttpService.send(object);
+				
+			}
+			private function calculateDateRange():void
+			{
+				date = new Date();
+				fromDate = dateFormatter.format(date);//fromDate is the latest date (current date)
+				usageReportDock.toDate.text = (int(date.getMonth()) + 1).toString() + "/" + date.getDate().toString() + "/" + date.getFullYear().toString();
+				switch(currentFixedperiod.toLowerCase())
+				{
+					case Constants.DAY.toLowerCase() : date.setDate(date.getDate() - 1);
+						usageReportDock.setSelectedButton=Constants.DAY;
+						break;
+					case Constants.WEEK.toLowerCase() : date.setDate(date.getDate() - 6);
+						usageReportDock.setSelectedButton=Constants.WEEK;
+						break;
+					case Constants.MONTH.toLowerCase() : date.setDate(date.getDate() - 30);
+						usageReportDock.setSelectedButton=Constants.MONTH;
+						break;
+					case Constants.YEAR.toLowerCase() : date.setDate(date.getDate() - 364);
+						usageReportDock.setSelectedButton=Constants.YEAR;
+						break;
+					default:
+						break;
+				}
+				toDate =dateFormatter.format(date);
+				usageReportDock.fromDate.text = (int(date.getMonth()) + 1).toString() + "/" + date.getDate().toString() + "/" + date.getFullYear().toString();
+				filterPeriodlabel.text= "Usage By Profile Report From "+ usageReportDock.fromDate.text  +" To " + usageReportDock.toDate.text; 
+			}
+			private function onUsageByProfileGroupData(event:ResultEvent):void{
+				cursorManager.removeAllCursors();
+				pieChartGroup.visible=true;
+				var xml:XMLDocument = new XMLDocument(event.result.toString());
+				
+				var asyncTokenObj:Object = event.token.message.body;
+				if(asyncTokenObj && asyncTokenObj.transactionId == transactionId)
+				{
+					if(event.result.toString() == "")
+					{
+						return;
+					}
+					if(profileUsageData!==null && profileUsageData.length>0)
+					{
+						profileUsageData.removeAll();
+					}
+					profileUsageData = new ArrayCollection();
+					var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+					var resultObj:Object = decoder.decodeXML(xml);
+					(resultObj.groupECRecords.groupECRecord is ArrayCollection) ? (profileUsageData = resultObj.groupECRecords.groupECRecord) : (profileUsageData.addItem(resultObj.groupECRecords.groupECRecord));
+					// Do conversion of data in Kwh from wh and Rounding the Cost
+					if(profileUsageData.length>0)
+					{
+						dataConversion(profileUsageData);
+						drawLegend();
+					}
+				}
+				if(profileUsageData.length==0)
+				{
+					pieChartGroup.includeInLayout =false;
+					pieChartGroup.visible =false;
+					noContentGroup.includeInLayout = true;
+					noContentGroup.visible =true;
+				}
+			}
+			
+			private function onLocationHttpService(event:ResultEvent):void
+			{
+				if(event.statusCode == Constants.SUCCESS)
+				{
+					var xml:XMLDocument = new XMLDocument(event.result.toString());
+					var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);				
+					if(event.result.toString() != "")
+					{
+						var resultObj:Object = decoder.decodeXML(xml);
+						breadscrumLabel.text = resultObj.toString();
+					}
+				}
+			}
+			private function locationHttpService_faultHandler(event:FaultEvent):void{
+				trace("Location service failed");
+			}
+			/**
+			 *	This function will modify will convert power values in Kw/h from w/h and rouding the cost.
+			 *  And if All powerused is 0, Message will display stating that "Energy used is not available!" 
+			 */ 
+			private function dataConversion(data:ArrayCollection):void
+			{
+				isAnyPowerAvailable = false;
+				for (var i:int = 0; i < data.length; i++)
+				{
+					var powerUsed:Number = checkNaN(data[i].powerused);
+					powerUsed = (powerUsed/1000);
+					
+					var savedPower:Number = checkNaN(data[i].savedpower);
+					savedPower = (savedPower/1000);
+					
+					var savedCost:Number = checkNaN(data[i].savedcost);
+					if(powerUsed>=1)
+					{
+						if(!isAnyPowerAvailable)
+						isAnyPowerAvailable = true;
+					}
+					data[i].powerused = powerUsed.toFixed(2);
+					data[i].savedpower = savedPower.toFixed(2);
+					data[i].savedcost = Math.round(savedCost);
+				}
+				if(!isAnyPowerAvailable)
+				{
+					noPowerAvailabelLabel.includeInLayout = true;
+					noPowerAvailabelLabel.visible =true;
+					
+					profileUsage.visible =false;
+					profileUsage.includeInLayout = false;
+					costPieChart.includeInLayout=false;
+					costPieChart.visible=false;
+					costPieChartTitle.includeInLayout=false;
+					costPieChartTitle.visible=false;
+				}else
+				{
+					noPowerAvailabelLabel.includeInLayout = false;
+					noPowerAvailabelLabel.visible =false;
+					
+					profileUsage.visible =true;
+					profileUsage.includeInLayout = true;
+					costPieChart.includeInLayout=true;
+					costPieChart.visible=true;
+					costPieChartTitle.includeInLayout=true;
+					costPieChartTitle.visible=true;
+				}
+				
+				data.refresh();
+			}
+			protected function usageByProfileGroupHttpService_faultHandler(event:FaultEvent):void
+			{
+				cursorManager.removeAllCursors();
+				//trace("Error occured in the usageByProfileGroupHttpService");
+			}
+			private function profileDataTipFunction(item:HitData) : String
+			{
+				return item.item.name + " (Power Used: " + item.item.powerused + " kW)";
+			}
+			private function costDataTipFunction(item:HitData) : String
+			{
+				return item.item.name + " (Cost ($): " + item.item.savedcost + ")";
+			}
+			private function pieChartLabelFun(item:Object, field:String, index:Number, percentValue:Number):String
+			{
+				return StringUtil.substitute("{0} ({1}%)",
+					field,
+					Math.round(percentValue));
+			}
+			private function getFilterUsageSummary(event:EnergySummaryFilterEvent):void{
+				//calculateDate(currentFixedperiod);
+				transactionId++;
+				fromDate = dateFormatter.format(event.toDate);//fromDate is the latest date (current date)
+				toDate = dateFormatter.format(event.fromDate); //toDate is the older date (current date - delta)
+				var diffDays:Number;
+				var tempDate:Date = new Date(((event.toDate as Date).getTime()-(event.fromDate as Date).getTime()));  
+				diffDays =  Math.round((tempDate.time / MS_PER_DAY) + 1);
+				if (diffDays <= 2) {
+					currentFixedperiod=Constants.DAY;
+				} else if (diffDays <= 6) {
+					currentFixedperiod=Constants.WEEK;
+				} else if (diffDays <= 30) {
+					currentFixedperiod=Constants.MONTH;
+				}else
+				{
+					currentFixedperiod=Constants.YEAR;
+				}
+				if((fromDate.length > 0) && (toDate.length > 0))
+				{
+					var object:Object = new Object();
+					object.transactionId = transactionId;
+					var contextRoot:String = FlexGlobals.topLevelApplication.parameters.contextRoot;
+					var currentPId:String = FlexGlobals.topLevelApplication.parameters.orgId;
+					var currentProperty:String = FlexGlobals.topLevelApplication.parameters.orgType;
+					usageByProfileGroupHttpService.url = contextRoot+ Constants.serverurl + 'ec/gmd/'+currentProperty+"/"+ currentPId +"/"+ fromDate + "/" + toDate;
+					usageByProfileGroupHttpService.send(object);
+				}
+			}
+			private function onClick(event:EnergySummaryDockEvent) : void
+			{
+				currentFixedperiod = event.label.toLowerCase();
+				updateUsageByProfile();
+			}
+			
+			private function pieSeries_fillFunc(item:ChartItem, index:Number):IFill {
+				var curItem:PieSeriesItem = PieSeriesItem(item);
+				trace(curItem.item.name);
+				//var indexstr:String = "sc"+(index+1);
+				var currColorStr:String = String(colorDictionary[curItem.item.name]);
+				var currColr:uint = uint(currColorStr);
+				return new SolidColor(currColr, 1.0);
+			}
+			
+			private function drawLegend():void {
+				creatColorDictionary();
+				clearLegend();
+				// Use a counter for the series.
+				var z:int = 0;
+				var numRows:int; 
+				numRows= profileUsageData.length;
+				for (var j:int = 0; j < numRows; j++) {
+					for (var k:int = 0; k < rowSize; k++) {
+						// As long as the series counter is less than the number of series...
+						var totalfixtures:Number = Number(profileUsageData[j].totalfixtures);
+						if (z < profileUsageData.length && totalfixtures>0) {
+							var gr:GridRow = new GridRow();
+							legendGrid.addChild(gr);
+							
+							var gi:GridItem = new GridItem();
+							gr.addChild(gi);
+							var li:LegendItem = new LegendItem();
+							// Apply the current series' displayName to the LegendItem's label.
+							li.label = profileUsageData[j].name;
+							li.width = 90;
+							// Get the current series' fill.
+							var currColorStr:String = colorDictionary[profileUsageData[j].name]
+							var currColr:uint = uint(currColorStr);
+							var sc:SolidColor = new SolidColor(currColr, 1.0);
+							// Apply the current series' fill to the corresponding LegendItem.
+							li.setStyle("fill", sc);
+							// Apply other styles to make the LegendItems look uniform.
+							//li.setStyle("textIndent", 5);
+							li.setStyle("labelPlacement", "right");
+							li.setStyle("fontSize", 9);
+							gi.setStyle("backgroundAlpha", "1");
+							//gi.setStyle("backgroundColor", currColr);
+							gi.width = 100;
+							// Add the LegendItem to the GridItem.
+							gi.addChild(li);
+							// Increment any time a LegendItem is added.
+							z++;
+						}
+					}                                  
+				}
+			}
+			private function clearLegend():void {
+				legendGrid.removeAllChildren();
+			}
+			public function checkNaN(value:*):Number
+			{
+				if(isNaN(value))
+					return 0;
+				else
+					return value;
+			}
+			
+		]]>
+	</fx:Script>
+ 	<components:UsageReportDock id="usageReportDock" width="100%" maxHeight="25"
+								filterEnergySummary="getFilterUsageSummary(event)"
+								dockClick="onClick(event)" />
+	<s:VGroup width="100%" height="95%"  >
+	<s:HGroup width="100%" height="5%" verticalAlign="middle">
+		<s:Label id="breadscrumLabel" width="38%" fontSize="14" fontWeight="bold" />
+		<s:Label id="filterPeriodlabel" width="62%" fontSize="14" fontWeight="bold" />
+	</s:HGroup>
+	<s:HGroup id="noContentGroup" width="100%" height="95%" horizontalAlign="center" verticalAlign="middle" visible="false" includeInLayout="false">
+		<s:Label id="noContentLabel" fontSize="14"  text="{Constants.NO_REPORT_DATA}"/>
+	</s:HGroup>
+	<s:HGroup id="pieChartGroup" width="100%" height="95%" horizontalAlign="center" verticalAlign="middle" >
+		<mx:DataGrid id="usageByProfileGrid" width="100%" height="100%" dataProvider="{profileUsageData}">
+			<mx:columns>
+				<mx:DataGridColumn id="groupType" headerText="Profile" dataField="name"/>
+				<mx:DataGridColumn id="energyUsed" headerText="Energy Used (kW)" dataField="powerused" textAlign="center"/>
+				<mx:DataGridColumn id="totalFixtures" headerText="No. of fixtures" dataField="totalfixtures" textAlign="center"/>
+				<mx:DataGridColumn id="cost" headerText="Cost($)" dataField="savedcost" textAlign="center" />
+				<mx:DataGridColumn id="saving" headerText="Saving (kW)" dataField="savedpower" textAlign="center"/>
+			</mx:columns>
+		</mx:DataGrid>
+		<s:VGroup width="100%" height="100%" horizontalAlign="center">
+			<mx:VBox width="100%" height="100%" styleName="vboxStyle" id="baseGroup">
+				<s:Label text="Energy Usage" fontSize="14" paddingTop="5" paddingRight="100" />
+				<s:HGroup  width="100%" height="100%" >
+					<s:VGroup width="100%" height="100%" verticalAlign="middle" horizontalAlign="center">
+						<s:Label id="noPowerAvailabelLabel" fontSize="14" text="{Constants.NO_ENERGY_USED}" includeInLayout="false" visible="false"/>
+						<mx:PieChart id="profileUsage" width="100%" height="200"
+									 dataProvider="{profileUsageData}" showDataTips="true"
+									 dataTipFunction="profileDataTipFunction" >
+							<mx:series>
+								<mx:PieSeries field="powerused" labelField="name" nameField="name" fillFunction="pieSeries_fillFunc" />
+							</mx:series>
+						</mx:PieChart>
+						<s:Label id="costPieChartTitle" text="Cost Saving" fontSize="14" paddingTop="5" paddingLeft="3"/>
+						<mx:PieChart id="costPieChart" width="100%" height="200"
+									 dataProvider="{profileUsageData}" showDataTips="true"
+									 dataTipFunction="costDataTipFunction" >
+							<mx:series>
+								<mx:PieSeries field="savedcost" labelField="name" nameField="name" fillFunction="pieSeries_fillFunc" />
+							</mx:series>
+						</mx:PieChart>
+					</s:VGroup>
+					
+					<mx:Grid id="legendGrid" paddingTop="10" paddingRight="10"/>
+				</s:HGroup>
+			</mx:VBox>
+		</s:VGroup>
+	</s:HGroup>
+	<!--<components:EnergyUsageGraph id="energyUsageGraph" width="100%" includeInLayout="false" visible="false"
+								 energyUsageData="{customFilterData}"/>-->
+	</s:VGroup>
+</s:VGroup>

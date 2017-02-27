@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.Device" table="device">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">fixture_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-Fixture.xml 
+					containing the additional parameters and place it in your merge dir. -->
+			</generator>
+		</id>
+		
+		<property name="name" type="java.lang.String" update="true"
+			insert="true" column="name" />
+
+		<property name="location" type="java.lang.String" update="true"
+			insert="true" column="location" />
+
+		<property name="macAddress" type="java.lang.String" update="true"
+			insert="true" column="mac_address" />
+
+		<many-to-one name="floor" class="com.ems.model.Floor"
+			cascade="none" outer-join="auto" update="true" insert="true" column="floor_id" />
+		
+		<property name="floorId" type="java.lang.Long" update="false"
+			insert="false" column="floor_id" />
+			
+		<many-to-one name="area" class="com.ems.model.Area"
+			cascade="none" outer-join="auto" update="true" insert="true" column="area_id" />
+
+		<property name="areaId" type="java.lang.Long" update="false"
+			insert="false" column="area_id" />
+
+		<property name="type" type="java.lang.String" update="true"
+			insert="true" column="type" />
+
+		<property name="campusId" type="java.lang.Long" update="true"
+			insert="true" column="campus_id" />
+
+		<property name="buildingId" type="java.lang.Long" update="true"
+			insert="true" column="building_id" />
+
+		<property name="xaxis" type="java.lang.Integer" update="true"
+			insert="true" column="x" />
+
+		<property name="yaxis" type="java.lang.Integer" update="true"
+			insert="true" column="y" />
+
+		<property name="version" type="java.lang.String" update="true"
+			insert="true" column="version" />
+		
+		<property name="modelNo" type="java.lang.String" update="true"
+			insert="true" column="model_no" />
+
+		<property name="pcbaSerialNo" type="java.lang.String" update="true"
+			insert="true" column="pcba_serial_no" />
+
+		<property name="pcbaPartNo" type="java.lang.String" update="true"
+			insert="true" column="pcba_part_no" />
+
+		<property name="hlaSerialNo" type="java.lang.String" update="true"
+			insert="true" column="hla_serial_no" />
+
+		<property name="hlaPartNo" type="java.lang.String" update="true"
+			insert="true" column="hla_part_no" />
+
+		<!-- To add non XDoclet property mappings, create a file named hibernate-properties-Device.xml 
+			containing the additional properties and place it in your merge dir. -->
+	  
+	  <joined-subclass name="com.ems.model.Fixture" table="fixture">
+	    <key column="id"/>
+ 	    
+		<property name="sensorId" type="java.lang.String" update="true"
+			insert="true" column="sensor_id" />
+
+		<many-to-one name="subArea" class="com.ems.model.SubArea"
+			cascade="none" outer-join="auto" update="true" insert="true" column="sub_area_id" />
+
+		<property name="ballastType" type="java.lang.String" update="true"
+			insert="true" column="ballast_type" />
+
+		<property name="ballastLastChanged" type="java.util.Date"
+			update="true" insert="true" column="ballast_last_changed" />
+
+		<property name="noOfBulbs" type="java.lang.Integer" update="true"
+			insert="true" column="no_of_bulbs" />
+
+		<property name="bulbWattage" type="java.lang.Integer" update="true"
+			insert="true" column="bulb_wattage" />
+
+		<property name="ballastManufacturer" type="java.lang.String"
+			update="true" insert="true" column="ballast_manufacturer" />
+
+		<property name="bulbManufacturer" type="java.lang.String"
+			update="true" insert="true" column="bulb_manufacturer" />
+
+		<property name="currentProfile" type="java.lang.String"
+			update="true" insert="true" column="current_profile" />
+
+		<property name="originalProfileFrom" type="java.lang.String"
+			update="true" insert="true" column="original_profile_from" />
+
+		<set name="eventsAndFaults" lazy="true" inverse="true" cascade="delete"
+			sort="unsorted" where="active='t'" outer-join="auto">
+
+			<key column="device_id">
+			</key>
+
+			<one-to-many class="com.ems.model.EventsAndFault" />
+
+		</set>
+
+		<property name="savingsType" type="java.lang.String" update="true"
+			insert="true" column="savings_type" />
+
+		<property name="snapAddress" type="java.lang.String" update="true"
+			insert="true" column="snap_address" />
+		
+		<property name="channel" type="java.lang.Integer" update="true"
+			insert="true" column="channel" />
+		
+		<property name="aesKey" type="java.lang.String" update="true"
+			insert="true" column="aes_key" />
+
+		<many-to-one name="gateway" class="com.ems.model.Gateway"
+			cascade="none" outer-join="auto" update="true" insert="true" column="gateway_id" />
+		
+		<property name="description" type="java.lang.String" update="true"
+			insert="true" column="description" />
+
+		<property name="notes" type="java.lang.String" update="true"
+			insert="true" column="notes" />
+
+		<property name="bulbsLastServiceDate" type="java.util.Date"
+			update="true" insert="true" column="bulbs_last_service_date" />
+
+		<property name="ballastLastServiceDate" type="java.util.Date"
+			update="true" insert="true" column="ballast_last_service_date" />
+
+		<property name="active" type="boolean" update="true" insert="true"
+			column="active" />
+
+		<property name="state" type="java.lang.String" update="true"
+			insert="true" column="state" />
+
+		<many-to-one name="ballast" class="com.ems.model.Ballast"
+			cascade="none" outer-join="auto" column="ballast_id" />
+
+		<many-to-one name="bulb" class="com.ems.model.Bulb"
+			cascade="none" outer-join="auto" column="bulb_id" />
+
+		<property name="noOfFixtures" type="java.lang.Integer"
+			update="true" insert="true" column="no_of_fixtures" />
+
+		<property name="ipAddress" type="java.lang.String" update="true"
+			insert="true" column="ip_address" />
+
+		<property name="commType" type="java.lang.Integer" update="true"
+			insert="true" column="comm_type" />
+
+		<property name="firmwareVersion" type="java.lang.String"
+			update="true" insert="true" column="firmware_version" />
+
+		<property name="bootLoaderVersion" type="java.lang.String"
+			update="true" insert="true" column="bootloader_version" />
+
+		<property name="groupId" type="java.lang.Long" update="true"
+			insert="true" column="group_id" />
+
+		<property name="secGwId" type="java.lang.Long" update="true"
+			insert="true" column="sec_gw_id" />
+
+		<property name="upgradeStatus" type="java.lang.String"
+			update="true" insert="true" column="upgrade_status" />
+
+		<property name="pushProfile" type="boolean" update="true"
+			insert="true" column="push_profile" />
+
+		<property name="pushGlobalProfile" type="boolean" update="true"
+			insert="true" column="push_global_profile" />
+
+		<property name="lastCmdSent" type="java.lang.String" update="true"
+			insert="true" column="last_cmd_sent" />
+
+		<property name="lastCmdSentAt" type="java.util.Date" update="true"
+			insert="true" column="last_cmd_sent_at" />
+
+		<property name="lastCmdStatus" type="java.lang.String"
+			update="true" insert="true" column="last_cmd_status" />
+		
+		<property name="voltage" type="java.lang.Short" update="true"
+			insert="true" column="voltage" />
+
+		<property name="commissionStatus" type="java.lang.Integer"
+			update="true" insert="true" column="commission_status" />
+
+		<property name="isHopper" type="java.lang.Integer" update="true"
+			insert="true" column="is_hopper" />
+
+		<property name="versionSynced" type="java.lang.Integer"
+			update="true" insert="true" column="version_synced" />
+
+		<property name="lastBootTime" type="java.util.Date" update="true"
+			insert="true" column="last_boot_time" />
+
+		<property name="temperatureOffset" type="java.lang.Float"
+			update="true" insert="true" column="temperature_offset" />
+
+		<property name="cuVersion" type="java.lang.String" update="true"
+			insert="true" column="cu_version" />
+
+		<property name="wattage" type="java.lang.Integer" update="true"
+			insert="true" column="wattage" />
+			
+		<property name="dimmerControl" type="java.lang.Integer"
+			update="true" insert="true" column="dimmer_control" />
+
+		<property name="currentState" type="java.lang.String" update="true"
+			insert="true" column="current_state" />
+
+		<property name="lastOccupancySeen" type="java.lang.Integer"
+			update="true" insert="true" column="last_occupancy_seen" />
+
+		<property name="lightLevel" type="java.lang.Integer" update="true"
+			insert="true" column="light_level" />
+			
+		<property name="bulbLife" type="java.lang.Double" update="true"
+			insert="true" column="bulb_life" />
+			
+		<property name="lastConnectivityAt" type="java.util.Date"
+			update="true" insert="true" column="last_connectivity_at" />
+			
+		<property name="lastStatsRcvdTime" type="java.util.Date"
+			update="true" insert="true" column="last_stats_rcvd_time" />
+
+		<property name="profileChecksum" type="java.lang.Short"
+			update="true" insert="true" column="profile_checksum" />
+
+		<property name="globalProfileChecksum" type="java.lang.Short"
+			update="true" insert="true" column="global_profile_checksum" />
+
+		<property name="currApp" type="java.lang.Short" update="true"
+			insert="true" column="curr_app" />
+					
+		<property name="avgTemperature" type="java.lang.Short"
+			update="true" insert="true" column="avg_temperature" />
+
+		<property name="baselinePower" type="java.math.BigDecimal"
+			update="true" insert="true" column="baseline_power" />
+
+		<property name="resetReason" type="java.lang.Short"
+			update="true" insert="true" column="reset_reason" />
+			
+		<property name="groupsChecksum" type="java.lang.Integer"
+			update="true" insert="true" column="groups_checksum" />
+
+		<property name="groupsSyncPending" type="java.lang.Boolean"
+			update="true" insert="true" column="groups_sync_pending" />
+			
+		<property name="useFxCurve" type="java.lang.Boolean"
+			update="true" insert="true" column="use_fx_curve" />	
+
+	  </joined-subclass>
+	
+	  <joined-subclass name="com.ems.model.Gateway" table="gateway">	  	
+	  	<key column="id"/>	
+
+		<property name="uniqueIdentifierId" type="java.lang.String"
+			update="true" insert="true" column="unique_identifier_id" />
+
+		<property name="status" type="boolean" update="true" insert="true"
+			column="status" />
+
+		<property name="commissioned" type="boolean" update="true"
+			insert="true" column="commissioned" />
+
+		<property name="ipAddress" type="java.lang.String" update="true"
+			insert="true" column="ip_address" />
+
+		<property name="port" type="java.lang.Short" update="true"
+			insert="true" column="port" />
+
+		<property name="snapAddress" type="java.lang.String" update="true"
+			insert="true" column="snap_address" />
+
+		<property name="gatewayType" type="java.lang.Short" update="true"
+			insert="true" column="gateway_type" />
+
+		<property name="serialPort" type="java.lang.Short" update="true"
+			insert="true" column="serial_port" />
+
+		<property name="channel" type="java.lang.Integer" update="true"
+			insert="true" column="channel" />
+
+		<property name="aesKey" type="java.lang.String" update="true"
+			insert="true" column="aes_key" />
+
+		<property name="userName" type="java.lang.String" update="true"
+			insert="true" column="user_name" />
+
+		<property name="password" type="java.lang.String" update="true"
+			insert="true" column="password" />
+
+		<property name="wirelessNetworkId" type="java.lang.Integer"
+			update="true" insert="true" column="wireless_networkid" />
+
+		<property name="wirelessEncryptType" type="java.lang.Integer"
+			update="true" insert="true" column="wireless_enctype" />
+
+		<property name="wirelessEncryptKey" type="java.lang.String"
+			update="true" insert="true" column="wireless_enckey" />
+
+		<property name="wirelessRadiorate" type="java.lang.Integer"
+			update="true" insert="true" column="wireless_radiorate" />
+
+		<property name="ethSecType" type="java.lang.Integer" update="true"
+			insert="true" column="eth_sec_type" />
+
+		<property name="ethSecIntegrityType" type="java.lang.Integer"
+			update="true" insert="true" column="eth_sec_integritytype" />
+
+		<property name="ethSecEncryptType" type="java.lang.Integer"
+			update="true" insert="true" column="eth_sec_enctype" />
+
+		<property name="ethSecKey" type="java.lang.String" update="true"
+			insert="true" column="eth_sec_key" />
+
+		<property name="ethIpaddrType" type="java.lang.Integer"
+			update="true" insert="true" column="eth_ipaddrtype" />
+
+		<property name="app1Version" type="java.lang.String" update="true"
+			insert="true" column="app1_version" />
+
+		<property name="currUptime" type="java.lang.Long" update="true"
+			insert="true" column="curr_uptime" />
+
+		<property name="currNoPktsFromGems" type="java.lang.Long"
+			update="true" insert="true" column="curr_no_pkts_from_gems" />
+
+		<property name="currNoPktsToGems" type="java.lang.Long"
+			update="true" insert="true" column="curr_no_pkts_to_gems" />
+
+		<property name="currNoPktsToNodes" type="java.lang.Long"
+			update="true" insert="true" column="curr_no_pkts_to_nodes" />
+
+		<property name="currNoPktsFromNodes" type="java.lang.Long"
+			update="true" insert="true" column="curr_no_pkts_from_nodes" />
+
+		<property name="lastStatsRcvdTime" type="java.util.Date"
+			update="true" insert="true" column="last_stats_rcvd_time" />
+
+		<property name="lastConnectivityAt" type="java.util.Date"
+			update="true" insert="true" column="last_connectivity_at" />
+
+		<property name="subnetMask" type="java.lang.String" update="true"
+			insert="true" column="subnet_mask" />
+
+		<property name="defaultGw" type="java.lang.String" update="true"
+			insert="true" column="default_gw" />
+
+		<property name="noOfSensors" type="int" update="true" insert="true"
+			column="no_of_sensors" />
+
+		<property name="upgradeStatus" type="java.lang.String"
+			update="true" insert="true" column="upgrade_status" />
+
+		<property name="bootLoaderVersion" type="java.lang.String"
+			update="true" insert="true" column="boot_loader_version" />
+		<property name="noOfWds" type="int" update="true" insert="true"
+			column="no_of_wds" />
+
+	  </joined-subclass>
+	
+	  <joined-subclass name="com.ems.model.Wds" table="wds">	  	
+		<key column="id"/>	
+		
+        <property name="state" type="java.lang.String" update="true" 
+			insert="true" column="state" />
+        
+		<property name="gatewayId" type="java.lang.Long" update="true"
+            insert="true" column="gateway_id"
+        />
+           
+       <many-to-one name="wdsSwitch" class="com.ems.model.Switch"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="switch_id" />
+			
+       <many-to-one name="wdsModelType" class="com.ems.model.WdsModelType"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="wds_model_type_id" />
+			
+       <many-to-one name="buttonMap" class="com.ems.model.ButtonMap"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="button_map_id" />
+			
+       <many-to-one name="switchGroup" class="com.ems.model.SwitchGroup"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="switch_group_id" />
+			
+		<property name="switchId" type="java.lang.Long" update="false"
+            insert="false" column="switch_id" />
+			
+		<property name="wdsNo" type="java.lang.Integer" update="true"
+            insert="true" column="wds_no" />
+		
+		<property name="associationState" type="java.lang.Integer"
+            update="true" insert="true" column="association_state" />
+
+		<property name="upgradeStatus" type="java.lang.String"
+			update="true" insert="true" column="upgrade_status" />
+	
+	  </joined-subclass>
+	  
+	  	  
+	  <joined-subclass name="com.ems.model.LocatorDevice" table="locator_device">	  	
+		<key column="id"/>	
+		
+		<property name="locatorDeviceType" update="true" insert="true" column="locator_device_type">
+			<type name="org.hibernate.type.EnumType">
+				<param name="enumClass">com.ems.types.LocatorDeviceType</param>
+				<!-- This is little wierd but hibernate takes number 12 for the String 
+					for enum in hbm file -->
+				<param name="type">12</param>
+			</type>
+		</property>
+	
+	  </joined-subclass>
+	  
+
+	</class>
+
+</hibernate-mapping>

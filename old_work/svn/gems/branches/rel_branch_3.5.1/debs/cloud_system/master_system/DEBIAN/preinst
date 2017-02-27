@@ -1,0 +1,22 @@
+#!/bin/bash -x
+# Run this before installing this package, it requires root privilage
+
+
+
+#Start execution
+echo "Doing prerequisite..."
+sudo service tomcat6 stop
+file=/home/enlighted/master_files
+if [ -e "$file" ] ; then
+	rmdir $file
+fi
+sudo  rm -rf /var/lib/tomcat6/webapps/ecloud*
+sudo  rm -rf /var/lib/tomcat6/work/Catalina/localhost/ecloud
+
+
+
+
+
+
+
+

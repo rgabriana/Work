@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   xmlns:mx="library://ns.adobe.com/flex/mx"
+		   buttonMode="true"
+		   horizontalAlign="center" verticalAlign="middle"
+		   doubleClickEnabled="true" doubleClick="showFixtureDetails(event)"
+		   name="{Constants.FIXTURE_RENDERER}"
+		   creationComplete="onUpdateComplete()">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.assets.images.Images;
+			import com.enlightedinc.components.Constants;
+			
+			import mx.core.FlexGlobals;
+			
+			private var value:Number;
+			
+			[Bindable]
+			public static var rendererType:String = "";
+			
+			[Bindable]
+			public static var imageStatus:String = "";
+			
+			[Bindable]
+			private var showLabel:Boolean = false;
+			
+			public function onUpdateComplete() : void
+			{
+				showLabel = false;
+				if(rendererType == Constants.FIXTURE_STATUS)
+				{
+					updateFixtureStatus();
+				}
+				else if(rendererType == Constants.LIGHT_LEVEL)
+				{
+					updateLightLevel();
+				}
+				else if(rendererType == Constants.AMBIENT_STATUS)
+				{
+					updateAmbientStatus();
+				}
+				else if(rendererType == Constants.OCCUPANCY_STATUS)
+				{
+					updateOccupancyStatus();
+				}
+				else if(rendererType == Constants.TEMPERATURE_STATUS)
+				{
+					updateTemperatureStatus();
+				}
+				else if(rendererType == Constants.BULB_STATUS)
+				{
+					updateBulbStatus();
+				}
+				else if(rendererType == Constants.FIXTURE_NAME)
+				{
+					updateLabelRenderer(data.item.name);
+				}
+				else if(rendererType == Constants.FIXTURE_MAC)
+				{
+					updateLabelRenderer(data.item.snapaddress);
+				}
+				else if(rendererType == Constants.FIXTURE_AREA)
+				{
+					if(data.item.area)
+					{
+						updateLabelRenderer(data.item.area.name);
+					}
+				}
+				else if(rendererType == Constants.FIXTURE_GROUP)
+				{
+					updateLabelRenderer(data.item.name);
+				}
+				else if(rendererType == Constants.FIXTURE_PROFILE)
+				{
+					updateLabelRenderer(data.item.currentprofile);
+				}
+			}
+			
+			private function createDate(str:String) : Date
+			{
+				var date:Date = new Date();
+				date.setFullYear(str.slice(0,4));
+				date.setMonth(str.slice(5,7));
+				date.setMonth(date.getMonth() - 1);
+				date.setDate(str.slice(8,10));
+				date.setHours(str.slice(11,13));
+				date.setMinutes(str.slice(14,16));
+				date.setSeconds(str.slice(17,19));
+				return date;
+			}
+			
+			private function showFixtureDetails(event:MouseEvent) : void
+			{
+				if((FlexGlobals.topLevelApplication.m_propertyMode == Constants.FLOORPLAN) && ExternalInterface.available)
+				{
+					FlexGlobals.topLevelApplication.showAlertMarquee("Please wait. Opening Fixture details", true);
+					//If the call is successful; update the fixture image as hopper property might change
+					ExternalInterface.call("showFixtureForm", data.item.id);
+				}
+			}
+			
+			private function updateFixtureStatus() : void
+			{
+				// value here indicate lastconnectivityat
+				var serverDate:Date = createDate(data.item.lastconnectivityat);
+				var date:Date = new Date();
+				value = ((date.time - serverDate.time)/1000)/60;
+				
+				if(value <= 10) // less than 10 mins
+				{
+					if(data.item.ishopper == 1)
+						fixtureImage.source = Images.ConnectivityGreenHopper ;
+					else
+						fixtureImage.source = Images.ConnectivityGreen ;
+				}
+				else if(value > 10 && value <= 1440) // between 10 mins and 1 day
+				{
+					if(data.item.ishopper == 1)
+						fixtureImage.source = Images.ConnectivityGreyHopper;
+					else
+						fixtureImage.source = Images.ConnectivityGrey;
+				}
+				else if(value > 1440 && value <= 10080 ) // between 1 and 7 days
+				{
+					if(data.item.ishopper == 1)
+						fixtureImage.source = Images.ConnectivityYellowHopper;
+					else
+						fixtureImage.source = Images.ConnectivityYellow;
+				}
+				else if(value > 10080)
+				{
+					if(data.item.ishopper == 1)
+						fixtureImage.source = Images.ConnectivityRedHopper;
+					else
+						fixtureImage.source = Images.ConnectivityRed;
+				}
+			}
+			
+			private function updateLightLevel() : void
+			{
+				// value here indicate lightlevel
+				value = data.item.lightlevel;
+				
+				if(value >= 0 && value < 25)
+				{
+					fixtureImage.source = Images.LightOff;
+				}
+				else if(value >= 25 && value < 50)
+				{
+					fixtureImage.source = Images.Light25On;
+				}
+				else if(value >= 50 && value < 75)
+				{
+					fixtureImage.source = Images.Light50On;
+				}
+				else if(value >= 75 && value < 100)
+				{
+					fixtureImage.source = Images.Light75On;
+				}
+				else if(value == 100)
+				{
+					fixtureImage.source = Images.LightFullOn;
+				}
+			}
+			
+			private function updateAmbientStatus() : void
+			{
+				// value here indicate ambientlight
+				value = data.item.ambientlight;
+				
+				if(value < 10)
+				{
+					fixtureImage.source = Images.AmbientDark;
+				}
+				else if(value >= 10 && value < 30)
+				{
+					fixtureImage.source = Images.AmbientDim;
+				}
+				else if(value >= 30 && value < 65)
+				{
+					fixtureImage.source = Images.AmbientNormal;
+				}
+				else if(value >= 65)
+				{
+					fixtureImage.source = Images.AmbientBright;
+				}
+			}
+			
+			private function updateOccupancyStatus() : void
+			{
+				// value here indicate lastoccupancyseen
+				value = data.item.lastoccupancyseen;
+				
+				if(value <= 30)
+				{
+					fixtureImage.source = Images.OccupancyOccupied;
+				}
+				else if(value > 30 &&  value< 300)
+				{
+					fixtureImage.source = Images.OccupancyJustVacated; 
+				}
+				else
+				{
+					fixtureImage.source = Images.OccupancyVacated;
+				}
+			}
+			
+			private function updateTemperatureStatus() : void
+			{
+				// value here indicate avgtemperature
+				value = data.item.avgtemperature;
+				
+				if(value > 82)
+				{
+					fixtureImage.source = Images.TemperatureHot;
+				}
+				else if(value > 75 && value <= 82)
+				{
+					fixtureImage.source = Images.TemperatureWarm;
+				}
+				else if(value > 68 && value <= 75)
+				{
+					fixtureImage.source = Images.TemperatureNormal;
+				}
+				else if(value > 65 && value <= 68)
+				{
+					fixtureImage.source = Images.TemperatureCool;
+				}
+				else if(value <= 65)
+				{
+					fixtureImage.source = Images.TemperatureCold;
+				}
+			}
+			
+			private function updateBulbStatus() : void
+			{
+				// value here indicate bulblife
+				value = data.item.bulblife;
+				
+				if (value < 25)
+				{
+					fixtureImage.source = Images.BulbLowLevel;
+				}						
+				else if(value < 75 && value >= 25)
+				{
+					fixtureImage.source = Images.BulbNormalLevel;
+				}
+				else
+				{
+					fixtureImage.source = Images.BulbGoodLevel;
+				}
+			}
+			
+			private function updateLabelRenderer( label:String ) : void
+			{
+				if(imageStatus == Constants.FIXTURE_STATUS)
+				{
+					updateFixtureStatus();
+				}
+				else if(imageStatus == Constants.LIGHT_LEVEL)
+				{
+					updateLightLevel();
+				}
+				else if(imageStatus == Constants.AMBIENT_STATUS)
+				{
+					updateAmbientStatus();
+				}
+				else if(imageStatus == Constants.OCCUPANCY_STATUS)
+				{
+					updateOccupancyStatus();
+				}
+				else if(imageStatus == Constants.TEMPERATURE_STATUS)
+				{
+					updateTemperatureStatus();
+				}
+				else if(imageStatus == Constants.BULB_STATUS)
+				{
+					updateBulbStatus();
+				}
+				showLabel = true;
+				fixtureLabel.text = label;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<mx:Image id="fixtureImage" width="16" height="16"/>
+	<mx:Box styleName="fixtureLabelRenderer" backgroundColor="0xFFFFFF"
+			visible="{showLabel}" includeInLayout="{showLabel}">
+		<s:Label id="fixtureLabel" maxDisplayedLines="1" width="70" showTruncationTip="true" textAlign="center"/>
+	</mx:Box>
+	
+</mx:VBox>

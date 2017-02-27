@@ -1,0 +1,21 @@
+#!/bin/bash -x
+# Run this before installing this package, it requires root privilage
+
+
+sudo mkdir /var/lib/tomcat6/Enlighted
+
+sudo rm -rf /var/lib/tomcat6/Enlighted/upgradeEnlFiles/
+
+sudo service tomcat6 stop
+
+sudo  rm -rf /var/lib/tomcat6/webapps/ecloud*
+sudo  rm -rf /var/lib/tomcat6/work/Catalina/localhost/ecloud
+
+
+
+
+
+
+
+
+

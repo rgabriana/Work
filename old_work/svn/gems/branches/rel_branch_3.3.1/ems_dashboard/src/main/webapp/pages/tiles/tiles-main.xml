@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+<tiles-definitions>
+
+	<definition name="default-main" template="/pages/tiles/gemssetup.jsp">
+		<put-attribute name="header" value="/pages/main/header.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/pages/tiles/footer.jsp" />
+	</definition>
+	
+	<definition name="header-left-right-footer" template="/pages/tiles/dashboardviewsetup.jsp">
+		<put-attribute name="header" value="/pages/main/header.jsp" />
+		<put-attribute name="left" value="/pages/facilities/dashboard_tree.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/pages/tiles/footer.jsp" />
+	</definition>
+	<definition name="home" extends="header-left-right-footer">
+		<put-attribute name="body" value="/index.jsp" />
+	</definition>
+	
+	<definition name="gems/list" extends="default-main">
+		<put-attribute name="body" value="/pages/gems/gems_list.jsp" />
+	</definition>
+		
+	<definition name="default-dialog" template="/pages/tiles/dialogtemplate.jsp">
+		<put-attribute name="body" value="" />
+	</definition>
+	
+	<definition name="gems/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/gems/gems_details.jsp" />
+	</definition>
+	
+</tiles-definitions>

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" creationComplete="group1_creationCompleteHandler(event)">
+	<s:layout>
+		<s:BasicLayout />
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import adobe.utils.XMLUI;
+			
+			import com.enlightedinc.common.IPValidator;
+			
+			import mx.charts.AreaChart;
+			import mx.collections.ArrayCollection;
+			import mx.core.FlexGlobals;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ValidationResultEvent;
+			import mx.managers.PopUpManager;
+			import mx.utils.XMLUtil;
+			import mx.validators.NumberValidator;
+			import mx.validators.StringValidator;
+			private var fileRef:FileReference;
+			private var xmllString:String="";
+			private var ipAddressValidator:IPValidator;
+			private var nameV:StringValidator;
+			private var portV:NumberValidator;
+			private var isValid:Boolean=false;
+			private var isDuplicate:Boolean=false;
+			private function addGem():void
+			{
+				if(isFormValid())
+				{
+					var ipAddr:String = ip.text+":"+port.text;
+					xmllString+="<gem type='gems' icon='Gems' name='"+gemname.text+"'" +" ip="+"'"+ipAddr+"'/>";
+					FlexGlobals.topLevelApplication.postDataService.send(xmllString);
+					dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+				}else
+				{
+					if(isDuplicate)
+					{
+						status.text="Please enter unique IP/Name";
+					}else
+					{
+						status.text="Please fill the required fields";
+					}
+					status.setStyle("color","0xFF0000");
+				}
+			}
+			protected function reset_clickHandler(event:MouseEvent):void
+			{
+				gemname.text="";
+				ip.text="";
+				port.text="";
+				status.text="";
+			}
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				isValid = true;
+				ipAddressValidator = new IPValidator();
+				ipAddressValidator.source = ip;
+				ipAddressValidator.triggerEvent ="focusOut";
+				ipAddressValidator.property ="text";
+				
+				nameV = new StringValidator();
+				nameV.source=gemname;
+				nameV.triggerEvent="focusOut";
+				nameV.property="text";
+				
+				portV = new NumberValidator();
+				portV.source=port;
+				portV.triggerEvent="focustOut";
+				portV.property="text";
+			}
+			protected function ip_changeHandler(event:Event):void
+			{
+				if(ipAddressValidator.validate().type == ValidationResultEvent.INVALID)
+				{
+					isValid = false;
+				}  
+				else
+				{
+					isValid = true;
+				}
+			}
+			private function isFormValid():Boolean{
+				var flag:Boolean=true;
+				if(ipAddressValidator.validate().type == ValidationResultEvent.INVALID || nameV.validate().type==ValidationResultEvent.INVALID || portV.validate().type==ValidationResultEvent.INVALID)
+				{
+					flag = false;
+				} 
+				//Check for duplicate IP/Name
+				var xmlData:XML=  FlexGlobals.topLevelApplication.treeDataCollection;
+				if(xmlData)
+				{
+					for (var obj:String in xmlData.gem)
+					{
+						var ipAdd:String= xmlData.gem.@ip[obj];
+						var ipArr:Array = ipAdd.split(":");
+						var name:String = xmlData.gem.@name[obj];
+						if(ip.text== ipArr[0] || gemname.text.toUpperCase()==name.toUpperCase())
+						{
+							//trace(xmlData.gem.@ip[obj]);
+							flag=false;	
+							isDuplicate=true;
+						}
+					}
+				}
+				return flag;
+			}
+		]]>
+	</fx:Script>
+	<mx:Form id="myForm" width="100%">
+		<mx:FormHeading label="Enter Below information to create Node in the tree"/>
+		<mx:FormItem label="Name" required="true">
+			<mx:TextInput id="gemname" width="282"/>
+		</mx:FormItem>
+		<mx:FormItem label="IP Address" width="360" required="true">
+			<mx:TextInput id="ip" width="100%" change="ip_changeHandler(event)"/>
+		</mx:FormItem>
+		<mx:FormItem label="Port" required="true">
+			<mx:TextInput id="port" width="280" text="443" restrict="0-9" maxChars="6"/>
+		</mx:FormItem>
+	</mx:Form>
+	<s:VGroup x="96" y="127" verticalAlign="middle" horizontalAlign="center">
+		<s:Label id="status" color="0x00FF00"/>
+		<s:HGroup horizontalAlign="center">
+			<mx:Button label="Add/Save" click="addGem();" labelPlacement="left" x="85" y="179"/>
+			<s:Button x="176" y="179" label="Reset" click="reset_clickHandler(event)"/>
+		</s:HGroup>
+	</s:VGroup>
+</s:Group>

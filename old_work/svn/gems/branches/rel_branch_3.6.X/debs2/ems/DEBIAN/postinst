@@ -1,0 +1,293 @@
+#!/bin/bash -x
+
+source /etc/environment
+
+# Run this before removing this package, it requires root privilage
+ntpSet=false
+func_setDefaultNtpDate()
+{
+        if [ $1 = "Y" ]; then
+                echo "NTPDATE_USE_NTP_CONF=no" > /tmp/ntpdefault
+                echo "NTPSERVERS=\"$2\"" >> /tmp/ntpdefault
+                echo "NTPOPTIONS=\"\"" >> /tmp/ntpdefault
+                sudo cp /tmp/ntpdefault /etc/default/ntpdate
+                
+				sudo cp /etc/ntp.conf /tmp/ntp.conf
+				sudo sed  -i '/^server/d' /etc/ntp.conf
+				#sudo sed -i '/ntp server as a fallback/i dhanesh-dhanesh' /etc/ntp.conf
+				#stringarray=($2)
+				stringarray1=$(echo $2 | tr "\"" "'")
+      			stringarray1=$(echo $stringarray1 | tr "'" " ")
+      			stringarray=($stringarray1)
+				for i in "${stringarray[@]}"
+				    do
+				      :
+				      # do whatever on $i
+				       sudo sed -i '/ntp server as a fallback/i server '$i /etc/ntp.conf
+				    done
+        else
+                echo "NTPDATE_USE_NTP_CONF=yes" > /tmp/ntpdefault
+                echo "NTPSERVERS=\"\"" >> /tmp/ntpdefault
+                echo "NTPOPTIONS=\"\"" >> /tmp/ntpdefault
+                sudo cp /tmp/ntpdefault /etc/default/ntpdate
+                #sudo rm /etc/ntp.conf
+                
+                sudo cp /etc/ntp.conf /tmp/ntp.conf
+				sudo sed  -i '/^server/d' /etc/ntp.conf
+        fi
+        ntpSet=true
+}
+
+cd /tmp/ems/
+sudo cp etc/iptables.rules /etc/ 
+sudo iptables-restore /etc/iptables.rules
+
+sed -i 's@ENL_APP_HOME@'"${ENL_APP_HOME}"'@' etc/customLogrotate.d/tomcat
+sudo cp etc/customLogrotate.conf /etc
+sudo cp -R etc/customLogrotate.d/ /etc/
+
+
+bash etc/firstboot/InstallDB
+
+sudo cp etc/network/if-up.d/iptables /etc/network/if-up.d/
+sudo chmod 755 /etc/network/if-up.d/iptables
+
+if [ -d ${ENL_APP_HOME}/webapps/host-manager ]
+then
+	sudo rm -rf  ${ENL_APP_HOME}/webapps/host-manager/
+fi
+
+if [ -d ${ENL_APP_HOME}/webapps/examples ]
+then
+	sudo rm -rf  ${ENL_APP_HOME}/webapps/examples/
+fi
+
+if [ -d ${ENL_APP_HOME}/webapps/docs ]
+then
+	sudo rm -rf  ${ENL_APP_HOME}/webapps/docs/
+fi
+
+if [ -d ${ENL_APP_HOME}/webapps/manager ]
+then
+	sudo rm -rf  ${ENL_APP_HOME}/webapps/manager/
+fi
+
+if [ -d ${ENL_APP_HOME}/work/Catalina/localhost ]
+then
+	sudo rm -rf  ${ENL_APP_HOME}/work/Catalina/localhost/
+fi
+
+if [ -d ${ENL_APP_HOME}/work/Catalina/ROOT ]
+then
+	sudo rm -rf  ${ENL_APP_HOME}/work/Catalina/ROOT/
+fi
+
+chmod 0440 home/enlighted/sudoers
+sudo cp home/enlighted/sudoers /etc/
+sudo chown root:root /etc/sudoers
+		
+# Copy Tomcat context.xml to $ENL_APP_HOME/conf/context.xml
+cp home/enlighted/context.xml ${ENL_APP_HOME}/conf/context.xml
+		
+# Copy Tomcat server.xml to $ENL_APP_HOME/conf/server.xml
+cp home/enlighted/server.xml ${ENL_APP_HOME}/conf/server.xml
+
+# Copy Tomcat web.xml to $ENL_APP_HOME/conf/web.xml
+cp home/enlighted/web.xml ${ENL_APP_HOME}/conf/web.xml
+
+if [ ! -d "${ENL_APP_HOME}/Enlighted" ]
+then
+	sudo mkdir -p ${ENL_TOMCAT_HOME}/Enlighted/
+fi
+
+if [ ! -f "${ENL_APP_HOME}/Enlighted/cloudServerInfo.xml" ]
+then
+    cp home/enlighted/cloudServerInfo.xml ${ENL_APP_HOME}/Enlighted/cloudServerInfo.xml
+fi
+
+
+#change permission on authorized keys
+sudo cp -R home/enlighted/.ssh/ ${ENLIGHTED_HOME}/
+chmod 755 ${ENLIGHTED_HOME}/.ssh
+chmod 644 ${ENLIGHTED_HOME}/.ssh/authorized_keys
+
+# 1000 is user id for enlighted user
+sudo cp home/enlighted/.pgpass ${ENLIGHTED_HOME}/
+chown 1000:1000 ${ENLIGHTED_HOME}/.pgpass
+chmod 600 ${ENLIGHTED_HOME}/.pgpass
+
+if [ ! -d ${OPT_ENLIGHTED}/DB ]
+then
+	sudo rm -rf ${OPT_ENLIGHTED}/*
+	sudo mkdir -p ${OPT_ENLIGHTED}/DB/DBBK/
+	sudo mkdir -p ${OPT_ENLIGHTED}/adminlogs/
+	sudo mkdir -p ${OPT_ENLIGHTED}/adr/
+fi
+
+sudo cp opt/enLighted/adr/adr_heartbeat.sh ${OPT_ENLIGHTED}/adr/adr_heartbeat.sh
+sudo chmod 755 $OPT_ENLIGHTED/adr/adr_heartbeat.sh
+
+if [ -f "/etc/logrotate.d/$TOMCAT_SUDO_SERVICE" ]
+then
+  sudo rm  -f /etc/logrotate.d/$TOMCAT_SUDO_SERVICE
+fi
+
+cp var/lib/tomcat6/webapps/ROOT/* $ENL_APP_HOME/webapps/ROOT/
+if [ ! -f "$ENL_APP_HOME/webapps/ROOT/heartbeat.jsp" ]
+then
+    cp home/enlighted/heartbeat.jsp $ENL_APP_HOME/webapps/ROOT/heartbeat.jsp
+    chown ${TOMCAT_USER}:${TOMCAT_USER} $ENL_APP_HOME/webapps/ROOT/heartbeat.jsp
+else
+    if [[ ! $(grep systat ${ENL_APP_HOME}/webapps/ROOT/heartbeat.jsp) =~ "systat" ]]
+    then
+        cp home/enlighted/heartbeat.jsp ${ENL_APP_HOME}/webapps/ROOT/heartbeat.jsp
+    	chown ${TOMCAT_USER}:${TOMCAT_USER} ${ENL_APP_HOME}/webapps/ROOT/heartbeat.jsp
+    fi
+fi
+
+
+
+if [[ ! $(grep maintenance ${ENL_APP_HOME}/webapps/ROOT/heartbeat.jsp) =~ "maintenance" ]]
+then
+    sed -i 's/\(<div\ id="systat">\)/\1<span\ id="maintenance">N<\/span>/' ${ENL_APP_HOME}/webapps/ROOT/heartbeat.jsp
+fi
+
+chmod -R 775 ${ENL_APP_HOME}/webapps/ROOT
+
+ps -ef |grep postgresql |grep -v grep > /dev/null
+
+if [ $? -eq 0 ]
+then
+   if [ `psql -q -U postgres -h localhost  -t -c "select count(*) from pg_database where datname='ems'"` -eq 1 ]
+   then
+		if [ `psql -q -U postgres -h localhost ems  -t -c "select count(*) from company"` -gt 0 ]
+		then
+		    if [ `psql -q -U postgres -h localhost ems  -t -c "select count(*) from information_schema.columns where table_name in ('company') and column_name in ('ntp_enable')"` -gt 0 ]
+		    then
+		        myarray=`psql -q -U postgres -h localhost ems -t -c "select ntp_enable,ntp_server_list from company limit 1"`
+		        ntpFlag=$(echo ${myarray[0]} | awk -F'|' '{print $1}')
+		        ntpServers=$(echo ${myarray[0]} | awk -F'|' '{print $2}')
+		        #func_setDefaultNtpDate $ntpFlag $ntpServers
+		        serversspaced=$(echo $ntpServers | tr "," " ")
+				func_setDefaultNtpDate $ntpFlag "$serversspaced"
+		    fi
+		fi
+    else 
+      	echo "*** ems DB not exists ***"
+    fi
+else
+    echo "*** postgres not running ***"
+fi
+
+if [ $ntpSet == 'false' ]
+then
+	func_setDefaultNtpDate Y "0.us.pool.ntp.org 1.us.pool.ntp.org 2.us.pool.ntp.org 3.us.pool.ntp.org"
+fi
+
+if [ -f "${OPT_ENLIGHTED}/adr/adrsetcron.sh" ]
+then
+	sudo chmod 755 $OPT_ENLIGHTED/adr/adrsetcron.sh
+fi
+
+sudo cp -R home/enlighted/scripts/  ${ENLIGHTED_HOME}/
+sudo bash home/enlighted/setcron.sh
+
+sudo service cron restart
+
+if [ ! -d ${ENL_APP_HOME}/Enlighted/bacnet ]
+then
+	mkdir -p ${ENL_APP_HOME}/Enlighted/bacnet/config/
+fi
+
+if [ ! -d ${ENL_APP_HOME}/Enlighted/adminlogs ]
+then
+	mkdir -p ${ENL_APP_HOME}/Enlighted/adminlogs/
+fi
+
+if [ ! -f "${ENL_APP_HOME}/Enlighted/bacnet/config/bacnet.conf" ]
+then
+    cp home/enlighted/bacnet/config/bacnet.conf ${ENL_APP_HOME}/Enlighted/bacnet/config/bacnet.conf
+    sed -i "s|/var/lib/tomcat6|$ENL_APP_HOME|g" ${ENL_APP_HOME}/Enlighted/bacnet/config/bacnet.conf
+fi
+
+cp home/enlighted/bacnet/config/bacnet_objects.cfg ${ENL_APP_HOME}/Enlighted/bacnet/config/bacnet_objects.cfg
+
+if [ ! -d ${ENL_APP_HOME}/Enlighted/bacnet/tools ]
+then
+	mkdir -p ${ENL_APP_HOME}/Enlighted/bacnet/tools/
+fi
+
+cp -R home/enlighted/bacnet/tools/* ${ENL_APP_HOME}/Enlighted/bacnet/tools/
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/em_private.key" ]
+then
+    cp home/enlighted/em_private.key $ENL_APP_HOME/Enlighted/em_private.key
+fi
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/em_public.key" ]
+then
+    cp home/enlighted/em_public.key $ENL_APP_HOME/Enlighted/em_public.key
+fi
+
+
+if [ ! -f "$ENL_APP_HOME/Enlighted/emsmode" ]
+then
+	sudo cp home/enlighted/emsmode $ENL_APP_HOME/Enlighted/
+	sudo chmod 777 $ENL_APP_HOME/Enlighted/emsmode
+	sudo chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted/emsmode
+fi
+
+cp home/enlighted/sensor_profile.xsd $ENL_APP_HOME/Enlighted/
+cp home/enlighted/plugload_profile.xsd $ENL_APP_HOME/Enlighted/
+cp var/lib/tomcat6/conf/logging.properties ${ENL_APP_HOME}/conf/
+ 
+
+if [ ! -d ${ENL_APP_HOME}/Enlighted/ems_log4j ]
+then
+	mkdir -p ${ENL_APP_HOME}/Enlighted/ems_log4j/
+fi
+
+cp var/lib/tomcat6/Enlighted/ems_log4j/* ${ENL_APP_HOME}/Enlighted/ems_log4j/
+
+if [ ! -d ${ENL_APP_HOME}/Enlighted/support ]
+then
+	mkdir -p ${ENL_APP_HOME}/Enlighted/support/
+fi
+
+if [ ! -d ${ENL_APP_HOME}/Enlighted/certs ]
+then
+	mkdir -p ${ENL_APP_HOME}/Enlighted/certs/CA/
+fi
+
+cp var/lib/tomcat6/Enlighted/certs/CA/enlighted.ts ${ENL_APP_HOME}/Enlighted/certs/CA/ 
+
+cp home/enlighted/discovergateway.sh ${ENLIGHTED_HOME}/
+cp home/enlighted/getMac.sh ${ENLIGHTED_HOME}/
+cp home/enlighted/importBallastCurve.php ${ENLIGHTED_HOME}/
+cp home/enlighted/importFixtureCurve.php ${ENLIGHTED_HOME}/
+cp home/enlighted/insertballast.php ${ENLIGHTED_HOME}/
+cp home/enlighted/insertbulb.php ${ENLIGHTED_HOME}/
+cp home/enlighted/insertGateway.php ${ENLIGHTED_HOME}/
+cp home/enlighted/updateballastguidelineload.php ${ENLIGHTED_HOME}/
+cp home/enlighted/voltpowermap.csv ${ENLIGHTED_HOME}/
+cp home/enlighted/supp_private.key ${ENLIGHTED_HOME}/
+cp home/enlighted/supp_public.key ${ENLIGHTED_HOME}/
+cp home/enlighted/upgradeSQL.sql ${ENLIGHTED_HOME}/
+cp home/enlighted/sppa.sql ${ENLIGHTED_HOME}/
+
+cp var/lib/tomcat6/webapps/ems.war ${ENL_APP_HOME}/webapps/
+cp home/enlighted/enl_utils.jar ${ENL_APP_HOME}/Enlighted/enl_utils.jar
+cp usr/lib/* /usr/lib/
+cp var/lib/tomcat6/Enlighted/bacnet/bacnetLighting ${ENL_APP_HOME}/Enlighted/bacnet/bacnetLighting
+
+	
+chmod +x ${ENLIGHTED_HOME}/*.sh
+chown -R 1000:1000 ${ENLIGHTED_HOME}
+chown -R 1000:1000 ${OPT_ENLIGHTED}
+chmod -R 777 ${OPT_ENLIGHTED}/DB/
+
+chown -R ${TOMCAT_USER}:${TOMCAT_USER} ${ENL_APP_HOME}/
+chmod 775 -R ${ENL_APP_HOME}/Enlighted
+chmod 777 -R ${ENL_APP_HOME}/Enlighted/bacnet/bacnetLighting
+chmod -R 777 ${ENL_APP_HOME}/Enlighted/bacnet/config
+chmod -R 777 ${ENL_APP_HOME}/Enlighted/bacnet/tools

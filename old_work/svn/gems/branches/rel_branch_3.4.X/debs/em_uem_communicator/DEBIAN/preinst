@@ -1,0 +1,9 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+if [ -d /opt/enLighted/uem/communicator ]
+then
+        echo "/opt/enLighted/uem/communicator Directory exists!!!!"
+else
+        echo "Creating /opt/enLighted/uem/communicator directory"
+        mkdir -p /opt/enLighted/uem/communicator
+fi

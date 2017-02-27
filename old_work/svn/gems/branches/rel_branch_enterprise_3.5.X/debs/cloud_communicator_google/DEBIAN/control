@@ -1,0 +1,12 @@
+Package: enLighted-cloud-communicator
+Version: 3.5.4
+Section: misc
+Priority: optional
+Architecture: all
+Essential: no
+Depends:
+Replaces:
+Suggests: no
+Maintainer: enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: enLighted cloud communicator upgrqade utility

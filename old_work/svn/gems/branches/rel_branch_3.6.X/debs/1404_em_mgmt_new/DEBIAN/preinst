@@ -1,0 +1,12 @@
+#!/bin/bash -x
+
+APACHE2_PATH=/var/www
+sudo mkdir -p ${APACHE2_PATH}/tempExtract
+sudo mkdir -p ${APACHE2_PATH}/em_mgmt
+
+echo "*** Taking backup of Existing application ***"
+
+sudo cp -R ${APACHE2_PATH}/em_mgmt/ ${APACHE2_PATH}/tempExtract/
+
+sudo rm -rf ${APACHE2_PATH}/em_mgmt/
+

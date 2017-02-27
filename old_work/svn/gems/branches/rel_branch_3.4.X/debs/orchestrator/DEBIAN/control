@@ -1,0 +1,11 @@
+Package: enLighted-orchestrator
+Version: 3.4.0
+Section: misc
+Priority: optional
+Architecture: amd64
+Essential: no
+Depends: 
+Suggests: no
+Maintainer: enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: Upgrade system files required for Enlighted Solution

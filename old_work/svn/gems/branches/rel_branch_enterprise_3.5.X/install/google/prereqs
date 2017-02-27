@@ -1,0 +1,3 @@
+source /etc/environment
+sudo apt-get -y install authbind $TOMCAT_SUDO_SERVICE postgresql postgresql-pltcl postgresql-plperl
+sudo apt-get -y install   apache2 libapache2-mod-wsgi software-properties-common postgresql tomcat6 tomcat6-admin php5 python-django python-setuptools python-django-piston gettext ssh-askpass bind9 curl

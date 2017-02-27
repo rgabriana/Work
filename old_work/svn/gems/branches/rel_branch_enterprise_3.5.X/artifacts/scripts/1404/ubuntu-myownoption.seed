@@ -1,0 +1,119 @@
+####################################################################
+# general
+####################################################################
+#disable gpg authentication
+d-i debian-installer/allow_unauthenticated boolean true
+
+####################################################################
+# localizations
+####################################################################
+### Keyboard selection ###
+d-i keyboard-configuration/layoutcode string us
+d-i keyboard-configuration/variantcode string
+
+### Locale ###
+d-i debian-installer/locale string en_US
+
+####################################################################
+# Timezone
+####################################################################
+
+d-i time/zone string America/New_York
+d-i time/zone select America/New_York
+d-i clock-setup/utc boolean true
+d-i clock-setup/ntp boolean false
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layoutcode string us
+d-i localechooser/supported-locales multiselect nl_NL, nl_BE, fr_BE
+
+### OEM-Config
+d-i oem-config/enable boolean true
+d-i oem-config/remove boolean true
+d-i oem-config/remove_extras boolean false
+d-i oem-config/install-language-support boolean true
+d-i ubiquity/only-show-installable-languages boolean true
+
+####################################################################
+# networking
+####################################################################
+# Network Configuration
+d-i netcfg/enable boolean true
+d-i netcfg/choose_interface select auto
+d-i netcfg/dhcp_failed note
+d-i netcfg/dhcp_options select Configure network manually
+# Static network configuration.
+d-i netcfg/get_nameservers string 192.168.1.1
+d-i netcfg/get_ipaddress string 192.168.1.42
+d-i netcfg/get_netmask string 255.255.255.0
+d-i netcfg/get_gateway string 192.168.1.1
+d-i netcfg/confirm_static boolean true
+d-i netcfg/get_hostname string enlighted
+d-i netcfg/get_domain string enlighted.local
+
+
+####################################################################
+# Disk Partitioning / Boot loader
+####################################################################
+
+### Disk Partitioning ###
+#Unmount old partition
+d-i preseed/early_command string umount /media || true
+# Remove existing lvm or md
+d-i partman-md/device_remove_md boolean true
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-lvm/confirm boolean true
+# Configure auto partitioner
+d-i partman-auto/init_automatically_partition some_device
+d-i partman-auto/disk string /dev/sda
+d-i partman-auto/method string regular
+d-i partman-auto/choose_recipe select atomic
+d-i partman/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+####################################################################
+# User Creation
+####################################################################
+d-i passwd/make-user boolean true
+d-i passwd/user-fullname string enLighted
+d-i passwd/username string enlighted
+d-i passwd/user-password password save-energy
+d-i passwd/user-password-again password save-energy
+d-i passwd/auto-login boolean false
+d-i user-setup/allow-password-weak boolean true
+d-i user-setup/encrypt-home boolean false
+
+####################################################################
+# Package selection
+####################################################################
+# Install the Ubuntu Server seed.
+d-i apt-setup/no_mirror boolean true
+#tasksel tasksel/force-tasks string server
+tasksel tasksel/first multiselect Custom-Ubuntu-Server
+# Other extras packages
+d-i preseed/include string oracle-java8-installer.cfg
+d-i pkgsel/include string openssh-server openssl ntp apache2 libapache2-mod-wsgi libapache2-mod-php5 software-properties-common oracle-java8-jdk postgresql-9.4 postgresql-plperl-9.4 postgresql-pltcl-9.4 python-paramiko curl tcl isc-dhcp-server php5 php5-pgsql python-django python-setuptools python-django-piston gettext ssh-askpass bind9 zip usbmount lftp uuid
+d-i preseed/late_command string in-target dpkg -i /cdrom/pool/extras/*.deb;cp /cdrom/preseed/dhcpscript /target/usr/bin/.;cp /cdrom/preseed/grub /target/etc/default/grub;chmod +x /target/usr/bin/dhcpscript; cp /cdrom/preseed/iptables.rules /target/etc/iptables.rules; mkdir -p /target/opt/enLighted/tmp; cp /cdrom/preseed/1004_ssh_host_* /target/opt/enLighted/tmp/; cp /cdrom/preseed/sshd_config /target/opt/enLighted/tmp/; cp /cdrom/preseed/hostname.sh /target/opt/enLighted/tmp/; cp /cdrom/preseed/tomcat8.deb /target/opt/enLighted/tmp/; cp /cdrom/preseed/dhcpd.conf /target/etc/dhcp/dhcpd.conf; cp /cdrom/preseed/psqlpassword.sql /target/opt/enLighted/tmp/psqlpassword.sql; cp /cdrom/preseed/firstrun.sh /target/opt/enLighted/tmp/firstrun.sh;cp /cdrom/preseed/interfaces /target/opt/enLighted/tmp/interfaces;cp /cdrom/preseed/pg_hba.conf /target/opt/enLighted/tmp/pg_hba.conf;cp /cdrom/preseed/postgresql.conf /target/opt/enLighted/tmp/postgresql.conf;cp /cdrom/preseed/apache.key /target/opt/enLighted/tmp/apache.key;cp /cdrom/preseed/isc-dhcp-server /target/opt/enLighted/tmp/isc-dhcp-server; cp /cdrom/preseed/apache.pem /target/opt/enLighted/tmp/apache.pem;cp /cdrom/preseed/rewrite_prg.pl /target/opt/enLighted/tmp/rewrite_prg.pl;cp /cdrom/preseed/etc-bind.bk.tar /target/opt/enLighted/tmp/etc-bind.bk.tar;cp /cdrom/preseed/var-bind.bk.tar /target/opt/enLighted/tmp/var-bind.bk.tar;cp /cdrom/preseed/setAllEMEnvironment.sh /target/opt/enLighted/tmp/setAllEMEnvironment.sh;cp /cdrom/preseed/000-default.conf /target/etc/apache2/sites-available/000-default.conf;cp /cdrom/preseed/debian_upgrade.sh /target/opt/enLighted/tmp/debian_upgrade.sh;cp /cdrom/preseed/em_all.deb /target/opt/enLighted/tmp/em_all.deb;cp /cdrom/preseed/finisher.sh /target/root/;chroot /target chmod +x /root/finisher.sh; chroot /target bash /root/finisher.sh
+
+# Policy for applying updates.
+d-i pkgsel/update-policy select none
+# Only install basic language packs. Let tasksel ask about tasks.
+d-i pkgsel/language-pack-patterns string
+# No language support packages.
+d-i pkgsel/install-language-support boolean false
+# Verbose output and no boot splash screen.
+d-i debian-installer/quiet boolean false
+d-i debian-installer/splash boolean false
+
+####################################################################
+# Package selection
+####################################################################
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/with_other_os boolean true
+
+####################################################################
+# Finishing up
+####################################################################
+d-i finish-install/keep-consoles boolean true
+d-i finish-install/reboot_in_progress note

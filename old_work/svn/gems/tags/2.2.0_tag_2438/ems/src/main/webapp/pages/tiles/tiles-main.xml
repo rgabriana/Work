@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+<tiles-definitions>
+	<definition name="default-main" template="/pages/tiles/facilitiessetup.jsp">
+		<put-attribute name="header" value="/pages/main/header.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/pages/tiles/footer.jsp" />
+	</definition>
+	
+	<definition name="error/generic" extends="default-main">
+        <put-attribute name="body" value="/pages/error/generic.jsp" />
+    </definition>
+    
+    <definition name="max-upload-error" template="/pages/tiles/facilitiessetup.jsp">
+		<put-attribute name="header" value="" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="" />
+	</definition>
+	<definition name="error/maxuploaderror" extends="max-upload-error">
+        <put-attribute name="body" value="/pages/error/maxUploadError.jsp" />
+    </definition>
+	
+	<definition name="header-left-right-footer" template="/pages/tiles/facilitiestreeviewsetup.jsp">
+		<put-attribute name="header" value="/pages/main/header.jsp" />
+		<put-attribute name="left" value="/pages/facilities/facility_tree.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/pages/tiles/footer.jsp" />
+	</definition>	
+	
+	<definition name="facilities/tree" template="/pages/tiles/facilitiestreeviewsetup.jsp">
+		<put-attribute name="left" value="/pages/facilities/facility_tree.jsp" />
+	</definition>
+
+	<definition name="default-dialog" template="/pages/tiles/dialogtemplate.jsp">
+		<put-attribute name="body" value="" />
+	</definition>
+	
+	<definition name="default-frame" template="/pages/tiles/tabframetemplate.jsp">
+		<put-attribute name="body" value="" />
+	</definition>
+	
+	<definition name="dialog-with-tree" template="/pages/tiles/dialog_with_tree_template.jsp">
+		<put-attribute name="header" value="/pages/devices/widgets/header.jsp" />
+		<put-attribute name="left" value="/pages/devices/widgets/dlg_facility_tree.jsp?viewTreeOnly=true" />
+		<!-- <put-attribute name="body" value="/pages/devices/widgets/widget_container.jsp" />-->
+		<put-attribute name="body" value="" />
+	</definition>
+	
+	<definition name="group-dialog-with-tree" template="/pages/tiles/dialog_with_tree_template.jsp">
+		<put-attribute name="header" value="/pages/devices/groups/widget/group_header.jsp" />
+		<put-attribute name="left" value="/pages/devices/groups/widget/group_dlg_facility_tree.jsp?viewTreeOnly=true" />
+		<!-- <put-attribute name="body" value="/pages/devices/groups/widget/group_widget_container.jsp" />-->
+		<put-attribute name="body" value="" />
+	</definition>
+
+	<definition name="facilities/home" extends="header-left-right-footer">
+		<put-attribute name="body" value="/pages/facilities/facilities.jsp" />
+	</definition>
+	
+	<definition name="facilities/tenant/treeAssignment" extends="default-main">
+		<put-attribute name="body" value="/pages/facilities/facility_assignment.jsp" />
+	</definition>
+
+	<definition name="facilities/user/treeAssignment" extends="default-dialog">
+		<put-attribute name="body" value="/pages/facilities/facility_assignment_users.jsp" />
+	</definition>
+	
+	<definition name="admin/organization/setup" extends="default-main">
+		<put-attribute name="body" value="/pages/setup/companySetup.jsp" />
+	</definition>
+	
+	<definition name="settings/system_management" extends="default-main">
+		<put-attribute name="body" value="/pages/settings/management.jsp" />
+	</definition>
+	
+	<definition name="settings/cleanUpSystem" extends="default-frame">
+		<put-attribute name="body" value="/pages/settings/system_management.jsp" />
+	</definition>
+	<definition name="settings/restApi" extends="default-frame">
+		<put-attribute name="body" value="/pages/settings/rest_api_settings.jsp" />
+	</definition>
+	
+	<definition name="settings/groups" extends="default-frame">
+		<put-attribute name="body" value="/pages/settings/groups.jsp" />
+	</definition>
+	
+	<definition name="settings/master_gems_settings" extends="default-frame">
+		<put-attribute name="body" value="/pages/settings/master_gems_settings.jsp" />
+	</definition>
+	<definition name="imageupgrade/details" extends="header-left-right-footer">
+		<put-attribute name="left" value="/pages/facilities/facility_tree.jsp?viewTreeOnly=true" />
+		<put-attribute name="body" value="/pages/imageupgrade/image_upgrade_form.jsp" />
+	</definition>
+	
+	<definition name="pricing/listPricing" extends="default-main">
+		<put-attribute name="body" value="/pages/pricing/listPricing.jsp" />
+	</definition>
+	
+	<definition name="dr/listDR" extends="default-main">
+		<put-attribute name="body" value="/pages/dr/listDR.jsp" />
+	</definition>
+	
+	<definition name="dr/addDRUser" extends="default-main">
+		<put-attribute name="body" value="/pages/dr/addDRUser.jsp" />
+	</definition>
+	
+	<definition name="settings/cloud_settings" extends="default-frame">
+		<put-attribute name="body" value="/pages/settings/cloud_settings.jsp" />
+	</definition>
+	
+	<definition name="bacnet/config" extends="default-main">
+		<put-attribute name="body" value="/pages/bacnet/config.jsp" />
+	</definition>
+	
+	<definition name="profile/fixture/setting" extends="default-dialog">
+		<put-attribute name="body" value="/pages/profile/profileSetting.jsp" />
+	</definition>
+	
+	<definition name="profile/addeditsetting" extends="default-dialog">
+		<put-attribute name="body" value="/pages/profile/profileSetting.jsp" />
+	</definition>
+	
+	<definition name="profile/setting" extends="default-frame">
+		<put-attribute name="body" value="/pages/profile/profileSetting.jsp" />
+	</definition>
+	
+	<definition name="templateManagement/list" extends="default-frame">
+		<put-attribute name="body" value="/pages/profile/templateManagement.jsp" />
+	</definition>
+	
+	<definition name="profile/filterProfile" extends="default-frame">
+		<put-attribute name="body" value="/pages/profile/filterProfile.jsp" />
+	</definition>
+	
+	<definition name="template/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/profile/template_details.jsp" />
+	</definition>
+	
+	<definition name="profileManagement/list" extends="default-frame">
+		<put-attribute name="body" value="/pages/profile/profileManagement.jsp" />
+	</definition>
+	
+	<definition name="profileTemplateManagement/management" extends="default-main">
+		<put-attribute name="body" value="/pages/profile/profile_template_management.jsp" />
+	</definition>
+	
+
+	<definition name="users/list" extends="default-main">
+		<put-attribute name="body" value="/pages/users/users_list.jsp" />
+	</definition>
+
+	<definition name="users/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/users/user_details.jsp" />
+	</definition>
+	
+	<definition name="admin/organization/changeserverdatetimedialog" extends="default-dialog">
+		<put-attribute name="body" value="/pages/setup/changeDateTime.jsp" />
+	</definition>
+	
+	<definition name="users/changepassword/dialog" extends="default-dialog">
+		<put-attribute name="body" value="/pages/users/change_password.jsp" />
+	</definition>
+	
+	<definition name="switches/assignusers" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/switches/assign_users_to_switches.jsp" />
+	</definition>
+
+	<definition name="tenants/list" extends="default-main">
+		<put-attribute name="body" value="/pages/tenants/tenants_list.jsp" />
+	</definition>
+
+	<definition name="tenants/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/tenants/tenant_details.jsp" />
+	</definition>
+
+	<definition name="reports/home" extends="header-left-right-footer">
+		<put-attribute name="body" value="/pages/reports/reports.jsp" />
+	</definition>
+	
+	<definition name="reports/usagebyprofile" extends="header-left-right-footer">
+		<put-attribute name="left" value="/pages/facilities/facility_tree.jsp" />
+		<put-attribute name="body" value="/pages/reports/usagebyprofile.jsp" />
+	</definition>
+
+	<definition name="reports/outage" extends="header-left-right-footer">
+		<put-attribute name="left" value="/pages/facilities/facility_tree.jsp" />
+		<put-attribute name="body" value="/pages/reports/outage.jsp" />
+	</definition>
+
+	<definition name="reports/bulb" extends="header-left-right-footer">
+		<put-attribute name="left" value="/pages/facilities/facility_tree.jsp" />
+		<put-attribute name="body" value="/pages/reports/bulb.jsp" />
+	</definition>
+	
+	<definition name="reports/auditlog" extends="default-main">		
+		<put-attribute name="body" value="/pages/reports/auditlog.jsp" />
+	</definition>
+	
+	<definition name="events/list" extends="default-frame">
+		<put-attribute name="body" value="/pages/events/eventsandfault_list.jsp" />
+	</definition>
+	
+	<definition name="events/view" extends="default-dialog">
+		<put-attribute name="body" value="/pages/events/eventsandfault_view.jsp" />
+	</definition>
+	
+	<definition name="events/filter" extends="default-dialog">
+		<put-attribute name="body" value="/pages/events/eventsandfault_filter.jsp" />
+	</definition>
+	
+	<definition name="events/resolveDialog" extends="default-dialog">
+		<put-attribute name="body" value="/pages/events/resolveDialog.jsp" />
+	</definition>
+	
+	<definition name="devices/install" extends="default-frame">
+		<put-attribute name="body" value="/pages/devices/installdevices.jsp" />
+	</definition>
+
+	<definition name="devices/gateways/commission" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/gateways/gateway_commission_form.jsp" />
+	</definition>
+
+	<definition name="devices/gateways/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/gateways/gateway_form.jsp" />
+	</definition>
+
+	<definition name="devices/gateways/list" extends="default-frame">
+		<put-attribute name="body" value="/pages/devices/gateways/gateways_list.jsp" />
+	</definition>
+
+	<definition name="devices/gateways/add" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/gateways/gateway_add_form.jsp" />
+	</definition>
+
+	<definition name="devices/fixtures/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/fixtures/fixture_form.jsp" />
+	</definition>
+	
+	<definition name="devices/fixtures/tabpaneldetails" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/fixtures/fixture_details.jsp" />
+	</definition>
+	
+	<definition name="devices/fixtures/list" extends="default-frame">
+		<put-attribute name="body" value="/pages/devices/fixtures/fixtures_list.jsp" />
+	</definition>
+	
+	<definition name="devices/fixtures/assignprofile/dialog" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/fixtures/assign_profile_to_fixtures.jsp" />
+	</definition>
+	
+	<definition name="devices/fixtures/assignprofileEmployee/dialog" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/fixtures/assign_profile_to_fixtures_employee_role.jsp" />
+	</definition>
+	
+	<definition name="devices/fixtures/assignarea/dialog" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/fixtures/assign_area_to_fixtures.jsp" />
+	</definition>
+
+	<definition name="devices/groups/group_form" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/groups/group_form.jsp" />
+	</definition>
+	
+	<definition name="devices/groups/resetFixtureGroups" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/groups/groups_reset.jsp" />
+	</definition>
+	
+	<definition name="devices/switches/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/switches/switch_form.jsp" />
+	</definition>
+	
+	<definition name="devices/switches/settings/dialog" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/switches/switch_settings.jsp" />
+	</definition>
+	
+	<definition name="devices/switches/create" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/switches/create_switch_from_flex.jsp" />
+	</definition>
+	
+	<definition name="devices/switches/list" extends="default-frame">
+		<put-attribute name="body" value="/pages/devices/switches/switches_list.jsp" />
+	</definition>
+
+	<definition name="devices/wds/list" extends="default-frame">
+		<put-attribute name="body" value="/pages/devices/wds/wds_list.jsp" />
+	</definition>
+	
+	<definition name="/devices/wds/wdsedit" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/wds/wds_edit.jsp" />
+	</definition>
+	
+	<definition name="devices/wds/commission" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/wds/wds_commission_form.jsp" />
+	</definition>
+	
+	<definition name="devices/groups/list" extends="default-frame">
+		<put-attribute name="body" value="/pages/devices/groups/groups_list.jsp" />
+	</definition>
+	
+	<definition name="devices/obsoleteGroups/list" extends="default-frame">
+		<put-attribute name="body" value="/pages/settings/groups.jsp" />
+	</definition>
+	
+	<definition name="devices/fixture/commission" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/fixtures/fixture_commission_form.jsp" />
+	</definition>
+	
+	<definition name="devices/fixture/startcommission" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/fixtures/fixture_commission_start_identify.jsp" />
+	</definition>
+	
+	<definition name="devices/fixture/discovery" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/fixtures/fixture_discovery_form.jsp" />
+	</definition>
+	
+	<definition name="devices/wds/startcommission" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/wds/wds_commission_start_identify.jsp" />
+	</definition>
+	
+	<definition name="devices/wds/discovery" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/wds/wds_discovery_form.jsp" />
+	</definition>
+	
+
+	<definition name="fixtures/delete/dialog" extends="default-dialog">
+		<put-attribute name="body" value="/pages/devices/fixtures/fixture_delete_dialog.jsp" />
+	</definition>	
+	
+	<definition name="profile/profilesfixturessettings" extends="default-frame">
+		<put-attribute name="body" value="/pages/profile/profilesfixturessettings.jsp" />
+	</definition>	
+	
+	<definition name="settings/ldap_settings" extends="default-main">
+		<put-attribute name="body" value="/pages/settings/ldap_settings.jsp" />
+	</definition>
+
+	<definition name="settings/ldap_server_settings" extends="default-frame">
+		<put-attribute name="body" value="/pages/settings/ldap_server_settings.jsp" />
+	</definition>
+	
+	<definition name="settings/ldap_login_settings" extends="default-frame">
+		<put-attribute name="body" value="/pages/settings/ldap_login_settings.jsp" />
+	</definition>
+	
+	<definition name="reports/auditfilter" extends="default-dialog">
+		<put-attribute name="body" value="/pages/reports/auditfilter.jsp" />
+	</definition>
+	
+	<definition name="sweeptimer/treeAssignment" extends="default-dialog">
+		<put-attribute name="body" value="/pages/sweeptimer/sweeptimer_assignment.jsp" />
+	</definition>
+	
+	<definition name="sweeptimer/list" extends="default-main">
+		<put-attribute name="body" value="/pages/sweeptimer/sweeptimers_list.jsp" />
+	</definition>
+
+	<definition name="sweeptimer/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/sweeptimer/sweeptimer_details.jsp" />
+	</definition>
+
+	<definition name="motionbits/list" extends="default-main">
+		<put-attribute name="body" value="/pages/motionbits/motionbitsschedule_list.jsp" />
+	</definition>
+	
+	<definition name="motionbits/details" extends="default-dialog">
+		<put-attribute name="body" value="/pages/motionbits/motionbitsschedule_details.jsp" />
+	</definition>
+
+	<definition name="switch/widget/details" extends="dialog-with-tree">
+		<!-- <put-attribute name="left" value="/pages/devices/widgets/dlg_facility_tree.jsp?viewTreeOnly=true" />-->
+		<put-attribute name="body" value="/pages/devices/widgets/main.jsp" />
+	</definition>
+	
+	<definition name="group/widget/details" extends="group-dialog-with-tree">
+		<put-attribute name="body" value="/pages/devices/groups/widget/group_main.jsp" />
+	</definition>
+
+</tiles-definitions>

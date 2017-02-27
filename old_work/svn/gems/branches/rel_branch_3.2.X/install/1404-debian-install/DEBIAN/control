@@ -1,0 +1,11 @@
+Package: enLighted-gems
+Version: 3.2.2
+Section: misc
+Priority: optional
+Architecture: all
+Essential: no
+Depends: tomcat6
+Suggests: no
+Maintainer: enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: enLighted EM

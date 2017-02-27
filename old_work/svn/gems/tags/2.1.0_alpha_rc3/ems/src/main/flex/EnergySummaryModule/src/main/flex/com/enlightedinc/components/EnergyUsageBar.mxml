@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="100%" height="100%"
+		 xmlns:components="com.enlightedinc.components.*" paddingTop="5" creationComplete="initComponent()">
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.common.CountsCalculator;
+			import com.enlightedinc.events.CurrentSavingChartUpdate;
+			import com.enlightedinc.events.EnergySummaryUnitBarEvent;
+			
+			import mx.core.FlexGlobals;
+			
+			import spark.components.Button;
+
+			private var currSelButton:Button;
+			[Bindable]
+			private var countsCalculator:CountsCalculator= CountsCalculator.getInstance();
+			private var application:Object = FlexGlobals.topLevelApplication;
+			private function initComponent():void{
+				countsCalculator.addEventListener(CurrentSavingChartUpdate.CHART_UPDATE,chartUpdate);
+				application.energySummaryView.addEventListener(CurrentSavingChartUpdate.CHART_RESET,chartReset);
+				application.energySummaryDock.energySummaryUnitBar.addEventListener(EnergySummaryUnitBarEvent.UNIT_CHANGE,unitChangeHandler);
+				application.energySummaryView.addEventListener(EnergySummaryUnitBarEvent.UNIT_CHANGE,unitChangeHandler);
+				//initialiseValues();
+			}
+			
+			private function percetPrecision(value:Number):String{
+				if(!isNaN(value))
+				{
+					if(value<100)
+						return Number(value).toString()+"%";
+					else
+						return "100%";
+				}
+				else
+					return "0%";
+			}
+			private function powerPrecision(value:Number):String{
+				if(!isNaN(value))
+				{
+					var power:Number=0;
+					var unitSuffix:String ="";
+					if(value<=999)
+					{
+						power = Math.round(Number(value));
+						unitSuffix = "W";
+					}
+					else if(value >= 1000)
+					{
+						power = Math.round(Number(value* 0.001));
+						unitSuffix = "kW";
+					}
+					else if(value>= 1000000)
+					{
+						power = Math.round(Number(value* 0.000001));
+						unitSuffix = "mW";
+					}
+					return numberFormatter.format(power) +" "+unitSuffix
+				}
+				else
+					return "0 kW";
+			}
+			private function unitChangeHandler(e:EnergySummaryUnitBarEvent):void
+			{
+				//var selectedButton:Button = (e.label as Button);
+				//currSelButton = selectedButton;
+				if(e.label==Constants.CURRENCY_UNIT)
+				{
+					countsCalculator.currentUnitSelection= Constants.POWER_UNIT;
+					countsCalculator.calculateKwhCounts(countsCalculator.energyConsumptionRawDataCollection);
+					if(countsCalculator.totalSavedCost>=0)
+						savingSoFar.text =currencyFormatter.format(String(Math.round(countsCalculator.totalSavedCost)));
+				}else if(e.label==Constants.POWER_UNIT)
+				{
+					countsCalculator.currentUnitSelection= Constants.POWER_UNIT;
+					countsCalculator.calculateKwhCounts(countsCalculator.energyConsumptionRawDataCollection);
+					savingSoFar.text = powerPrecision(Math.round(countsCalculator.totalSavedPower));
+					
+				}else if(e.label==Constants.CARBON_UNIT)
+				{
+					countsCalculator.currentUnitSelection= Constants.CARBON_UNIT;
+					countsCalculator.calculateCO2Counts(countsCalculator.energyConsumptionRawDataCollection);
+					var carbonCount:Number = Math.round(Constants.CARBON_FACTOR * countsCalculator.totalSavedPower);
+					if(carbonCount<Constants.MAX_CO2_SAVING)
+						savingSoFar.text= numberFormatter.format(String(carbonCount)) +" t ";
+					else
+						savingSoFar.text= numberFormatter.format(String(Math.round(carbonCount/1000))) +" kt ";
+				}
+				application.energyGraphHeader.setHeaderTitle();
+				
+			}
+			private function initialiseValues():void{
+				var selectedButton:Button = currSelButton as Button;
+				if(selectedButton!=null)
+				{
+					if(selectedButton.label==Constants.CURRENCY_UNIT)
+					{
+						countsCalculator.currentUnitSelection= Constants.POWER_UNIT;
+						countsCalculator.calculateKwhCounts(countsCalculator.energyConsumptionRawDataCollection);
+						if(countsCalculator.totalSavedCost>=0)
+							savingSoFar.text =currencyFormatter.format(String(Math.round(countsCalculator.totalSavedCost)));
+						
+					}else if(selectedButton.label==Constants.POWER_UNIT)
+					{
+						countsCalculator.currentUnitSelection= Constants.POWER_UNIT;
+						countsCalculator.calculateKwhCounts(countsCalculator.energyConsumptionRawDataCollection);
+						savingSoFar.text = powerPrecision(Math.round(countsCalculator.totalSavedPower));
+						
+					}else if(selectedButton.label==Constants.CARBON_UNIT)
+					{
+						countsCalculator.currentUnitSelection= Constants.CARBON_UNIT;
+						countsCalculator.calculateCO2Counts(countsCalculator.energyConsumptionRawDataCollection);
+						var carbonCount:Number = Math.round(Constants.CARBON_FACTOR * countsCalculator.totalSavedPower);
+						if(carbonCount<Constants.MAX_CO2_SAVING)
+							savingSoFar.text= numberFormatter.format(String(carbonCount)) +" t ";
+						else
+							savingSoFar.text= numberFormatter.format(String(Math.round(carbonCount/1000))) +" kt ";
+					}
+				}
+				application.energyGraphHeader.setHeaderTitle();
+			}
+			private function chartUpdate(e:CurrentSavingChartUpdate):void
+			{
+				if(countsCalculator.savingMeterData.length>0)
+					energySavingGraph.chartData = countsCalculator.savingMeterData;
+			}
+			private function chartReset(e:CurrentSavingChartUpdate):void{
+				savingCurrPerc.text ="0%";
+				energySavingGraph.resetUI();
+			}
+			
+			
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:CurrencyFormatter id="currencyFormatter"
+							  currencySymbol="$"
+							  useThousandsSeparator="true"
+							  precision="0" />
+		<mx:NumberFormatter id="numberFormatter" useThousandsSeparator="true"  />
+
+	</fx:Declarations>
+	
+	<!--<s:BorderContainer width="100%" cornerRadius="15" borderAlpha="0.5">-->
+	<!--<s:filters>
+		<s:DropShadowFilter distance="5" angle="30" color="#d8d8d8"/>
+	</s:filters>
+		<s:Rect height="100%" radiusX="15" width="100%">
+			<s:fill>
+				<s:LinearGradient rotation="270">
+					<s:GradientEntry alpha="0" color="#000000" ratio="0"/>
+					<s:GradientEntry alpha="0.5" color="#d8d8d8" ratio="0.8"/>
+				</s:LinearGradient>
+			</s:fill>
+		</s:Rect>-->
+	
+		<s:HGroup width="100%" paddingLeft="0" height="110" gap="-1">
+			<s:filters>
+				<s:DropShadowFilter distance="3" angle="90" color="#b1b1b1"/>
+			</s:filters>
+			<components:GroupBox height="100%" width="100%" label="{Constants.PERIOD_SAVING}" skinClass="com.enlightedinc.components.skins.GroupBoxLegendSkin" >
+				<s:VGroup verticalAlign="middle" paddingLeft="10" paddingTop="10">
+					<!--<s:BorderContainer styleName="summaryTitleStyleBackBg" height="20" width="95">
+						<s:Label text="Savings so far" styleName="summaryTitleStyle" height="100%" width="100%" />
+					</s:BorderContainer>-->
+					<s:HGroup>
+						<s:BorderContainer id="brdr"
+								  width="85" height="60"
+								  horizontalCenter="0" verticalCenter="0"
+								  styleName="savingPercBorderStyle">
+							<s:Label id="savingSoFarPerc" styleName="savingPercLabelStyle"  text="{percetPrecision(countsCalculator.savingSoFarPercVal)}" 
+									 height="100%" width="100%" />
+						</s:BorderContainer>
+						<s:VGroup gap="5" horizontalAlign="center">
+							<s:HGroup>
+								<s:BorderContainer width="170" height="32" cornerRadius="5">
+									<s:borderStroke> 
+										<mx:SolidColorStroke 
+											color="#CCCCCC" 
+											weight="1"/> 
+									</s:borderStroke> 
+									<s:backgroundFill>
+										<!-- 180 rotation creates right to left gradient --> 
+										<s:LinearGradient rotation="90">
+											<s:GradientEntry color="0xa2a2a2" />
+											<s:GradientEntry color="0x353535" />
+										</s:LinearGradient>
+									</s:backgroundFill> 
+									<s:Label id="savingSoFar"  styleName="odometerText" height="100%" width="100%" trackingRight="4"  />
+								</s:BorderContainer>
+							</s:HGroup>
+							<!--<s:HGroup gap="15">
+								<s:Button id="dollarUnitButton" styleName="unitButton" name="dollarUnitButton" label="{Constants.CURRENCY_UNIT}" toolTip="{Constants.CURRENCY_UNIT}" buttonMode="true"  width="45" click="unitChangeHandler(event)"/>
+								<s:Button id="powerUnitButton" styleName="unitButton" name="powerUnitButton" label="{Constants.POWER_UNIT}" toolTip="{Constants.POWER_UNIT}" buttonMode="true" width="48" click="unitChangeHandler(event)"/>
+								<s:Button id="carbonUnitButton" styleName="unitButton" name="carbonUnitButton" label="{Constants.CARBON_UNIT}" toolTip="{Constants.CARBON_UNIT}" buttonMode="true" width="45" click="unitChangeHandler(event)"/>
+							</s:HGroup>-->
+						</s:VGroup>
+				</s:HGroup>
+				</s:VGroup>	
+			
+			</components:GroupBox>
+			<!--<mx:Spacer width="15%"/>
+			<mx:VRule height="100%" />-->
+			<components:GroupBox height="100%" width="100%" label="{Constants.CURRENT_SAVING}" skinClass="com.enlightedinc.components.skins.GroupBoxLegendSkin" >
+				<s:VGroup verticalAlign="middle" paddingLeft="10" paddingTop="10">
+					<!--<s:BorderContainer styleName="summaryTitleStyleBackBg" height="20" width="115">
+						<s:Label text="Savings right now"  styleName="summaryTitleStyle" height="100%" width="100%"/>
+					</s:BorderContainer>-->
+					<s:HGroup verticalAlign="middle" gap="0">
+						<s:BorderContainer id="brdr2"
+										   width="115" height="60"
+										   horizontalCenter="0" verticalCenter="0"
+										   styleName="savingPercBorderStyle">
+							<s:Label id="savingCurrPerc" styleName="savingPercLabelStyle" text="{percetPrecision(countsCalculator.savingRightNowPercVal)}" height="100%" width="100%"/>
+							<components:EnergySavingChart id="energySavingGraph" x="83" y="0" maxHeight="57"  />
+						</s:BorderContainer>
+						<s:VGroup paddingLeft="5">
+							<s:HGroup>
+								<s:Rect height="10" width="20">
+									<s:fill>
+										<s:SolidColor color="#3299cc"/>
+									</s:fill>
+								</s:Rect>
+								<s:Label text="Task Tuning" styleName="taskTunegraphBarlabel"  />
+							</s:HGroup>
+							
+							<mx:Spacer width="5"/>
+							<s:HGroup>
+								<s:Rect height="10" width="20">
+									<s:fill>
+										<s:SolidColor color="#FFFF52"/>
+									</s:fill>
+								</s:Rect>
+								<s:Label text="Daylight Harvesting" styleName="DHgraphBarlabel" />
+							</s:HGroup>
+							
+							<mx:Spacer width="5"/>
+							<s:HGroup>
+								<s:Rect height="10" width="20">
+									<s:fill>
+										<s:SolidColor color="#569814"/>
+									</s:fill>
+								</s:Rect>
+								<s:Label text="Occupancy" styleName="OccgraphBarlabel" />
+							</s:HGroup>
+						</s:VGroup>
+					</s:HGroup>
+				</s:VGroup>
+				
+			</components:GroupBox>
+		<!--	<mx:Spacer width="15%"/>
+			<mx:VRule height="100%"/>-->
+			<components:GroupBox height="100%" width="100%" label="{Constants.LOAD}" skinClass="com.enlightedinc.components.skins.GroupBoxLegendSkin" >
+				<s:VGroup paddingLeft="10" paddingTop="0" width="100%" height="100%" gap="1" >
+					<s:HGroup verticalAlign="middle" width="100%">
+						<s:Label text="{Constants.CURRENT}"  styleName="currentLabels"/>
+						<mx:Spacer width="22"/>
+						<s:BorderContainer  width="137" height="30"  cornerRadius="5" >
+							<s:borderStroke> 
+								<mx:SolidColorStroke 
+									color="#CCCCCC" 
+									weight="1"/> 
+							</s:borderStroke> 
+							<s:backgroundFill>
+								<!-- 180 rotation creates right to left gradient --> 
+								<s:LinearGradient rotation="90">
+									<s:GradientEntry color="0xa2a2a2"/>
+									<s:GradientEntry color="0x353535"/>
+								</s:LinearGradient>
+							</s:backgroundFill>
+							<s:Label id="currentLoad" text="{powerPrecision(countsCalculator.currentLoad)}" styleName="odometerTextCurrent" width="100%" height="100%" trackingRight="4"/>
+						</s:BorderContainer>
+					</s:HGroup>
+					<s:HGroup verticalAlign="middle" width="100%">
+						<s:Label text="{Constants.PERIOD_PEAK}" styleName="currentLabels" />
+						<mx:Spacer width="0"/>
+					<s:BorderContainer width="137" height="30"  cornerRadius="5" >
+						<s:borderStroke> 
+							<mx:SolidColorStroke 
+								color="#CCCCCC" 
+								weight="1"/> 
+						</s:borderStroke> 
+						<s:backgroundFill>
+							<!-- 180 rotation creates right to left gradient --> 
+							<s:LinearGradient rotation="90">
+								<s:GradientEntry color="0xa2a2a2"/>
+								<s:GradientEntry color="0x353535"/>
+							</s:LinearGradient>
+						</s:backgroundFill>
+						<s:Label id="periodPeak" text="{powerPrecision(countsCalculator.periodPeak)}" styleName="odometerTextCurrent" width="100%" height="100%" trackingRight="4"/>
+					</s:BorderContainer>
+					</s:HGroup>
+					<s:HGroup verticalAlign="middle" width="100%">
+						<s:Label text="{Constants.BASE_LINE}" styleName="currentLabels" />
+						<mx:Spacer width="19"/>
+					<s:BorderContainer width="137" height="30"  cornerRadius="5" >
+						<s:borderStroke> 
+							<mx:SolidColorStroke 
+								color="#CCCCCC" 
+								weight="1"/> 
+						</s:borderStroke> 
+						<s:backgroundFill>
+							<!-- 180 rotation creates right to left gradient --> 
+							<s:LinearGradient rotation="90">
+								<s:GradientEntry color="0xa2a2a2"/>
+								<s:GradientEntry color="0x353535"/>
+							</s:LinearGradient>
+						</s:backgroundFill>
+						<s:Label id="baselinePower" text="{powerPrecision(countsCalculator.baseLine)}" styleName="odometerTextCurrent" width="100%" height="100%" trackingRight="4"/>
+					</s:BorderContainer>
+					</s:HGroup>
+				</s:VGroup>
+			</components:GroupBox>
+		</s:HGroup>
+	<!--</s:BorderContainer>-->
+</s:VGroup> 

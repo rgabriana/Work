@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:BarChart xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			 xmlns:s="library://ns.adobe.com/flex/spark" 
+			 xmlns:mx="library://ns.adobe.com/flex/mx"
+			 showDataTips="true"
+			 dataProvider="{CountsCalculator.getInstance().chartDataCollection}"
+			 dataTipFunction="chartDataTipFunction"
+			 styleName="energyGraph"
+			 type="stacked">
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="MMM DD"/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.enlightedinc.common.CountsCalculator;
+			
+			import mx.charts.HitData;
+			import mx.charts.chartClasses.IAxis;
+			import mx.charts.series.items.BarSeriesItem;
+			[Bindable]
+			public var dataPeriod:String;
+			[Bindable]
+			public var rotationVal:Number =0;
+			private function barSeriesLabelFunction(barSeriesItem:BarSeriesItem, series:BarSeries):Number 
+			{
+				return (barSeriesItem.xNumber - Number(barSeriesItem.minValue));
+			} 
+			
+			private function chartDataTipFunction(item:HitData):String 
+			{
+				var type:String = (item.element as BarSeries).displayName;
+				var value:Number = (item.chartItem as BarSeriesItem).xNumber - Number((item.chartItem as BarSeriesItem).minValue);
+				return type + ' : ' + value + '%' as String;
+			}
+			private function timeLabelFunction(categoryValue:Object, previousLabelValue:Object, axis:IAxis) : String
+			{
+				var timeStr:String = categoryValue.slice(0,10);
+				var datestr:String="";
+				if(dataPeriod == Constants.WEEK || dataPeriod == Constants.MONTH || dataPeriod == Constants.MAX)
+				{
+					if(dataPeriod == Constants.WEEK)
+						rotationVal =0;
+					else
+						rotationVal =60;
+					datestr = categoryValue.slice(5,7) + "/" + categoryValue.slice(8,10) + "/" + categoryValue.slice(2,4);
+					return datestr;
+				}	
+				if(dataPeriod == Constants.DAY)
+				{
+					rotationVal =60;
+					dateFormatter.formatString = "L A";
+					//Change the time to 12Hr format
+					datestr = dateFormatter.format(categoryValue);
+					//timeStr =categoryValue.slice(11,16);
+					//datestr = categoryValue.slice(11,16);
+					return datestr;
+				}	
+				if(dataPeriod == Constants.YEAR)
+				{
+					rotationVal =0;
+					dateFormatter.formatString="MMM YYYY"
+					datestr = dateFormatter.format(timeStr);
+					return datestr//categoryValue.slice(5,7) + "/" + categoryValue.slice(2,4);
+				}	
+				return "";
+			}
+			private function setEnergyLabel(labelValue:Object, previousLabelValue:Object, axis:IAxis):String
+			{
+				var currentUnit:String = CountsCalculator.getInstance().currentUnitSelection;
+				if(currentUnit == Constants.POWER_UNIT)
+				{
+					return this.getCustomEnergyLabel(labelValue);
+				}else if(currentUnit == Constants.CARBON_UNIT)
+				{
+					return this.getCarbonUnitEnergyLabel(labelValue);
+				}else if(currentUnit == Constants.CURRENCY_UNIT)
+				{
+					return this.getCustomMoneyLabel(labelValue);
+				}
+				return this.getCustomEnergyLabel(labelValue);
+			}
+			private function getCustomEnergyLabel(labelValue:Object):String
+			{
+				if (Number(labelValue) >= 1000000)
+					return (Number(labelValue)/1000000).toFixed(2) +" MWh";				
+				if (Number(labelValue) >= 1000)
+					return (Number(labelValue)/1000).toFixed(2) +" kWh";
+				else
+					return Number(labelValue).toFixed(2) +" Wh";
+			}
+			private function getCarbonUnitEnergyLabel(labelValue:Object):String
+			{
+				if (Number(labelValue)>= 1000000)
+					return (Number(labelValue)).toFixed(2) +" mtons";				
+				else if (Number(labelValue) >= 1000)
+					return (Number(labelValue)/1000).toFixed(2) +" ktons";
+				else
+					return Number(labelValue).toFixed(2) +" tons";
+			}
+			
+			private function getCustomMoneyLabel(labelValue:Object):String{
+				return "$ "+  Number(labelValue).toFixed(2);
+			}
+		]]>
+	</fx:Script>
+		
+	<mx:backgroundElements>
+		<mx:GridLines alpha="0"/>
+	</mx:backgroundElements>
+	<mx:verticalAxisRenderers>
+			<mx:AxisRenderer axis="{dateAxis}" labelRotation="{rotationVal}" showLine="false" canDropLabels="false" fontSize="10" tickLength="0">
+			<mx:axisStroke>
+				<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+			</mx:axisStroke>
+			<mx:tickStroke>
+				<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+			</mx:tickStroke>
+			<mx:minorTickStroke>
+				<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+			</mx:minorTickStroke>
+			<mx:labelRenderer>
+				<fx:Component>
+					<mx:Label toolTip="{this.customToolTip}">
+						<fx:Script><![CDATA[
+							[Bindable]
+							private var customToolTip:String;
+							override public function set data(value:Object):void{
+								if(value == null)
+									return;
+								customToolTip = value.text;
+								var length:int = value.text.toString().length;
+								if (length > 20) {
+									text = value.text.toString().substr(0, 20) + "...";
+								} else {
+									text = value.text;
+								}
+							}
+						]]></fx:Script>
+					</mx:Label>
+				</fx:Component>
+			</mx:labelRenderer>
+		</mx:AxisRenderer>
+	</mx:verticalAxisRenderers>
+	<mx:horizontalAxisRenderers>
+		<mx:AxisRenderer axis="{energyAxis}" fontSize="10" tickLength="0">
+			<mx:axisStroke>
+				<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+			</mx:axisStroke>
+			<mx:tickStroke>
+				<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+			</mx:tickStroke>
+			<mx:minorTickStroke>
+				<mx:SolidColorStroke color="#000000" weight="1" alpha="0.5"/>
+			</mx:minorTickStroke>
+		</mx:AxisRenderer>
+	</mx:horizontalAxisRenderers>
+	<mx:horizontalAxis>
+		<mx:CategoryAxis id="energyAxis" labelFunction="setEnergyLabel"  />
+	</mx:horizontalAxis>
+	<mx:verticalAxis>
+		<mx:LinearAxis id="dateAxis"  labelFunction="timeLabelFunction"/>
+	</mx:verticalAxis>
+	
+	<mx:series>
+		<mx:BarSeries id="powerSeries"
+					  xField="powerused"
+					  yField="captureon"
+					  displayName="Power"
+					  labelPosition="inside"
+					  labelFunction="barSeriesLabelFunction" >
+			<mx:fill>
+				<s:SolidColor color="#F9B2EE" alpha="0.7"/>
+			</mx:fill>
+		</mx:BarSeries>
+		
+		<mx:BarSeries id="occupanySavingsSeries"
+					  xField="occsaving"
+					  yField="captureon"
+					  displayName="Occupancy Savings"
+					  labelPosition="inside"
+					  labelFunction="barSeriesLabelFunction">
+			<mx:fill>
+				<s:SolidColor color="#99FF66" alpha="0.7"/>
+			</mx:fill>
+		</mx:BarSeries>
+		
+		<mx:BarSeries id="ambientSavingsSeries"
+					  xField="ambientsaving"
+					  yField="captureon"
+					  displayName="Ambient Savings"
+					  labelPosition="inside"
+					  labelFunction="barSeriesLabelFunction">
+			<mx:fill>
+				<s:SolidColor color="#F79749" alpha="0.7"/>
+			</mx:fill>
+		</mx:BarSeries>
+		
+		<mx:BarSeries id="taskTuningSavingsSeries"
+					  xField="tasktuneupsaving"
+					  yField="captureon"
+					  displayName="Task Tuning Savings"
+					  labelPosition="inside"
+					  labelFunction="barSeriesLabelFunction">
+			<mx:fill>
+				<s:SolidColor color="#006600" alpha="0.7"/>
+			</mx:fill>
+		</mx:BarSeries>
+	</mx:series>
+	
+	<mx:seriesFilters>
+		<fx:Array/>
+	</mx:seriesFilters>
+	
+</mx:BarChart>

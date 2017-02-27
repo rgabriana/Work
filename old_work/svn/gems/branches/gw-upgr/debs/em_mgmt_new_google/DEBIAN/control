@@ -1,0 +1,11 @@
+Package: enLighted-em-mgmt
+Version: 3.5.1
+Section: misc
+Priority: optional
+Architecture: all
+Essential: no
+Depends: tomcat6
+Suggests: no
+Maintainer: enLighted Inc [support@enlightedinc.com]
+Provides: enLighted
+Description: Manages backup, restore and upgrade of EM 

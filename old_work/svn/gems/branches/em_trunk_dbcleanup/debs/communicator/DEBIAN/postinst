@@ -1,0 +1,5 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+
+
+sudo bash /opt/enLighted/communicator/setcron_communicator.sh

@@ -1,0 +1,13 @@
+#!/bin/bash -x
+
+
+cd /home/enlighted/upgrade/
+
+chown -R tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/logs/
+
+
+sudo rm -rf /var/lib/tomcat6/webapps/em_cloud_instance*
+sudo rm -rf /var/lib/tomcat6/work/Catalina/localhost/em_cloud_instance/
+sudo cp em_cloud_instance.war /var/lib/tomcat6/webapps/
+sudo service tomcat6 restart
+sudo service apache2 restart

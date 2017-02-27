@@ -1,0 +1,135 @@
+#!/bin/bash -x
+###########################
+# Rolando Gabriana added verbose on all file actions\
+# Changed relative paths to absolute paths.\
+# Added backup creation of all files prior to clobbering.\
+###########################
+
+# Adding path for the bin utils -RG
+
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+EN_home=/home/enlighted
+src_dir=$EN_home/upgrade
+bk_folder=/opt/enlighted_upgrade_bkups/files
+
+# Backup folder check
+
+if [ ! -d $bk_folder ]; then
+  echo "Creating backup folder $bk_folder"
+  mkdir -pv $bk_folder
+fi
+
+# logrotate stuff
+
+echo "#################################################"
+echo "SETTING UP LOGROTATION FOR REPLICA BACKUP"
+echo "#################################################"
+
+if [ -f /etc/logrotate.d/replica_dbdbackup ]; then
+
+  sum_check_dst=`md5sum /etc/logrotate.d/replica_dbdbackup|awk -F " " '{print $1}'`
+  sum_check_src=`md5sum $src_dir/replica_dbdbackup|awk -F " " '{print $1}'`
+
+  if [ "$sum_check_dst" != "$sum_check_src" ]; then
+
+    echo "creating back up file of /etc/logrotate.d/replica_dbdbackup"
+    cp -fv /etc/logrotate.d/replica_dbdbackup $bk_folder/replica_dbdbackup.$(date +%d%b%Y_%T)
+
+  fi
+fi
+
+cp -fv $src_dir/replica_dbdbackup /etc/logrotate.d/replica_dbdbackup
+chown -v root:root /etc/logrotate.d/replica_dbdbackup
+chmod -v 0644 /etc/logrotate.d/replica_dbdbackup
+
+# Replica backup scripts
+
+echo "#################################################"
+echo "SETTING UP REPLICA BACKUP SCRIPTS"
+echo "#################################################"
+
+if [ -f $EN_home/replica_check.sh ]; then
+
+  sum_check_dst=`md5sum $EN_home/replica_check.sh|awk -F " " '{print $1}'`
+  sum_check_src=`md5sum $src_dir/replica_check.sh|awk -F " " '{print $1}'`
+
+  if [ "$sum_check_dst" != "$sum_check_src" ]; then
+
+    echo "creating back up file of $EN_home/replica_check.sh"
+    cp -fv $EN_home/replica_check.sh $bk_folder/replica_check.sh.$(date +%d%b%Y_%T)
+
+  fi
+fi
+
+echo "updating $EN_home/replica_check.sh"
+cp -fv $src_dir/replica_check.sh $EN_home
+chown -v enlighted:enlighted $EN_home/replica_check.sh
+chmod -v 744 $EN_home/replica_check.sh
+
+if [ -f $EN_home/replica_daily_backups.sh ]; then
+
+  sum_check_dst=`md5sum $EN_home/replica_daily_backups.sh|awk -F " " '{print $1}'`
+  sum_check_src=`md5sum $src_dir/replica_daily_backups.sh|awk -F " " '{print $1}'`
+
+  if [ "$sum_check_dst" != "$sum_check_src" ]; then
+
+    echo "creating back up file of $EN_home/replica_daily_backups.sh"
+    cp -fv $EN_home/replica_daily_backups.sh $bk_folder/replica_daily_backups.$(date +%d%b%Y_%T)
+  fi
+fi
+
+cp -fv $src_dir/replica_daily_backups.sh $EN_home
+chown -v enlighted:enlighted $EN_home/replica_daily_backups.sh
+chmod -v 744 $EN_home/replica_daily_backups.sh
+
+# Tomcat files
+
+TC6_HOME=/var/lib/tomcat6
+
+echo "###################"
+echo "SETTING UP TOMCAT"
+echo "###################"
+
+if [ -f $TC6_HOME/em_cloud_instance.war ]; then
+
+  sum_check_dst=`md5sum $TC6_HOME/em_cloud_instance.war|awk -F " " '{print $1}'`
+  sum_check_src=`md5sum $src_dir/em_cloud_instance.war|awk -F " " '{print $1}'`
+
+  if [ "$sum_check_dst" != "$sum_check_src" ]; then
+
+    echo "creating back up file of $TC6_HOME/em_cloud_instance.war"
+    cp -fv $TC6_HOME/em_cloud_instance.war $bk_folder/em_cloud_instance.war.$(date +%d%b%Y_%T)
+
+  fi
+fi
+
+chown -Rv tomcat6:tomcat6 $TC6_HOME/Enlighted/logs/
+rm -rvf $TC6_HOME/webapps/em_cloud_instance*
+rm -rvf $TC6_HOME/work/Catalina/localhost/em_cloud_instance
+cp -vf $src_dir/em_cloud_instance.war $TC6_HOME/webapps/
+
+if [ -f $TC6_HOME/Enlighted/ems_log4j/log4j.properties ]; then
+
+  sum_check_dst=`md5sum $TC6_HOME/Enlighted/ems_log4j/log4j.properties|awk -F " " '{print $1}'`
+  sum_check_src=`md5sum $src_dir/log4j.properties|awk -F " " '{print $1}'`
+
+  if [ $sum_check_dst != $sum_chek_src ]; then
+
+  echo "creating back up file of $TC6_HOME/Enlighted/ems_log4j/log4j.properties"
+  cp -vf $TC6_HOME/Enlighted/ems_log4j/log4j.properties $bk_folder/log4j.properties.$(date +%d%b%Y_%T)
+  fi
+fi
+
+cp -vf $src_dir/log4j.properties $TC6_HOME/Enlighted/ems_log4j/log4j.properties
+chown -v tomcat6:tomcat6 $TC6_HOME/Enlighted/ems_log4j/log4j.properties
+
+if [ ! -d "/var/lib/tomcat6/Enlighted/dataPullRequests" ]
+then
+	mkdir -pv /var/lib/tomcat6/Enlighted/dataPullRequests
+	chown -Rv tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/dataPullRequests
+fi
+
+# restarting web services
+service tomcat6 restart
+service apache2 restart

@@ -1,0 +1,7 @@
+Setup
+
+1. Copy file get_cloud_data.sh to /bin/ folder with appropriate executable permissions.
+2. Execute psql -U postgres ems < getCloudData.sql
+3. Create directory /home/enlighted/clouddata with 777 permissions.
+4. Copy CloudDataManifest.MF to /var/lib/tomcat6/Enlighted/
+5. Copy file txn_and_zip.sh to /bin/ folder with appropriate executable permissions.

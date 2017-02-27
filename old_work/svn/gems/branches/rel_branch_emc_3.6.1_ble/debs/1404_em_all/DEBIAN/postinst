@@ -1,0 +1,4 @@
+#!/bin/bash -x
+
+sudo mkdir -p /var/lib/tomcat6/Enlighted/bkRestoreFolderTemp
+sudo chmod 775 /var/lib/tomcat6/Enlighted/bkRestoreFolderTemp

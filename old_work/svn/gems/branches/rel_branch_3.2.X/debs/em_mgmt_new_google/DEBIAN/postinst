@@ -1,0 +1,78 @@
+#!/bin/bash -x
+
+ehome="/usr/local/google/home/enlighted"
+
+cd $ehome/apache2/installation/
+
+sudo chmod 755 -R /var/www/em_mgmt/
+
+sudo mkdir -p /var/lib/tomcat6/Enlighted/UpgradeImages
+ 
+sudo chmod 775 /var/lib/tomcat6/Enlighted/UpgradeImages
+
+sudo chown tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/UpgradeImages
+
+#sudo rm -f /media/usb
+
+#sudo cp /home/enlighted/usbmount.conf /etc/usbmount/
+#sudo chown root:root  /etc/usbmount/usbmount.conf
+#sudo chmod 644 /etc/usbmount/usbmount.conf
+
+sudo chmod 751 /var/log/tomcat6/
+
+if [ ! -f "/var/lib/tomcat6/Enlighted/adminpasswd" ]
+then
+	adminpass=$(psql -U postgres -x ems -c "select password from users where email = 'admin' limit 1" | grep password | cut -d " " -f3)
+	if test -z "$adminpass"
+	then
+		echo -n "admin" | md5sum | cut -d" " -f1 > /var/lib/tomcat6/Enlighted/adminpasswd
+	else
+		echo "$adminpass" > /var/lib/tomcat6/Enlighted/adminpasswd
+	fi
+	sudo chmod 775 /var/lib/tomcat6/Enlighted/adminpasswd
+	sudo chown tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/adminpasswd
+fi
+
+sudo chmod 755 /bin/authadmin.sh
+
+# Remove tomcat-manager and tomcat-host-manager
+sudo rm -f /var/lib/tomcat6/conf/Catalina/localhost/manager.xml
+sudo rm -f /var/lib/tomcat6/conf/Catalina/localhost/host-manager.xml
+
+startapache=$(sudo /etc/init.d/apache2 start)
+		
+        sudo touch /var/lib/tomcat6/Enlighted/emsmode
+        sudo chown tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/emsmode
+		sudo chmod 777 /var/lib/tomcat6/Enlighted/emsmode
+        sudo echo NORMAL > /var/lib/tomcat6/Enlighted/emsmode
+		
+		sudo cp $ehome/checkandsetemmode.sh /bin/checkandsetemmode.sh
+		sudo chown root:root /bin/checkandsetemmode.sh
+		sudo chmod 755 /bin/checkandsetemmode.sh
+		
+		sudo service udev restart
+		
+		#sudo cp /home/enlighted/rc.local /etc/rc.local
+		#sudo chown root:root /etc/rc.local
+		#sudo chmod 755 /etc/rc.local
+		
+		sudo cp $ehome/dailybackup.sh /opt/enLighted/DB/dailybackup.sh
+		
+		#chmod 0440 ./sudoers
+		#sudo cp ./sudoers /etc/
+		#sudo chown root:root /etc/sudoers
+		
+		cp ./server.xml /etc/tomcat6/server.xml
+		
+		cp ./web.xml /etc/tomcat6/web.xml
+		
+		# Add www-data to tomcat6 group
+		sudo sed -i.bak  's/\(tomcat6:x:[0-9]*:\).*/\1www-data/' /etc/group
+		
+		mkdir $ehome/django_cache
+		
+		sudo updatedb
+		
+
+#Future backups should not use the stale ec data which might be based on different schema.
+rm -f /opt/enLighted/DB/DBBK/daily_ec_dump.backup

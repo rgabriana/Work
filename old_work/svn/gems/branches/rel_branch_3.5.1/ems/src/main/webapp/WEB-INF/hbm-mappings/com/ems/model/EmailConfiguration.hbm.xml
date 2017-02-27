@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.EmailConfiguration"
+        table="email_configuration"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">email_configuration_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-SystemConfiguration.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property name="host" type="java.lang.String" update="true" insert="true" column="email_smtp_host"/>
+        <property name="port" type="java.lang.String" update="true" insert="true" column="email_smtp_port"/>
+        <property name="user" type="java.lang.String" update="true" insert="true" column="email_smtp_user"/>
+        <property name="pass" type="java.lang.String" update="true" insert="true" column="email_smtp_pass"/>
+        <property name="protocol" type="java.lang.String" update="true" insert="true" column="email_transport_protocol"/>
+        <property name="flagAuth" type="java.lang.String" update="true" insert="true" column="email_smtp_auth"/>
+        <property name="flagTls" type="java.lang.String" update="true" insert="true" column="email_smtp_starttls_enable"/>
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-SystemConfiguration.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

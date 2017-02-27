@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	version="2.5">
+	
+    <listener>
+        <listener-class>com.emcloudinstance.http.Log4jEnablingListener</listener-class>
+    </listener>
+
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath*:META-INF/spring/application*.xml</param-value>
+	</context-param>
+	
+	<listener>
+        <listener-class>com.emcloudinstance.http.CloudStartupShutdownListener</listener-class>
+    </listener>
+    
+	<filter>
+		  <filter-name>ExpiredSessionFilter</filter-name>
+		  <filter-class>com.emcloudinstance.filter.ExpiredSessionFilter</filter-class>
+   </filter>
+   <filter-mapping>
+		   <filter-name>ExpiredSessionFilter</filter-name>
+		   <url-pattern>/services/*</url-pattern>
+		   <url-pattern>/api/*</url-pattern>
+   </filter-mapping>
+   	
+	<filter>
+		<filter-name>springSecurityFilterChain</filter-name>
+		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>springSecurityFilterChain</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+
+     <filter>
+		  <filter-name>cleanUpFilter</filter-name>
+		  <filter-class>com.emcloudinstance.filter.ReplicaCleanUpFilter</filter-class>
+   </filter>
+   <filter-mapping>
+		   <filter-name>cleanUpFilter</filter-name>
+		   <url-pattern>/*</url-pattern>
+   </filter-mapping>
+   
+ <servlet>
+		<servlet-name>jersey-spring</servlet-name>
+		<servlet-class>com.sun.jersey.spi.spring.container.servlet.SpringServlet</servlet-class>
+		<init-param>
+			<param-name>com.sun.jersey.config.property.packages</param-name>
+			<param-value>com.emcloudinstance.ws</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>jersey-spring</servlet-name>
+		<url-pattern>/services/*</url-pattern>
+		<url-pattern>/api/*</url-pattern>
+	</servlet-mapping> 
+
+	
+	<session-config>
+		<session-timeout>60</session-timeout>
+	</session-config>
+</web-app>

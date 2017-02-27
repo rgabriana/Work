@@ -1,0 +1,34 @@
+#!/bin/bash -x
+# Run this after installing this package, it requires root privilage
+
+MASTER_HOME_DIR=/home/enlighted/master_files
+TOMCAT_ENLIGHTED=/var/lib/tomcat6/Enlighted
+TOMCAT_BASE_DIR=/var/lib/tomcat6
+sudo cp $MASTER_HOME_DIR/ecloud.war $TOMCAT_BASE_DIR/webapps/
+sudo psql -U postgres emscloud < $MASTER_HOME_DIR/ecloud_upgrade.sql
+sudo cp $MASTER_HOME_DIR/pruneTable.sh $TOMCAT_ENLIGHTED/scripts/
+sudo cp $MASTER_HOME_DIR/setCron.sh $TOMCAT_ENLIGHTED/scripts/
+sudo chown tomcat6:tomcat6 $TOMCAT_ENLIGHTED/scripts/*.sh
+sudo chmod +x $TOMCAT_ENLIGHTED/scripts/*.sh
+sudo sh $TOMCAT_ENLIGHTED/scripts/setCron.sh
+sudo cp $MASTER_HOME_DIR/context.xml  $TOMCAT_BASE_DIR/conf/
+sudo chown tomcat6:tomcat6 $MASTER_HOME_DIR/context.xml
+sudo chown -R tomcat6:tomcat6 $TOMCAT_BASE_DIR
+
+sudo cp $MASTER_HOME_DIR/etc/apache2/apache2.conf /etc/apache2/
+sudo sed -i 's/\(CustomLog[\ ]*\/var\/log\/apache2\/access.log[\ ]*\).*/\1cust/' /etc/apache2/sites-enabled/000-default
+
+sudo cp $MASTER_HOME_DIR/connection_config.properties  $TOMCAT_ENLIGHTED/
+sudo chown tomcat6:tomcat6 $TOMCAT_ENLIGHTED/connection_config.properties
+
+#Restart all the services changes,used, installed,upgraded
+echo "Restarting all services"
+sudo service tomcat6 restart
+sudo service apache2 restart 
+sudo service postgresql restart
+sudo service cron restart
+
+
+
+
+

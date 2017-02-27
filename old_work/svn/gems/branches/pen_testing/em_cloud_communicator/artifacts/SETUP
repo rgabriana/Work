@@ -1,0 +1,43 @@
+Steps to add your EM to cloud.
+-----------------------------------
+Take the latest of everything from SVN.
+
+Part A: Only Call Home Support
+
+1. Login to ecloud app in your browser using admin/admin.
+	Create new customer corresponding to you and add new em instance corresponding to your EM instance.
+2. Your ecloud server is ready to accept data from your local EM.
+3. Come back to local EM and upgrade it using the latest debian. Cloud Communicator should be installed with this.
+4. Login as admin and Go to Administration -> System Management. Click Cloud Server Settings. 
+	Provide cloud service ip, cloud server port and your local EM mac. MAC should be exactly same as the one you used above.
+5. Execute "update system_configuration set value = '1' where name like 'cloud.communicate.type';" on ems db console
+6. Give it atleast 5 mins.
+
+
+Part B: Only SPPA support
+
+1. Install tcl8.5_8.5.8-2_i386.deb from debs/em_all/home/enlighted/debs/archives/ folder on your EM.
+2. Install postgresql-pltcl-8.4_8.4.3-1_i386.deb from debs/em_all/home/enlighted/debs/archives/ folder on your EM.
+3. Upgrade it using the latest debian. 
+4. Stop the tomcat server on your local EM. Make sure that tomcat doesn't come up again due to tracker cron or manually.
+5. Run ems/artifacts/sql/migration/From_2.0_To_3.0/sppa.sql on your ems db
+//-----------------------------------------do not need these steps as migration code has been checked in. After testing we will delete these steps from setup----------//
+6. Execute 'select addTriggers();' in your db console to add triggers on your tables.
+7. Take database dump. Command: pg_dump -U postgres ems -F c -v -b -f 'sppa_migration.dump'
+8. Go to cloud server. Copy this sppa_migration.dump to your cloud server. Right now, rackspace server is configured as cloud server.
+9. Login to ecloud app in your browser using admin/admin. For rackspace server, access at https://198.101.232.49/ecloud.
+	Create new customer corresponding to you and add new em instance corresponding to your EM instance. 
+	MAC ID should be your EM mac id. This value would be reused while configuring your EM. This will create a default db.
+10. Checkout em_instance table 'database_name' value from emscloud db to get the name of your cloud db. Once done, restore sppa_migration.dump to this new db. Command: pg_restore -U postgres -d db_name -v < sppa_migration.dump
+11. Execute "update cloud_config set val = (select max(id) from wal_logs) where name = 'lastWalSyncId';" on this new db.
+12. Your ecloud server is ready to accept data from your local EM.
+12. Now start the local tomcat server.
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+13. Login as admin and Go to Administration -> System Management. Click Cloud Server Settings. 
+	Provide cloud service ip, cloud server port and your local EM mac. MAC should be exactly same as the one you used above.
+14. Execute "update system_configuration set value = '2' where name like 'cloud.communicate.type';" on ems db console
+15. Make a directory with tomcat6 user and group on ecloud server . 
+		sudo Mkdir /home/enlighted/ecloud/customers/
+		sudo chown tomcat6:tomcat6 /home/enlighted/ecloud/customers/	
+16.put "/usr/bin/pg_restore" in sudoer file on ecloud. 
+

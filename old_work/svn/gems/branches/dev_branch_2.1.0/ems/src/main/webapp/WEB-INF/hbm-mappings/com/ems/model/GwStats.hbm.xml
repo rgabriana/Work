@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    <class
+        name="com.ems.model.GwStats"
+        table="gw_stats"
+    >
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+            unsaved-value="null"
+        >
+            <generator class="native">
+                <param name="sequence">gw_stats_seq</param>
+              <!--  
+                  To add non XDoclet generator parameters, create a file named 
+                  hibernate-generator-params-GwStats.xml 
+                  containing the additional parameters and place it in your merge dir. 
+              --> 
+            </generator>
+        </id>
+
+        <property
+            name="gwId"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="gw_id"
+        />
+
+        <property
+            name="captureAt"
+            type="java.util.Date"
+            update="true"
+            insert="true"
+            column="capture_at"
+        />
+
+        <property
+            name="uptime"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="uptime"
+        />
+
+        <property
+            name="noPktsFromGems"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="no_pkts_from_gems"
+        />
+
+        <property
+            name="noPktsToGems"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="no_pkts_to_gems"
+        />
+
+        <property
+            name="noPktsToNodes"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="no_pkts_to_nodes"
+        />
+
+        <property
+            name="noPktsFromNodes"
+            type="java.lang.Long"
+            update="true"
+            insert="true"
+            column="no_pkts_from_nodes"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-GwStats.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

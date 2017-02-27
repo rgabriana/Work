@@ -1,0 +1,51 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+source /etc/environment
+cd /tmp/adr
+sed -i "s|/home/enlighted|$ENLIGHTED_HOME|g" opt/enLighted/adr/logging.properties
+sudo cp -r opt/enLighted/adr/* ${OPT_ENLIGHTED}/adr/.
+sudo chmod -R 775 ${OPT_ENLIGHTED}/adr
+sudo chmod -R enlighted:enlighted ${OPT_ENLIGHTED}/adr
+
+ADR_PATH=$OPT_ENLIGHTED/adr
+DBUSER=postgres
+DBHOST=localhost
+DB=adr
+ps -ef |grep postgresql |grep -v grep > /dev/null
+if [ $? -eq 0 ]
+then
+   if [ `psql -q -U ${DBUSER} -h ${DBHOST}  -t -c "select count(*) from pg_database where datname='${DB}'"` -eq 1 ]
+   then
+		p1=`ps -eaf | grep adr.jar | grep -v grep | wc -l`
+   else
+        echo "ADR DB not exists "
+        echo "Creating ADR DB"
+        createdb -U ${DBUSER}  ${DB}
+
+        if [ `psql -q -U ${DBUSER} -h ${DBHOST}  -t -c "select count(*) from pg_database where datname='${DB}'"` -eq 1 ]
+        then
+			echo "${DB} DB created successfully!!!!"
+			if [ -f ${ADR_PATH}/ADRInstall.sql ]
+			then
+				echo "Running ADRInstall.sql!!!!"
+				psql -U ${DBUSER} ${DB} < ${ADR_PATH}/ADRInstall.sql
+			else
+				echo "ADRInstall.sql does not exists!!!!"
+			fi
+		else
+		echo "not able to create ${DB} DB!!!!"
+		exit
+		fi
+    fi
+else
+    echo "postgres not running"
+fi
+
+cd $OPT_ENLIGHTED/adr
+#sudo tar -xzf jre-7u21-linux-i586.tar.gz
+#sudo chown -R enlighted:enlighted jre1.7.0_21/
+
+sudo chmod 755 ${ADR_PATH}/adrsetcron.sh
+sudo chmod 755 ${ADR_PATH}/adr_tracker.sh
+sudo bash ${ADR_PATH}/adrsetcron.sh
+sudo ${ADR_PATH}/adr_tracker.sh

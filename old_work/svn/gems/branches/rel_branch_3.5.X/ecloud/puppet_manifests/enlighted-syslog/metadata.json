@@ -1,0 +1,14 @@
+{
+  "name": "enlighted-syslog",
+  "version": "0.1.0",
+  "author": "Rolando R. Gabriana Jr.",
+  "summary": "puppet module to control syslog service",
+  "license": "Apache 2.0",
+  "source": "rolando.gabriana@enightedinc.com",
+  "project_page": "rolando.gabriana@enlightedinc.com",
+  "issues_url": "rolando.gabriana@enlightedinc.com",
+  "dependencies": [
+    {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"}
+  ]
+}
+

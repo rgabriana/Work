@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+>
+    
+     <class
+        name="com.ems.model.FirmwareUpgradeSchedule"
+        table="firmware_upgrade_schedule"
+    >
+    
+    	<id name="id" column="id" type="java.lang.Long" unsaved-value="null" >
+            <generator class="native">
+                <param name="sequence">firmware_upgrade_schedule_seq</param>              
+            </generator>
+        </id>
+
+		<property name="fileName" type="java.lang.String" update="true"
+			insert="true" column="file_name" />
+        
+        <property name="deviceType" type="java.lang.String" update="true" 
+        	insert="true" column="device_type" />
+        	
+        <property name="modelNo" type="java.lang.String" update="true" 
+        	insert="true" column="model_no" />
+        	
+        <property name="version" type="java.lang.String" update="true" 
+        	insert="true" column="version" />
+        	
+        <property name="addedTime" type="java.util.Date" update="true" 
+        	insert="true" column="added_time" />
+        	
+        <property name="scheduledTime" type="java.util.Date" update="true" 
+        	insert="true" column="scheduled_time" />
+
+         <property name="startTime" type="java.util.Date" update="true" 
+        	insert="true" column="start_time" />
+        	
+         <property name="duration" type="java.lang.Integer" update="true" 
+        	insert="true" column="duration" />
+        	
+         <property name="onReboot" type="java.lang.Boolean" update="true" 
+        	insert="true" column="on_reboot" />
+        	
+         <property name="retries" type="java.lang.Integer" update="true" 
+        	insert="true" column="retries" />
+        	
+         <property name="retryInterval" type="java.lang.Integer" update="true" 
+        	insert="true" column="retry_interval" />
+        	
+       	 <property name="includeList" type="java.lang.String" update="true" 
+        	insert="true" column="include_list" />
+        	
+         <property name="excludeList" type="java.lang.String" update="true" 
+        	insert="true" column="exclude_list" />
+        	
+         <property name="active" type="java.lang.Boolean" update="true" 
+        	insert="true" column="active" />
+        	
+         <property name="description" type="java.lang.String" update="true" 
+        	insert="true" column="description" />
+         
+         <property name="jobPrefix" type="java.lang.String" update="true" 
+         	insert="true" column="job_prefix" />
+		
+    </class>
+
+</hibernate-mapping>

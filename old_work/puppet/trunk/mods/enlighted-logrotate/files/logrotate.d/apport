@@ -1,0 +1,10 @@
+# This file is managed by puppet
+/var/log/apport.log {
+       daily
+       rotate 7
+       delaycompress
+       compress
+       notifempty
+       missingok
+}
+

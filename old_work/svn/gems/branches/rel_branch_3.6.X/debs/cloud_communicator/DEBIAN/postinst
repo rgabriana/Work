@@ -1,0 +1,10 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+
+sudo bash /opt/enLighted/communicator/communicatorsetcron.sh
+sudo service cron restart
+
+sudo mkdir /opt/enLighted/communicator/syncdata/
+sudo chmod 777 /opt/enLighted/communicator/syncdata/
+
+sudo chmod 600 /opt/enLighted/communicator/enlightedTunnelKey

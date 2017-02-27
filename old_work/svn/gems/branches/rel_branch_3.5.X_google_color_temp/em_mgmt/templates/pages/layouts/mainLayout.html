@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+{% load i18n %}
+
+<title>{% trans 'enlighted.mangement.title' %}</title>
+
+{% load customtemplatetags %}
+ 
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}static/themes/default/css/style.css" />
+
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}static/themes/default/css/menu.css" />
+
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}static/themes/standard/css/jquery/jquery-ui-1.8.16.custom.css" />
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.1.6.4.min.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.ui.1.8.16.custom.min.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.validate.1.9.min.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.layout-latest.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}static/scripts/jquery/jquery.alerts.js"></script>
+
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}static/themes/standard/css/jquery/jquery.alerts.css" />
+ 
+</head>
+<body>
+	<div style="width: 100%;">
+		<div id="header" style="width: 100%; min-width: 800px; margin: 0 auto;">
+			{% block header %}
+
+        <style type="text/css">
+        html,body {
+	        margin: 0px !important;
+        }
+        </style>
+
+        <script type="text/javascript">
+	        $.ajaxSetup({
+	           cache: true
+	         });
+	
+	        $(document).ready(function(){
+		        var mainpage_url = location.protocol + '//' + location.host + '/ems/home.ems';
+		        $("#mainpage").attr("href", mainpage_url);			
+	        });
+	
+        </script>
+
+        <table id="tblcompcreated" border="0" cellpadding="0" cellspacing="0"
+	        class="headertbl" >
+	        <tr>
+		        {% if request.session.connexusFeature == '1' %}
+		        <td align="left"><img src="{{ STATIC_URL }}static/themes/default/images/logo_Connexus.png" style='padding-top: 4px' />
+				<span id="welcome"	class="welcmConnexus">{% trans 'welcome.message' %} {{ request.session.username }}</span>
+				{% else %}
+				 <td align="left"><img src="{{ STATIC_URL }}static/themes/default/images/logo.png" style='padding-top: 4px' />
+				  <span id="welcome"	class="welcm">{% trans 'welcome.message' %} {{ request.session.username }}</span>
+				{% endif %}   
+				</td>
+            <td></td>
+		        <td align="right">
+			        <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+				        <tr>
+					        <td>
+						        <div class="nav">
+							        <ul id="cssdropdown">
+								        <li class="headlink noright" >									 
+									        <a href="#" class="link">
+										        <div class='imgicon'>
+											        <img src="{{ STATIC_URL }}static/themes/default/images/admin.png" />
+										        </div>
+										        <div class='menutxt'>
+											        {% trans 'enlighted.mangement.administration' %}
+										        </div>
+									        </a>
+									        
+									        <ul>
+												<li><a href="{{ STATIC_URL }}upgrade" >
+													{% trans 'em.upgrade' %}
+												    </a>
+												</li>
+												<li><a href="{{ STATIC_URL }}backuprestore">
+													{% trans 'em.backup.restore' %}
+													</a>
+												</li>							
+												<li><a href="{{ STATIC_URL }}history">
+													{% trans 'em.history' %}
+													</a>
+												</li>														
+												<li><a href="{{ STATIC_URL }}clouduemsettings">
+													{% trans 'em.cloud.manage' %}
+													</a>
+												</li>
+												
+											</ul>
+									        
+								        </li>
+									    <li class="headlink noright" >									 
+									        <a id="mainpage" href="#" class="link">
+										        <div class='imgicon'>
+											        <img src="{{ STATIC_URL }}static/themes/default/images/back.png" />
+										        </div>
+										        <div class='menutxt'>
+											        {% trans 'back.main.page' %}
+										        </div>
+									        </a>
+								        </li>
+							        </ul>
+						        </div>
+					        </td>
+				        </tr>
+			        </table>
+				
+		        </td>
+	        </tr>
+	        <tr>
+		        <td></td>
+            <td id="currentproc" align="right" style="color:red; font-weight: bold;"></td>
+		        <td align="right">{% trans 'version.label' %} {% revision %}  {% trans 'current.server.time' %}: {% currentdatetime %}</td>
+	        </tr>
+        </table>
+      {% endblock %}
+		</div>
+
+		<div id="body" style="width: 100%;background:#fff; margin-right:10px;">
+						{% block body %} {% endblock %}
+		</div>
+
+	  <div style="width: 100%; margin: 0 auto;">
+		  {% block footer %} 
+        <script type="text/javascript">
+	        $(document).ready(function() {
+		        var dialogOptions = {
+			        title : "{% trans 'enlighted.energy.manager.title' %}",
+			        modal : true,
+			        autoOpen : false,
+			        height : 300,
+			        width : 500,
+			        draggable : true
+		        }
+	
+		        $("#notesDialog").dialog(dialogOptions);
+	
+		        $('#contactUs').click(function() {
+			        $("#notesDialog").dialog('open');
+			        return false;
+		        });
+		
+		        $('#userNameTextBox').focus();
+
+            {% if proc == 'IMAGE_UPGRADE' %}
+              $("#currentproc").html('{% trans "ongoing.process" %} <a href="' + location.protocol + '//' + location.host + '/ems/home.ems' + '" ><span style="color:blue; text-decoration: underline;">{% trans "image.upgrade" %}</span></a>');
+            {% else %} {% if proc == 'BACKUP' %}
+               $("#currentproc").html('{% trans "ongoing.process" %} <a href="{{ STATIC_URL }}backuprestore/" ><span style="color:blue; text-decoration: underline;">{% trans "database.backup" %}</span></a>');
+            {% else %} {% if proc == 'EM_UPGRADE' %}
+               $("#currentproc").html('{% trans "ongoing.process" %} <a href="{{ STATIC_URL }}upgrade/" ><span style="color:blue; text-decoration: underline;">{% trans "em.upgrade" %}</span></a>');
+            {% else %} {% if proc == 'RESTORE' %}
+               $("#currentproc").html('{% trans "ongoing.process" %} <a href="{{ STATIC_URL }}backuprestore/" ><span style="color:blue; text-decoration: underline;">{% trans "database.restore" %}</span></a>');
+            {% endif %} {% endif %} {% endif %} {% endif %}
+
+	        });
+        </script>
+
+        <div id="notesDialog">
+	        <table border="0" cellpadding="0" cellspacing="5">
+		        <tr>
+			        <td><b>{% trans 'enlighted.corporate.headquaters' %}</b></td>
+		        </tr>
+		        <tr>
+			        <td>{% trans 'enlighted.corporate.address1' %}<br />
+				        {% trans 'enlighted.corporate.address2' %}<br /> {% trans 'enlighted.corporate.phone' %}<br /> {% trans 'enlighted.corporate.fax' %}<br /> {% trans 'enlighted.corporate.email' %}
+			        </td>
+		        </tr>
+		        <tr>
+			        <td style="padding-top:5px;"><b>{% trans 'enlighted.sales.heading' %}</b></td>
+		        </tr>
+		        <tr>
+			        <td>{% trans 'enlighted.sales.email' %}<br /> {% trans 'enlighted.sales.phone' %}</td>
+		        </tr>
+		        <tr>
+			        <td style="padding-top:5px;"><b>{% trans 'enlighted.customerservice.heading' %}</b></td>
+		        </tr>
+		        <tr>
+			        <td>{% trans 'enlighted.customerservice.email' %}<br />
+				        {% trans 'enlighted.customerservice.phone' %}
+			        </td>
+		        </tr>		
+	        </table>
+        </div>
+
+        <div style="float:left;width:100%">
+        <table border="0" cellspacing="0" class="footer">
+	        <tr>
+		        <td align="left">
+			        {% trans 'enlighted.copyright' %}
+		        </td>
+		        <td align="right">
+			        <a href="#" target="_blank">{% trans 'enlighted.eula' %}</a>&nbsp;|&nbsp;<a id="contactUs" href="">{% trans 'enlighted.contactus' %}</a>
+		        </td>
+	        </tr>
+        </table>
+        </div>
+      {% endblock %}
+		</div>
+
+
+	</div>
+</body>
+</html>

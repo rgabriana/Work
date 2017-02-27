@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.occengine.model.Zone" table="zone">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">zone_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-Fixture.xml 
+					containing the additional parameters and place it in your merge dir. -->
+			</generator>
+		</id>
+		
+		<property name="name" type="java.lang.String" update="true"
+			insert="true" column="name" />
+
+		<property name="startTime" type="java.util.Date"
+			update="true" insert="true" column="start_time" />
+
+		<property name="endTime" type="java.util.Date"
+			update="true" insert="true" column="end_time" />
+
+		<property name="lastStatusUpdateTime" type="java.util.Date"
+			update="true" insert="true" column="last_status_update_time" />
+
+		<property name="avgAmbientLight" type="java.lang.Integer" update="true"
+			insert="true" column="avg_ambient_light" />
+
+		<property name="occStatus" type="java.lang.Integer" update="true"
+			insert="true" column="occ_status" />
+		
+		<property name="setback" type="java.lang.Integer" update="true"
+			insert="true" column="setback" />
+		
+		<property name="fanSpeed" type="java.lang.Integer" update="true"
+			insert="true" column="fan_speed" />
+		
+		<property name="heartbeat" type="java.lang.Integer" update="true"
+			insert="true" column="heartbeat" />
+		
+		<property name="avgTemperature" type="java.lang.Float"
+			update="true" insert="true" column="avg_temperature" />
+
+		<property name="maxTemperature" type="java.lang.Float"
+			update="true" insert="true" column="max_temperature" />
+
+		<property name="minTemperature" type="java.lang.Float"
+			update="true" insert="true" column="min_temperature" />
+
+		<property name="setbackStartTime" type="java.util.Date"
+			update="true" insert="true" column="setback_start_time" />
+
+		<property name="setbackEndTime" type="java.util.Date"
+			update="true" insert="true" column="setback_end_time" />
+
+		<property name="bmsClientLastHbTime" type="java.util.Date"
+			update="true" insert="true" column="bms_client_last_hb_time" />
+
+		<property name="lastBmsClientSetback" type="java.lang.Integer" update="true"
+			insert="true" column="last_bms_client_setback" />
+
+		<property name="lastRestoredTime" type="java.util.Date"
+			update="true" insert="true" column="last_restored_time" />
+
+		<property name="lastReliableTime" type="java.util.Date"
+			update="true" insert="true" column="last_reliable_time" />
+
+	</class>
+
+</hibernate-mapping>

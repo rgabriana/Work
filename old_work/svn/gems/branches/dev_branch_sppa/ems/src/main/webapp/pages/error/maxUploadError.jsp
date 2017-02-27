@@ -1,0 +1,1 @@
+<b>Please upload an image which is less than the stipulated size</b>

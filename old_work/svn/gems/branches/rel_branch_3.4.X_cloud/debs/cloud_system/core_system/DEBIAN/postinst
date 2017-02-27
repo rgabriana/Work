@@ -1,0 +1,155 @@
+#!/bin/bash -x
+# Run this after installing this package, it requires root privilage
+backup_server_config()
+{
+	echo "ssh key creation started."
+	sudo mkdir ~/.ssh
+	touch ~/.ssh/authorized_keys
+ 	chmod 700 ~/
+ 	chmod 700 ~/.ssh
+	chmod 600 ~/.ssh/authorized_keys
+	sudo chown -R enlighted:enlighted  ~/.ssh
+	sudo sed -i "s/StrictModes yes/StrictModes no/g"  /etc/ssh/sshd_config
+	sudo ssh-keygen -f  ~/.ssh/id_rsync
+	chmod 600 ~/.ssh/id_rsync
+	sleep 5
+	read -p "Enter Backup Server FQDN (eg. in-pu-r-12343.enlightedcloud.net)  : " answer
+	sudo echo "backupServerIp=$answer"  >> /tmp/installInfo.properties
+	sudo ssh-copy-id -i  ~/.ssh/id_rsync.pub enlighted@$answer
+	sudo ssh-agent
+	sudo echo 'ssh-agent' >> ~/.bash_profile
+	sudo echo 'eval $(ssh-agent)' >> ~/.bash_profile
+	sudo echo 'eval $(ssh-agent)' >> /etc/profile
+	sudo ssh-add ~/.ssh/id_rsync	
+	sudo mkdir /home/enlighted/backups/
+	sudo chown -R enlighted:enlighted  /home/enlighted/backups/
+	sleep 5
+	read -p "Enter full path for Backup dir name on backup server : " backupdir
+	sudo echo "backupDir=$backupdir"  >> /tmp/installInfo.properties
+}
+
+server_specific_changes()
+{
+	file=/tmp/installInfo.properties
+	if [ -e "$file" ] ; then
+		. /tmp/installInfo.properties
+	else
+		touch /tmp/installInfo.properties
+		read -p "Give FQDN for this server (eg. in-pu-r-12343.enlightedcloud.net) : " dns
+		sudo echo "dns=$dns"  >> /tmp/installInfo.properties
+	fi
+
+	echo "Server type specific installation will begin ..."
+	read -p "Is this Master Server  [yes or no] : " answer
+	case $answer in
+
+	 [yY]|[yY][Ee][Ss] )
+		echo "Master server related configuration started...."
+		echo "Certificate related changes in progress..."
+		sudo cp -R /home/enlighted/core_file/Certificate/* /etc/enlighted/CA/
+		sudo chown -R enlighted:enlighted /etc/enlighted
+		sudo chmod +x /etc/enlighted/CA/scripts/*.sh
+		echo "Apache default configuration in progress"
+		sudo cp /home/enlighted/core_file/apache/000-default /etc/apache2/sites-enabled/
+		sudo sed -i "s/dns_change/${dns}/g"  /etc/apache2/sites-enabled/000-default
+		echo "NOTE:- You will face problem in apache restart as certificate for this master server is not generated. Generate the certificate and restart apache."
+		echo "starting the process of Backup server configuration."
+		backup_server_config
+		. /tmp/installInfo.properties
+		sudo cp /home/enlighted/core_file/scripts/master_daily_backup.sh /home/enlighted/
+		sudo chown enlighted:enlighted /home/enlighted/master_daily_backup.sh
+		sudo chmod +x /home/enlighted/master_daily_backup.sh
+		sudo sed -i "$ a\rsync --delete -azvv -e \"ssh  -o \\\\\"StrictHostKeyChecking no\\\\\" -i /home/enlighted/.ssh/id_rsync\" /home/enlighted/backups/ enlighted@${backupServerIp}:${backupDir}" /home/enlighted/master_daily_backup.sh
+		cronExists=$(grep 'master_daily_backup\.sh' /var/spool/cron/crontabs/root)
+		if [[ "$cronExists" =~ "master_daily_backup" ]]
+		then
+   			echo "Master Backup Cron is already set.Resetting it."
+    			sudo sed -i '/master_daily_backup/d' /var/spool/cron/crontabs/root
+    			echo "0 2 * * * /home/enlighted/master_daily_backup.sh" >> /var/spool/cron/crontabs/root
+   			echo "Master Backup Cron is set."
+		else
+    			echo "0 2 * * * /home/enlighted/master_daily_backup.sh" >> /var/spool/cron/crontabs/root
+    			echo "Master Backup Cron is set."
+		fi
+		echo "Setting up Master server database...."
+		sudo createdb -U postgres emscloud -O postgres
+		sudo psql -U postgres -d emscloud -a -f /home/enlighted/core_file/postgresql/ecloud_install.sql
+		sudo mkdir -p /var/lib/tomcat6/Enlighted/scripts/
+		sudo chown -R tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/scripts/
+		;;
+
+	[nN]|[Nn][Oo] )
+		echo "Replica server related configuration started...."
+		sleep 5
+		read -p "provide internal master server ip : " masterIp
+		echo "Certificate related changes in progress. Rsyncing certificates from master server."
+		sudo rsync -avHx --exclude='.svn' enlighted@$masterIp:/etc/enlighted/CA/* /etc/enlighted/CA/
+		sudo touch /var/lib/tomcat6/Enlighted/config.properties
+		sudo chown tomcat6:tomcat6 /var/lib/tomcat6/Enlighted/config.properties
+		sudo chmod 777 /var/lib/tomcat6/Enlighted/config.properties
+		sudo echo "ecloudIp=$masterIp"  >>  /var/lib/tomcat6/Enlighted/config.properties
+		echo "Apache default configuration in progress"
+		sudo cp /home/enlighted/core_file/apache/000-default-replica /etc/apache2/sites-enabled/
+		sudo rm -rf /etc/apache2/sites-enabled/000-default
+		sudo sed -i "s/dns_change/${dns}/g"  /etc/apache2/sites-enabled/000-default-replica
+		echo "If master server do not have certificate for this server it would have not rsynced. You may get error while restarting the apache. If error found contact admin."
+		echo "starting the process of Backup server configuration."
+		backup_server_config
+		. /tmp/installInfo.properties
+		sudo cp /home/enlighted/core_file/scripts/replica_daily_backups.sh /home/enlighted/
+		sudo chown enlighted:enlighted /home/enlighted/replica_daily_backups.sh
+		sudo chmod +x /home/enlighted/replica_daily_backups.sh
+		sudo sed -i "$ a\rsync --delete -azvv -e \"ssh  -o \\\\\"StrictHostKeyChecking no\\\\\" -i /home/enlighted/.ssh/id_rsync\" /home/enlighted/backups/ enlighted@${backupServerIp}:${backupDir}" /home/enlighted/replica_daily_backups.sh
+		cronExists=$(grep 'replica_daily_backups\.sh' /var/spool/cron/crontabs/root)
+		if [[ "$cronExists" =~ "replica_daily_backups" ]]
+		then
+   			echo "Replica Backup Cron is already set.Resetting it."
+    			sudo sed -i '/replica_daily_backups/d' /var/spool/cron/crontabs/root
+    			echo "0 2 * * * /home/enlighted/replica_daily_backups.sh" >> /var/spool/cron/crontabs/root
+   			echo "Replica Backup Cron is set."
+		else
+    			echo "0 2 * * * /home/enlighted/replica_daily_backups.sh" >> /var/spool/cron/crontabs/root
+    			echo "Replica Backup Cron is set."
+		fi
+		;;
+	*)
+		echo"Invalid option!!! Try again..."
+		server_specific_changes
+		;;
+	esac
+}
+
+# Make directories which are needed post install
+sudo mkdir -p /etc/enlighted/CA/
+sudo chown -R enlighted:enlighted /etc/enlighted/
+sudo mkdir /var/lib/tomcat6/Enlighted
+sudo chown -R tomcat6:tomcat6 /var/lib/tomcat6
+
+#Config file replacements and config file changes
+echo "starting config settings for postgres,apache ..."
+sudo cp /home/enlighted/core_file/postgresql/pg_hba.conf /etc/postgresql/9.2/main/pg_hba.conf
+sudo sed -i '$ a\listen_addresses = '\''*'\''' /etc/postgresql/9.2/main/postgresql.conf
+sudo sed -i '$ a\bytea_output = '\''escape'\''' /etc/postgresql/9.2/main/postgresql.conf
+# need this restart otherwise you wont be able to enter postgres in sql related changes steps. 
+sudo service postgresql restart
+sudo cp /home/enlighted/core_file/apache/proxy.conf /etc/apache2/mods-enabled/proxy.conf
+ 
+#Sql related changes
+echo "Database ascii settings started ...."
+sudo psql -U postgres -a -f /home/enlighted/core_file/postgresql/sql_ascii.sql
+
+#Server specific installation
+server_specific_changes
+
+
+#Restart all the services changes,used, installed,upgraded
+echo "Restarting all services"
+sudo service apache2 restart 
+sudo service postgresql restart
+sudo service tomcat6 restart
+sudo service cron restart
+sudo ufw enable
+
+
+
+

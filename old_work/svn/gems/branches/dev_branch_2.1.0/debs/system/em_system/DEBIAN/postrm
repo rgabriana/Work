@@ -1,0 +1,3 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+

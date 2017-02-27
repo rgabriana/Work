@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans  
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+						http://www.springframework.org/schema/util
+						http://www.springframework.org/schema/util/spring-util-3.0.xsd
+                       http://www.springframework.org/schema/security
+                         http://www.springframework.org/schema/security/spring-security-3.0.xsd">
+
+	<global-method-security pre-post-annotations="enabled"/>
+	
+	<http auto-config='true' use-expressions="true">
+		<intercept-url pattern='/wsaction.action' access="permitAll()"
+			requires-channel="https" />
+		<intercept-url pattern='/ems_dashboard' access="permitAll()"
+			requires-channel="https" />
+		<intercept-url pattern="/login.jsp" access="permitAll()" />
+		<intercept-url pattern="/heartbeat.jsp" access="permitAll()" />
+		<intercept-url pattern="/index.jsp" access="permitAll()" />
+		<intercept-url pattern="/services/**" access="isAuthenticated()"
+			requires-channel="https" />
+		<intercept-url pattern="/themes/**" access="permitAll()" />
+		<intercept-url pattern="/scripts/**" access="permitAll()" />
+		<intercept-url pattern="/logout.jsp" access="permitAll()" />
+		<intercept-url pattern="/**" access="isAuthenticated()" />
+		<form-login login-page="/login.jsp" default-target-url="/home.ems"
+			always-use-default-target="true" authentication-failure-handler-ref="authenticationFailureHandler" />
+		<session-management invalid-session-url="/logout.jsp"></session-management>
+		<logout logout-success-url="/login.jsp" invalidate-session="true" />
+	</http>
+
+	<authentication-manager alias="authenticationManager">
+		<authentication-provider ref="authenticationProvider"></authentication-provider>
+	</authentication-manager>
+
+
+	<beans:bean id="authenticationProvider" class="com.ems.security.EmsauthenticationProvider" />
+
+	<beans:bean id="authenticationFailureHandler"
+		class="org.springframework.security.web.authentication.ExceptionMappingAuthenticationFailureHandler">
+		<beans:property name="exceptionMappings">
+			<beans:props>
+				<beans:prop
+					key="org.springframework.security.authentication.BadCredentialsException">/login.jsp?error=true</beans:prop>
+				<beans:prop
+					key="org.springframework.security.authentication.AuthenticationCredentialsNotFoundException">/login.jsp?error=true</beans:prop>
+				<beans:prop
+					key="org.springframework.security.authentication.CredentialsExpiredException">/login.jsp?inactive=true</beans:prop>
+				<beans:prop
+					key="org.springframework.security.authentication.LockedException">/login.jsp?inactive=true</beans:prop>
+				<beans:prop
+					key="org.springframework.security.authentication.DisabledException">/login.jsp?inactive=true</beans:prop>
+			    <beans:prop
+					key="com.ems.security.exception.FacilityNotAssignedException">/login.jsp?facilityNotAssigned=true</beans:prop>
+					<beans:prop
+					key="com.ems.security.exception.SSLCertificateNotFoundException">/login.jsp?certificateNotFound=true</beans:prop>
+					<beans:prop
+					key="com.ems.security.exception.EmsUnkownSecurityException">/login.jsp?UnkownSecurityException=true</beans:prop>
+
+			</beans:props>
+		</beans:property>
+	</beans:bean>
+
+	<beans:bean id="emsUserDetailsService" class="com.ems.security.EmsUserDetailsService" />
+
+	<beans:bean id="postSuccessAuthHandler"
+		class="com.ems.security.PostSuccessfulAuthenticationHandler">
+		<beans:property name="defaultTargetUrl" value="/home.ems"></beans:property>
+	</beans:bean>
+
+	<beans:bean
+		class="org.springframework.security.authentication.encoding.Md5PasswordEncoder"
+		id="passwordEncoder" />
+</beans:beans>

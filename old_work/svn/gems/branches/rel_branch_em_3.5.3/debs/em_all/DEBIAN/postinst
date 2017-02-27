@@ -1,0 +1,14 @@
+#!/bin/bash -x
+if [ -f "/home/enlighted/setAllEMEnvironment.sh" ]
+then
+	sh /home/enlighted/setAllEMEnvironment.sh
+elif [ -f "/usr/local/google/home/enlighted/setAllEMEnvironment.sh"  ]
+then
+	sh /usr/local/google/home/enlighted/setAllEMEnvironment.sh
+else
+	for x in `find / -name "setAllEMEnvironment.sh" -path "*/enlighted/*"`; do sh $x; done;
+fi
+source /etc/environment
+sudo mkdir -p $ENL_APP_HOME/Enlighted/bkRestoreFolderTemp
+sudo chmod 775 $ENL_APP_HOME/Enlighted/bkRestoreFolderTemp
+sudo chown $TOMCAT_USER:$TOMCAT_USER $ENL_APP_HOME/Enlighted/bkRestoreFolderTemp

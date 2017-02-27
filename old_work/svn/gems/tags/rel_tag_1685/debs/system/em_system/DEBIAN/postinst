@@ -1,0 +1,5 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+
+sudo chown root:root /etc/default/rcS
+sudo chmod 644 /etc/default/rcS

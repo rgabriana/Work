@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd">
+   
+    <diskStore path="java.io.tmpdir"/>              
+ 
+    <cache name="gateway_id"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="100"
+          diskPersistent="false"/>
+          
+     <cache name="system_configuration"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="5000"
+          diskPersistent="false"/>
+          
+    <cache name="pricing"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="10"
+          diskPersistent="false"/>
+          
+ 	<cache name="company"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="2"
+          diskPersistent="false"/>
+          
+	<cache name="ballast"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="5000"
+          diskPersistent="false"/>
+          
+	<cache name="bvp_ballast_inputvolt"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="5000"
+          diskPersistent="false"/>
+          
+	<cache name="bvp_vpm"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="5000"
+          diskPersistent="false"/>
+          
+	<cache name="fixture_id"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="10000"
+          diskPersistent="false"/>
+          
+	<cache name="fixture_snap"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="10000"
+          diskPersistent="false"/>
+          
+ 	<cache name="lamp_calib_config"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="2"
+          diskPersistent="false"/>
+          
+	<cache name="fixt_callib_map"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="10000"
+          diskPersistent="false"/>
+          
+	<cache name="fixt_lamp_config"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="10000"
+          diskPersistent="false"/>
+          
+	<cache name="group_id"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="10000"
+          diskPersistent="false"/>
+          
+	<cache name="ph_id"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="10000"
+          diskPersistent="false"/>
+          
+	<cache name="ph_fixt_id"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="10000"
+          diskPersistent="false"/>
+          
+	<cache name="ph_group_id"
+          eternal="true" timeToLiveSeconds="0" timeToIdleSeconds="0"
+          maxEntriesLocalHeap="10000"
+          diskPersistent="false"/>
+ 
+</ehcache>

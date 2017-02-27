@@ -1,0 +1,21 @@
+#!/bin/bash -x
+# Run this before removing this package, it requires root privilage
+source /etc/environment
+
+cd /tmp/cloud_communicator/
+cp var/lib/tomcat6/Enlighted/connection_config.properties ${ENL_APP_HOME}/Enlighted/ 
+cp -r opt/enLighted/communicator/*	${OPT_ENLIGHTED}/communicator/.
+
+sed -i "s|/opt/enLighted|$OPT_ENLIGHTED|g" ${OPT_ENLIGHTED}/communicator/config.properties
+sed -i "s|/opt/enLighted|$OPT_ENLIGHTED|g" ${OPT_ENLIGHTED}/communicator/logFileBaseDirPaths.properties
+sed -i "s|/var/lib/tomcat6|$ENL_APP_HOME|g" ${OPT_ENLIGHTED}/communicator/logFileBaseDirPaths.properties
+sed -i "s|/home/enlighted|$ENLIGHTED_HOME|g" ${OPT_ENLIGHTED}/communicator/logFileBaseDirPaths.properties
+
+
+sudo bash ${OPT_ENLIGHTED}/communicator/communicatorsetcron.sh
+sudo service cron restart
+
+sudo mkdir ${OPT_ENLIGHTED}/communicator/syncdata/
+sudo chmod 777 ${OPT_ENLIGHTED}/communicator/syncdata/
+
+sudo chmod 600 ${OPT_ENLIGHTED}/communicator/enlightedTunnelKey

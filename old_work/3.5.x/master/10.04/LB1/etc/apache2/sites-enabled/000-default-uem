@@ -1,0 +1,79 @@
+<VirtualHost *:443>
+        ServerAdmin webmaster@localhost
+        ServerName em-uem-setup-hp3182.p.enlightedcloud.net
+
+        SSLEngine On
+        #SSLCertificateFile    /etc/apache2/ssl/apache.pem
+        #SSLCertificateKeyFile /etc/apache2/ssl/apache.key
+        SSLCertificateFile    /etc/enlighted/CA/ssl/certs/us-tx-m-p-6854f5fff88e.enlightedcloud.net.pem
+        SSLCertificateKeyFile /etc/enlighted/CA/ssl/private/us-tx-m-p-6854f5fff88e.enlightedcloud.net.key
+        SSLCACertificateFile  /etc/enlighted/CA/ssl/certs/enlca.crt
+        SSLCACertificatePath /etc/enlighted/CA/ssl/
+        SSLCARevocationFile /etc/enlighted/CA/ssl/crl/enlca.crl
+    SSLCARevocationPath /etc/enlighted/CA/ssl/crl/
+        SSLOptions +ExportCertData +StdEnvVars
+        SSLVerifyClient none
+        SSLVerifyDepth  2
+        BrowserMatch "MSIE [2-6]" \
+                nokeepalive ssl-unclean-shutdown \
+                downgrade-1.0 force-response-1.0
+        # MSIE 7 and newer should be able to use keepalive
+    BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+
+        RewriteEngine On
+
+        ErrorLog /var/log/apache2/error.log
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel warn
+
+        CustomLog /var/log/apache2/access.log combined
+
+
+        ProxyRequests on
+
+        ProxyPass / http://localhost:30000/
+    ProxyPassReverse / http://localhost:30000/
+
+</VirtualHost>
+
+<VirtualHost *:443>
+        ServerAdmin webmaster@localhost
+        ServerName em-uem-setup-att3454.p.enlightedcloud.net
+
+        SSLEngine On
+        #SSLCertificateFile    /etc/apache2/ssl/apache.pem
+        #SSLCertificateKeyFile /etc/apache2/ssl/apache.key
+        SSLCertificateFile    /etc/enlighted/CA/ssl/certs/us-tx-m-p-6854f5fff88e.enlightedcloud.net.pem
+        SSLCertificateKeyFile /etc/enlighted/CA/ssl/private/us-tx-m-p-6854f5fff88e.enlightedcloud.net.key
+        SSLCACertificateFile  /etc/enlighted/CA/ssl/certs/enlca.crt
+        SSLCACertificatePath /etc/enlighted/CA/ssl/
+        SSLCARevocationFile /etc/enlighted/CA/ssl/crl/enlca.crl
+    SSLCARevocationPath /etc/enlighted/CA/ssl/crl/
+        SSLOptions +ExportCertData +StdEnvVars
+        SSLVerifyClient none
+        SSLVerifyDepth  2
+        BrowserMatch "MSIE [2-6]" \
+                nokeepalive ssl-unclean-shutdown \
+                downgrade-1.0 force-response-1.0
+        # MSIE 7 and newer should be able to use keepalive
+    BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+
+        RewriteEngine On
+
+        ErrorLog /var/log/apache2/error.log
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel warn
+
+        CustomLog /var/log/apache2/access.log combined
+
+
+        ProxyRequests on
+
+        ProxyPass / http://localhost:30002/
+    ProxyPassReverse / http://localhost:30002/
+
+</VirtualHost>

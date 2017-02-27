@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="100%" 
+		 horizontalAlign="center" verticalAlign="middle"
+		 horizontalScrollPolicy="off">
+	
+	<fx:Script>
+		<![CDATA[
+			
+			[Bindable]
+			public var marqueeText:String;
+			
+		]]>
+	</fx:Script>
+	
+	<mx:Box id="errorContainer" height="25" styleName="alertBox">
+		<mx:Label text="{marqueeText}"/>
+	</mx:Box>
+	
+</mx:Box>

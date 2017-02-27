@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ReportsTable is used to display details of the fixture status, location, etc. 
+This table is reused for both "Bulb Report" and "Outage Report".
+If "Bulb Report" is inserted again, table columns should be handled.
+-->
+<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			 xmlns:s="library://ns.adobe.com/flex/spark" 
+			 xmlns:mx="library://ns.adobe.com/flex/mx"
+			 width="100%" height="100%">
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="YYYY-MM-DD JJ:NN:SS"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			
+			private function outageSince(obj:Object,column:DataGridColumn):String
+			{
+				return dateFormatter.format(obj.outageSince);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<mx:columns>
+		<mx:DataGridColumn headerText="Fixture Name" dataField="name"/>
+		<mx:DataGridColumn headerText="Location" dataField="location"/>
+		<mx:DataGridColumn headerText="Outage Since" labelFunction="outageSince"/>
+		<mx:DataGridColumn headerText="Description" dataField="description"/>
+	</mx:columns>
+</mx:DataGrid>

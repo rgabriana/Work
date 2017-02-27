@@ -1,0 +1,13 @@
+{
+  "name": "master-oddities",
+  "version": "0.1.0",
+  "author": "Rolando R. Gabriana Jr.",
+  "summary": "puppet module to control master server oddities",
+  "license": "Apache 2.0",
+  "source": "rolando.gabriana@enlightedinc.com",
+  "project_page": "rolando.gabriana@enlightedinc.com",
+  "issues_url": "rolando.gabriana@enlightedinc.com",
+  "dependencies": [
+  ]
+}
+

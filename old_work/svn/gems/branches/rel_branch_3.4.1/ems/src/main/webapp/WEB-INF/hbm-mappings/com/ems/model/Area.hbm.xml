@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.Area" table="area">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">area_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-Area.xml 
+					containing the additional parameters and place it in your merge dir. -->
+			</generator>
+		</id>
+
+		<property name="name" type="java.lang.String" update="true"
+			insert="true" column="name" />
+
+		<property name="description" type="java.lang.String" update="true"
+			insert="true" column="description" />
+
+		<many-to-one name="floor" class="com.ems.model.Floor"
+			cascade="none" outer-join="auto" update="true" insert="true" column="floor_id" />
+
+		<set name="subAreas" lazy="true" inverse="true" cascade="delete"
+			sort="unsorted" outer-join="false">
+
+			<key column="area_id">
+			</key>
+
+			<one-to-many class="com.ems.model.SubArea" />
+
+		</set>
+
+		<many-to-one name="profileHandler" class="com.ems.model.ProfileHandler"
+			cascade="none" outer-join="auto" update="true" insert="true"
+			column="profile_handler_id" />
+
+		<!--
+		<set name="fixtures" lazy="true" inverse="true" cascade="delete"
+			sort="unsorted" outer-join="false">
+
+			<key column="area_id">
+			</key>
+
+			<one-to-many class="com.ems.model.Device" />
+
+		</set>
+		-->
+
+		<property name="areaPlanUrl" type="java.lang.String" update="true"
+			insert="true" column="areaplan_url" />
+
+		<many-to-one name="planMap" class="com.ems.model.PlanMap"
+			cascade="none" outer-join="auto" update="true" insert="true" column="plan_map_id" />
+
+		<!-- To add non XDoclet property mappings, create a file named hibernate-properties-Area.xml 
+			containing the additional properties and place it in your merge dir. -->
+
+		<many-to-one name="tenant" class="com.ems.model.Tenant"
+			cascade="none" outer-join="auto" update="true" insert="true" column="tenant_id" />
+			
+		<property name="sweepTimerId" type="java.lang.Long" update="true"
+			insert="true" column="sweep_timer_id" />
+		<property name="occupancyState" type="java.lang.Integer" update="true"
+			insert="true" column="lighting_occ_count" />
+
+	</class>
+
+</hibernate-mapping>

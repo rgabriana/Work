@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.ems.model.ProfileHandler" table="profile_handler">
+
+		<id name="id" column="id" type="java.lang.Long" unsaved-value="null">
+			<generator class="native">
+				<param name="sequence">profile_handler_seq</param>
+				<!-- To add non XDoclet generator parameters, create a file named hibernate-generator-params-ProfileHandler.xml 
+					containing the additional parameters and place it in your merge dir. -->
+			</generator>
+		</id>
+
+		<many-to-one name="morningProfile" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="morning_profile_id" />
+
+		<many-to-one name="dayProfile" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="day_profile_id" />
+
+		<many-to-one name="eveningProfile" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="evening_profile_id" />
+
+		<many-to-one name="nightProfile" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="night_profile_id" />
+
+		<many-to-one name="morningProfileWeekEnd" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="morning_profile_weekend" />
+
+		<many-to-one name="dayProfileWeekEnd" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="day_profile_weekend" />
+
+		<many-to-one name="eveningProfileWeekEnd" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="evening_profile_weekend" />
+
+		<many-to-one name="nightProfileWeekEnd" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="night_profile_weekend" />
+
+		<many-to-one name="morningProfileHoliday" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="morning_profile_holiday" />
+
+		<many-to-one name="dayProfileHoliday" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="day_profile_holiday" />
+
+		<many-to-one name="eveningProfileHoliday" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="evening_profile_holiday" />
+
+		<many-to-one name="nightProfileHoliday" class="com.ems.model.Profile"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="night_profile_holiday" />
+
+		<many-to-one name="profileConfiguration" class="com.ems.model.ProfileConfiguration"
+			cascade="save-update" outer-join="auto" update="true" insert="true"
+			column="profile_configuration_id" />
+
+		<property name="darkLux" type="java.lang.Integer" update="true"
+			insert="true" column="dark_lux" />
+
+		<property name="neighborLux" type="java.lang.Integer" update="true"
+			insert="true" column="neighbor_lux" />
+
+		<property name="envelopeOnLevel" type="java.lang.Integer"
+			update="true" insert="true" column="envelope_on_level" />
+
+		<property name="dropPercent" type="java.lang.Integer" update="true"
+			insert="false" column="drop" />
+
+		<property name="risePercent" type="java.lang.Integer" update="true"
+			insert="false" column="rise" />
+
+		<property name="dimBackoffTime" type="java.lang.Short"
+			update="true" insert="false" column="dim_backoff_time" />
+
+		<property name="intensityNormTime" type="java.lang.Short"
+			update="true" insert="false" column="intensity_norm_time" />
+
+		<property name="onAmbLightLevel" type="java.lang.Integer"
+			update="true" insert="true" column="on_amb_light_level" />
+
+		<property name="minLevelBeforeOff" type="java.lang.Short"
+			update="true" insert="false" column="min_level_before_off" />
+
+		<property name="relaysConnected" type="java.lang.Integer"
+			update="true" insert="false" column="relays_connected" />
+
+		<property name="profileChecksum" type="java.lang.Short"
+			update="true" insert="true" column="profile_checksum" />
+
+		<property name="globalProfileChecksum" type="java.lang.Short"
+			update="true" insert="true" column="global_profile_checksum" />
+
+		<property name="standaloneMotionOverride" type="java.lang.Short"
+			update="true" insert="true" column="standalone_motion_override" />
+
+		<property name="drReactivity" type="java.lang.Byte" update="true"
+			insert="true" column="dr_reactivity" />
+
+		<property name="toOffLinger" type="java.lang.Integer" update="true"
+			insert="true" column="to_off_linger" />
+
+		<property name="initialOnTime" type="java.lang.Integer"
+			update="true" insert="true" column="initial_on_time" />
+
+		<property name="initialOnLevel" type="java.lang.Byte" update="true"
+			insert="true" column="initial_on_level" />
+
+		<property name="profileGroupId" type="java.lang.Short" update="true"
+			insert="true" column="profile_group_id" />
+
+		<property name="profileFlag" type="java.lang.Byte" update="true"
+			insert="true" column="profile_flag" />
+		
+		<property name="isHighBay" type="java.lang.Byte" update="true"
+			insert="true" column="is_high_bay" />
+
+		<property name="motionThresholdGain" type="java.lang.Integer"
+			update="true" insert="true" column="motion_threshold_gain" />
+		
+		<property name="drLowLevel" type="java.lang.Byte" update="true"
+			insert="true" column="dr_low_level" />
+		
+		<property name="drModerateLevel" type="java.lang.Byte" update="true"
+			insert="true" column="dr_moderate_level" />
+		
+		<property name="drHighLevel" type="java.lang.Byte" update="true"
+			insert="true" column="dr_high_level" />	
+			
+		<property name="drSpecialLevel" type="java.lang.Byte" update="true"
+			insert="true" column="dr_special_level" />		
+		
+		<!-- To add non XDoclet property mappings, create a file named hibernate-properties-ProfileHandler.xml 
+			containing the additional properties and place it in your merge dir. -->
+
+	</class>
+
+</hibernate-mapping>
